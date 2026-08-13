@@ -1,0 +1,10 @@
+PySide6>=6.6
+langgraph>=0.2
+langchain-core>=0.3
+langchain-google-genai>=2.0
+tavily-python>=0.5
+pywin32>=306
+python-dotenv>=1.0
+PyYAML>=6.0
+requests>=2.31
+psutil>=5.9

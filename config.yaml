@@ -1,0 +1,48 @@
+# Calcifer Desktop Pet — configuration (non-secret settings; API keys live in .env)
+
+llm:
+  provider: gemini
+  model: gemini-2.0-flash
+  temperature: 0.7
+
+memory:
+  idle_timeout_minutes: 10 # clear in-memory chat history after this many minutes of inactivity
+
+overlay:
+  always_on_top: true
+  click_through_transparent_areas: true
+
+behavior:
+  # relative weights used to randomly pick the next idle-time movement state
+  state_weights:
+    idle: 0.4
+    walk: 0.25
+    float: 0.25
+    jump: 0.1
+
+system_status:
+  poll_interval_seconds: 45
+  cpu_threshold_percent: 90
+  ram_threshold_percent: 90
+  battery_threshold_percent: 30
+
+ambient:
+  random_fact_or_joke:
+    idle_minutes: 15 # trigger a random line after this many minutes without chat/click activity
+    facts_file: data/facts_jokes.json
+
+click_reaction:
+  lines_file: data/click_reactions.json
+
+tools:
+  weather:
+    provider: open-meteo
+  web_search:
+    provider: tavily
+
+tray:
+  start_visible: true
+
+autostart:
+  enabled: true
+  method: startup_folder # startup_folder | task_scheduler (task_scheduler used after packaging to .exe)

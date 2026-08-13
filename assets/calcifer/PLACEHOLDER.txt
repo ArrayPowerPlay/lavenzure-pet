@@ -1,0 +1,5 @@
+Put the cutout PNG layers here (see ANIMATION_TUTORIAL.md), e.g.:
+body_base.png, eye_left_open.png, eye_left_closed.png, eye_right_open.png,
+eye_right_closed.png, mouth_closed.png, mouth_open.png, flame_top.png
+
+Until these exist, the app draws a simple placeholder flame shape instead.
