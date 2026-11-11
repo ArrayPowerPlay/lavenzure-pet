@@ -16,6 +16,7 @@ from agent.memory import SessionMemory
 from chat.chat_window import ChatWindow
 from monitor.background_monitor import BackgroundMonitor
 from overlay.behavior import BehaviorController, PetState
+from overlay.character import Mood
 from overlay.overlay_window import OverlaySprite
 from overlay.speech_bubble import SpeechBubble
 
@@ -76,7 +77,7 @@ class CalciferApp:
         self.monitor.reminder_triggered.connect(self._on_reminder)
 
     def _build_tray_icon(self) -> None:
-        # Windows has no icon theme, so fall back to the sprite's own placeholder pixmap.
+        # Windows has no icon theme, so fall back to a snapshot of the drawn character.
         icon = QIcon.fromTheme("weather-clear")
         if icon.isNull():
             icon = QIcon(self.sprite.grab())
@@ -102,17 +103,17 @@ class CalciferApp:
             return
         self.behavior.trigger_reaction()
         line = random.choice(self._click_lines)
-        self.bubble.show_above(self.sprite.pos(), line, auto_hide_ms=3000)
+        self.bubble.show_above(self.sprite.bubble_anchor(), line, auto_hide_ms=3000)
 
     def _on_alert(self, message: str) -> None:
         self.behavior.trigger_alert()
-        self.bubble.show_above(self.sprite.pos(), message, auto_hide_ms=None)
+        self.bubble.show_above(self.sprite.bubble_anchor(), message, auto_hide_ms=None)
 
     def _on_joke(self, text: str) -> None:
-        self.bubble.show_above(self.sprite.pos(), text, auto_hide_ms=5000)
+        self.bubble.show_above(self.sprite.bubble_anchor(), text, auto_hide_ms=5000)
 
     def _on_reminder(self, message: str) -> None:
-        self.bubble.show_above(self.sprite.pos(), f"Reminder: {message}", auto_hide_ms=6000)
+        self.bubble.show_above(self.sprite.bubble_anchor(), f"Reminder: {message}", auto_hide_ms=6000)
 
     def _toggle_visibility(self) -> None:
         if self.sprite.isVisible():
@@ -133,6 +134,7 @@ class CalciferApp:
         history = self.memory.get_history()
         self.memory.add("user", message)
         self.chat_window.set_thinking(True)
+        self.sprite.character.set_thinking(True)
 
         self._agent_thread = QThread()
         self._agent_worker = AgentWorker(history, message)
@@ -148,12 +150,16 @@ class CalciferApp:
         self.memory.add("assistant", reply)
         self.chat_window.append_message("Calcifer", reply)
         self.chat_window.set_thinking(False)
+        self.sprite.character.set_thinking(False)
+        # Move the mouth for roughly as long as it would take to say the reply.
+        self.sprite.character.play(Mood.TALKING, min(5.0, max(1.2, len(reply) * 0.045)))
 
     def _on_agent_error(self, error: str) -> None:
         self.chat_window.append_message(
             "Calcifer", "Oops, my flame flickered out for a second. Try again?"
         )
         self.chat_window.set_thinking(False)
+        self.sprite.character.set_thinking(False)
 
     def run(self) -> int:
         return self.app.exec()

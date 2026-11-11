@@ -22,10 +22,17 @@ class SpeechBubble(QLabel):
         self._auto_hide_timer.timeout.connect(self.hide)
 
     def show_above(self, anchor_pos, text: str, auto_hide_ms: int | None = 4000) -> None:
-        """auto_hide_ms=None keeps the bubble visible until hide() is called explicitly (alerts)."""
+        """Show ``text`` centered above ``anchor_pos`` (global point above the pet's head).
+
+        auto_hide_ms=None keeps the bubble visible until hide() is called explicitly (alerts)."""
         self.setText(text)
         self.adjustSize()
-        self.move(anchor_pos.x(), anchor_pos.y() - self.height() - 10)
+        # Center horizontally over the anchor (the pet's head) and keep the bubble on screen.
+        screen = self.screen().availableGeometry()
+        x = anchor_pos.x() - self.width() // 2
+        x = max(screen.left(), min(x, screen.right() - self.width()))
+        y = max(screen.top(), anchor_pos.y() - self.height() - 4)
+        self.move(x, y)
         self.show()
         self.raise_()
         self._auto_hide_timer.stop()
