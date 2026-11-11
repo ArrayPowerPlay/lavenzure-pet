@@ -115,6 +115,6 @@
 Còn thiếu / cần làm tiếp:
 - [ ] Thêm `GEMINI_API_KEY` và `TAVILY_API_KEY` thật vào file `.env` (copy từ `.env.example`)
 - [ ] Chạy thử trên màn hình Windows thật (không phải offscreen) để kiểm tra click-through/always-on-top/mask thực tế
-- [ ] Thay placeholder flame bằng layer PNG thật theo `ANIMATION_TUTORIAL.md` (Phase 3), sau đó nâng cấp `overlay_window.py` để ghép nhiều layer (mắt/miệng/lửa) thay vì 1 pixmap duy nhất
+- [x] Nhân vật thật: thay placeholder bằng nhân vật vẽ bằng code (`src/overlay/character.py`) — không cần PNG (2026-11-11). Xem thử: `.venv-win/Scripts/python.exe src/character_preview.py`
 - [ ] Chạy `src/autostart/install_startup.py` để tạo shortcut Startup (Phase 10)
 - [ ] Phase 11 (PyInstaller) và Phase 12 (polish/testing hiệu năng) vẫn chưa làm

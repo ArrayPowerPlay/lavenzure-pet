@@ -1,5 +1,7 @@
 # Hướng dẫn: Cutout/Rigging Animation bằng code (không cần phần mềm vẽ hoạt ảnh)
 
+> **Đã thay thế (2026-11-11):** nhân vật hiện được vẽ hoàn toàn bằng code trong `src/overlay/character.py`, không dùng PNG nữa. File này chỉ giữ lại để tham khảo.
+
 > Mục tiêu: tạo chuyển động mượt cho Calcifer chỉ từ vài ảnh PNG tĩnh + code Python (PySide6), không cần biết vẽ hoạt ảnh, không cần After Effects/Spine/DragonBones.
 
 ## 1. Ý tưởng cốt lõi
