@@ -25,7 +25,7 @@ def _instance_name() -> str:
         user = getpass.getuser()
     except Exception:  # noqa: BLE001 - getuser can fail in unusual environments
         user = "user"
-    return "calcifer-pet-" + re.sub(r"[^A-Za-z0-9_-]", "_", user)
+    return "lavenzure-pet-" + re.sub(r"[^A-Za-z0-9_-]", "_", user)
 
 
 class SingleInstance(QObject):

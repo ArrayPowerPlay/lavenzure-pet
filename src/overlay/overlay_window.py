@@ -13,7 +13,7 @@ transparent pixels let mouse events fall through to the app underneath, so only 
 catches clicks. (No ``setMask()`` — a mask would also clip the soft glow and the embers.)
 
 Frame statistics (how many frames were drawn and how long each took) are written to the log every
-``diagnostics.frame_stats_seconds`` (config.yaml; the ``CALCIFER_FRAME_STATS_SECONDS`` environment
+``diagnostics.frame_stats_seconds`` (config.yaml; the ``LAVENZURE_FRAME_STATS_SECONDS`` environment
 variable overrides it, which ``perf_check.py`` uses for short runs). 0 turns them off.
 """
 from __future__ import annotations
@@ -44,7 +44,7 @@ log = logging.getLogger(__name__)
 
 def _frame_stats_interval() -> float:
     """Seconds between frame-statistics log lines (env var first, then config; 0 = off)."""
-    raw = os.environ.get("CALCIFER_FRAME_STATS_SECONDS")
+    raw = os.environ.get("LAVENZURE_FRAME_STATS_SECONDS")
     if raw is None:
         raw = config.get("diagnostics.frame_stats_seconds", 600)
     try:

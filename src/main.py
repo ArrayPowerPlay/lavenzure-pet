@@ -1,6 +1,6 @@
 """Entry point: wires the overlay sprite, chat bubble, agent, and background monitors together.
 
-Components never reference each other directly; ``CalciferApp._wire_signals`` connects their Qt
+Components never reference each other directly; ``LavenzureApp._wire_signals`` connects their Qt
 signals. Startup order: logging -> single-instance check -> build components -> show the pet.
 """
 from __future__ import annotations
@@ -73,7 +73,7 @@ class AgentWorker(QObject):
             self.failed.emit(friendly_error(exc))
 
 
-class CalciferApp:
+class LavenzureApp:
     """Builds every component, connects them with signals and runs the Qt event loop."""
 
     def __init__(self, app: QApplication, instance: SingleInstance) -> None:
@@ -280,7 +280,7 @@ def main() -> int:
     instance = SingleInstance()
     if not instance.acquire():
         return 0  # the running pet was asked to open its chat window instead
-    code = CalciferApp(app, instance).run()
+    code = LavenzureApp(app, instance).run()
     log.info("Lavenzure exiting (code %s)", code)
     return code
 

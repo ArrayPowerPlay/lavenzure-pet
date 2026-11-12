@@ -8,7 +8,7 @@
 .venv-win\Scripts\python.exe src\main.py
 ```
 
-File log nằm ở `%LOCALAPPDATA%\Calcifer\logs\calcifer.log`. Cứ 10 phút pet ghi một dòng `frame stats` (số khung hình/giây và thời gian vẽ mỗi khung).
+File log nằm ở `%LOCALAPPDATA%\Lavenzure\logs\lavenzure.log`. Cứ 10 phút pet ghi một dòng `frame stats` (số khung hình/giây và thời gian vẽ mỗi khung).
 
 ## 1. Phần máy tự kiểm (chạy khi pet đang mở)
 

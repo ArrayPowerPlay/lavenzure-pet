@@ -192,7 +192,7 @@ def running_pets() -> list[psutil.Process]:
 
 def launch_pet(frame_stats_seconds: int) -> subprocess.Popen:
     """Start ``main.py`` with the same interpreter; frame stats are logged more often."""
-    env = dict(os.environ, CALCIFER_FRAME_STATS_SECONDS=str(frame_stats_seconds))
+    env = dict(os.environ, LAVENZURE_FRAME_STATS_SECONDS=str(frame_stats_seconds))
     return subprocess.Popen([sys.executable, str(SRC_DIR / "main.py")], cwd=SRC_DIR.parent,
                             env=env)
 
