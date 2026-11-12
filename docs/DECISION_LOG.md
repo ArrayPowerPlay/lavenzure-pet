@@ -102,12 +102,14 @@
 - Hoạt ảnh nâng cao (E3): tay (cần cho mặt `angry`), ôm/gặm củi, trứng… Tư thế ngủ của Idle (sẽ vẽ khi làm).
 - C3 tự khởi động, F đóng gói `.exe`, chat bằng giọng nói, phát triển lại hẹn giờ.
 
-## Còn bàn
-
-Claude đề xuất (lượt 7), chờ user chốt trước khi code:
-- **Thứ tự làm:** G4 → G3 (bong bóng chat) → G1 + G2 (chuột trái/phải) → E1 (vui, hoảng, giận, bay trên củi + AI chọn cảm xúc) → E2 (tư thế ngủ, ngủ gật, ban đêm) → C1 + menu khay → `chill` + chảo.
-- **Tư thế ngủ (dùng chung cho Idle và ngủ gật):** lấy mặt mắt nhắm cười trong ảnh gốc (hàng 4, giữa); lửa lùn xuống, bè ra, thở chậm, thỉnh thoảng bay chữ "z".
+### Chốt thêm (2026-11-12, lượt 7) — trước khi code
+- **Thứ tự làm:** G4 (tắt hẹn giờ) → G3 (bong bóng chat) → G1 + G2 (chuột trái/phải) → E1 (vui, hoảng, giận, bay trên củi + AI chọn cảm xúc) → E2 (tư thế ngủ, ngủ gật, ban đêm) → C1 + menu khay → `chill` + chảo.
+- **Tư thế ngủ (dùng chung cho Idle và ngủ gật):** mặt mắt nhắm cười trong ảnh gốc (hàng 4, giữa); lửa lùn xuống, bè ra, thở chậm, thỉnh thoảng bay chữ "z".
 - **E1 — biểu cảm giữ bao lâu:** khoảng 5 giây khi câu trả lời hiện ra, rồi về mặt bình thường.
 - **Khúc củi lúc bay:** hiện ra kèm tia lửa khi cất cánh, tan thành tàn lửa khi đáp xuống.
-- **Cửa sổ Settings (tạm):** chỉ gồm 2 mục đã có số: thời gian ngủ gật, khung giờ ban đêm.
-- **Ảnh tham khảo `docs/references/`:** repo GitHub đang **public** và ảnh là tranh của họa sĩ khác (@nyatche) → không đưa lên git, thêm thư mục vào `.gitignore`, chỉ giữ ở máy.
+- **Cửa sổ Settings:** **tạm để trống** (mục `Settings` trong menu khay vẫn có, nội dung chốt sau).
+- **Ảnh tham khảo `docs/references/`:** **không đưa lên git** (repo public, ảnh là tranh của họa sĩ khác @nyatche); thư mục nằm trong `.gitignore`, chỉ giữ ở máy.
+
+## Còn bàn
+
+- Không còn câu hỏi nào chặn việc code. Phiên sau bắt đầu code theo thứ tự ở lượt 7.
