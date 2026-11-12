@@ -93,4 +93,11 @@
 
 ## Còn bàn
 
-- **E1 — danh sách cảm xúc:** gồm những cảm xúc nào (ngoài `other`). User gửi ảnh tham khảo (`D:\Downloads\download.jpg`), gạch chân 9 hình. Claude đề xuất (chờ user chốt): giữ `happy`, `surprised`, `thinking`; thêm mới `excited` (hớn hở), `scared` (hoảng, lửa bùng to), `pouty` (dỗi, thay cho "giận"), `unimpressed` (cạn lời), `sheepish` (ngại, liếc ngang), `strained` (nhe răng gồng), `yummy` (thè lưỡi thèm ăn). Chỉ vẽ **nét mặt + dáng lửa**; củi, chảo, tay để E3. Còn hỏi: có giữ `sad` (buồn) không, vì ảnh không có hình buồn được chọn.
+- **E1 — danh sách cảm xúc (lượt 6, user chọn lại):** user đánh số 7 hình trên ảnh `D:\Downloads\calcipher_picked.jpg` (gạch xanh), thay đề xuất 8 cảm xúc trước của Claude:
+  - **1, 2** → thay mặt `happy` hiện tại (cute hơn). 1 = mắt lim dim liếc ngang, miệng cười mở; 2 = mắt nhìn lên, miệng cười mở.
+  - **3** → `scared` (hoảng hốt, hoảng loạn): lửa bùng to, mắt tròn, miệng há rộng.
+  - **4, 5** → tư thế **bay** (FLOAT): ngồi trên khúc củi, như "triệu hồi gỗ để bay". 4 = miệng nhỏ; 5 = miệng há to. Khúc củi được kéo lên làm sớm, riêng cho lúc bay (các đạo cụ khác vẫn để E3).
+  - **6** → `angry` (tức giận). Hiện mới có `alert`, chưa có mặt giận.
+  - **7** → `chill` (thư giãn): mắt lim dim liếc ngang, miệng lượn sóng, lửa dẹt.
+  - Claude đề xuất, chờ user chốt: dùng **cả 1 và 2** cho `happy` (chọn ngẫu nhiên); bay thường dùng **4**, lúc cất cánh dùng **5**; hình 6 trong ảnh trông giống hoảng hơn giận nên **thêm lông mày chau xuống** để không lẫn với 3; hình 7 **chỉ vẽ mặt + lửa dẹt, không vẽ chảo**; **giữ** `surprised`, `thinking` có sẵn; **bỏ** `sad` và các cảm xúc Claude đề xuất trước đó (excited, pouty, unimpressed, sheepish, strained, yummy).
+  - Danh sách AI chọn (dự kiến): `happy`, `scared`, `angry`, `chill`, `surprised`, `thinking`, `other`.
