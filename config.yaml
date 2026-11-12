@@ -12,7 +12,7 @@ memory:
   idle_timeout_minutes: 15 # wipe the chat (screen + memory) after this many minutes without chatting
 
 character:
-  scale: 0.75 # size multiplier of the code-drawn flame character (1.0 = 200x236 px window, 0.75 = 150x177)
+  scale: 0.75 # size multiplier of the code-drawn flame character (1.0 = 280x236 px window, 0.75 = 210x177)
   fps: 60 # redraw rate; lower it (e.g. 30) to save CPU
   flame_renderer: shader   # flame body: shader (GPU, chosen) | metaball | baked (pre-simulated clips); falls back to metaball
 
@@ -27,6 +27,9 @@ behavior:
     walk: 0.25
     float: 0.25
     jump: 0.1
+  doze_after_minutes: 10 # doze off after this long without mouse/keyboard input (wakes on input)
+  night_start_hour: 20 # night look (calmer, slower; never forces sleep) from this hour...
+  night_end_hour: 5 # ...until this hour
 
 system_status:
   poll_interval_seconds: 45
