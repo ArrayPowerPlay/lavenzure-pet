@@ -1,2 +1,0 @@
-No image assets are needed any more: the character is drawn entirely in code
-(src/overlay/character.py). This folder is kept only for optional future assets.
