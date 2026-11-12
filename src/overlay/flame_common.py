@@ -144,15 +144,16 @@ class FlameDrive:
     sway: float
     breath: float
     # Body shape (expressions reshape the flame freely; only the shader renderer draws all of it,
-    # the others get a plain scale): width / height multipliers, boxiness 0..1, raggedness 0..1,
-    # side flares ("arms") 0..1 and their flapping phase / strength.
+    # the others get a plain scale): width / height multipliers, boxiness 0..1, raggedness 0..1.
     body_w: float = 1.0
     body_h: float = 1.0
     boxy: float = 0.0
     jag: float = 0.0
-    arms: float = 0.0
-    arms_phase: float = 0.0
-    arms_flap: float = 0.0
+    # Sitting on the log (shader only): how much 0..1, the paws' kneading phase and the height
+    # of the log's top (R above the feet) where the body's bottom is cut flat.
+    paws: float = 0.0
+    paw_phase: float = 0.0
+    seat: float = 0.0
 
 
 @dataclass

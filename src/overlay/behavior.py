@@ -255,7 +255,7 @@ class BehaviorController(QObject):
 
     @reaction("angry")
     def _react_angry(self) -> float:
-        """Frown, narrowed eyes and flame arms flaring out at the sides."""
+        """Frown, fierce slanted eyes and a wide-open shouting mouth (fig. 6, without arms)."""
         return self._play(Mood.ANGRY, 2.4)
 
     @reaction("thinking")

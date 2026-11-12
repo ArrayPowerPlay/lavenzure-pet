@@ -12,7 +12,7 @@ Pieces:
 - **Flame body** - one of several interchangeable renderers (``overlay.flame_common``:
   ``metaball``, ``shader`` or ``baked``), chosen with ``renderer=``. The body is not a fixed
   shape: every expression may reshape it (puff up, go boxy and ragged, flatten, shoot flame
-  "arms" out of the sides). Shape values are springs, so the fire wobbles like jelly when it
+  paws hanging over the log). Shape values are springs, so the fire wobbles like jelly when it
   changes shape.
 - **Fire weather** - slow random calm / gust / crackle / lull phases and a drifting main tip, so
   the fire never falls into one rhythm. Mood sets the base flicker; moving the window blows the
@@ -55,7 +55,7 @@ from overlay.flame_common import (
     noise1,
     smoothstep,
 )
-from overlay.props import LogProp, PanProp, Snores
+from overlay.props import LOG_CY, LOG_RADIUS, LogProp, PanProp, Snores
 
 __all__ = ["FlameCharacter", "Mood"]
 
@@ -118,6 +118,7 @@ EMBER_RATES = {Mood.ALERT: 8.0, Mood.HAPPY: 7.0, Mood.SURPRISED: 5.0, Mood.THINK
                Mood.SCARED: 11.0, Mood.ANGRY: 10.0, Mood.CHILL: 1.5, Mood.SLEEP: 0.5,
                Mood.YAWN: 1.0, Mood.TAKEOFF: 9.0, Mood.FLY: 3.0, Mood.WAKE: 4.0,
                Mood.YUCK: 4.0}
+SEAT_SINK = 0.05                   # R: the body's flat bottom sits this far into the log
 FACE_LIFT_ON_LOG = 0.24            # R: the face moves up while sitting on the log ...
 MOUTH_FLOOR_ON_LOG = -0.56         # ... and the mouth stays above this height (R, feet = 0)
 BREATH_PERIOD = 3.6                # seconds per breath while asleep
@@ -139,7 +140,7 @@ class FlameCharacter:
         """``scale`` = size multiplier; ``renderer`` = flame body renderer name (see module doc)."""
         self.scale = scale
         self.R = self.BASE_RADIUS * scale
-        # Wide canvas: room for flame "arms", the frying pan's handle and the log.
+        # Wide canvas: room for a puffed-up body, the frying pan's handle and the log.
         self.width = int(round(280 * scale))
         self.height = int(round(236 * scale))
         self.feet = QPointF(self.width / 2, self.height - 22 * scale)
@@ -179,7 +180,6 @@ class FlameCharacter:
         self._clock = self._rng.uniform(0.0, 1000.0)
         self._height_n = 0.0
         self._breath_n = 0.0
-        self._arms_phase = 0.0
         self.weather = FireWeather(self._rng, self._seed)
         self.flame = make_flame_renderer(renderer, self.R, self._rng)
 
@@ -450,7 +450,8 @@ class FlameCharacter:
         self._breath_n = fbm1(c * 0.4, s + 301)
         sway = (0.2 * math.sqrt(wild) * fbm1(c * 0.75, s + 303) + w.drift
                 + 0.9 * self._lean.value)
-        self._arms_phase += dt * (6.0 + 6.0 * clamp(ex.arms, 0.0, 1.0))
+        # Sitting on the log: the shader draws the paws as part of the fire (see ``paint``).
+        ride = clamp(self.log.amount, 0.0, 1.2) if self.log.visible else 0.0
         height = ex.flame * w.height * (1.0 - 0.14 * night) * (1.0 + 0.1 * self._breath_wave)
         # Apparent wind from the pet's own movement (in R per second): the fire trails behind.
         self.flame.step(FlameDrive(
@@ -458,8 +459,9 @@ class FlameCharacter:
             wind_x=-0.45 * self._vx / self.R, wind_y=-0.3 * self._vy / self.R,
             sway=sway, breath=self._breath_n,
             body_w=ex.body_w, body_h=ex.body_h, boxy=clamp(ex.boxy, 0.0, 1.0),
-            jag=clamp(ex.jag, 0.0, 1.2), arms=clamp(ex.arms, 0.0, 1.3),
-            arms_phase=self._arms_phase, arms_flap=clamp(ex.arms, 0.0, 1.0),
+            jag=clamp(ex.jag, 0.0, 1.2),
+            paws=clamp(ride, 0.0, 1.0) * (1.0 - smoothstep(0.0, 0.3, self.log.crumble)),
+            paw_phase=self.log.knead_phase, seat=-(LOG_CY - LOG_RADIUS) - SEAT_SINK,
         ))
 
     def _update_props(self, dt: float) -> None:
@@ -559,6 +561,11 @@ class FlameCharacter:
         # Sparks go behind the body: they appear to fly out from behind the flame tips.
         self._paint_embers(painter)
         ex = self.face.expr
+        # With the shader the paws are part of the fire, so the log goes *behind* it: the body
+        # sits on the log and the paws hang over its front, one mass with the flame.
+        log_behind = self.flame.name == "shader"
+        if log_behind:
+            self._paint_log(painter, paws=False)
 
         painter.save()
         painter.translate(self.feet.x() + self._shake_px,
@@ -580,14 +587,22 @@ class FlameCharacter:
         self.pan.paint(painter, self.face.eye_top() - 0.07 * self.R)
         painter.restore()
 
-        if self.log.visible:
-            painter.save()
-            painter.translate(self.feet.x() + self._shake_px * 0.3,
-                              self.feet.y() + self._hop_y + self._float_y)
-            self.log.paint(painter, (self._palette_color("inner"), self._palette_color("mid")))
-            painter.restore()
+        if not log_behind:
+            self._paint_log(painter, paws=True)
         self._paint_poofs(painter)
         self.snores.paint(painter)
+
+    def _paint_log(self, painter: QPainter, paws: bool) -> None:
+        """Draw the log under the pet (if it is out). ``paws`` = also draw the two paws over it
+        as separate shapes (renderers that cannot draw them as part of the fire)."""
+        if not self.log.visible:
+            return
+        painter.save()
+        painter.translate(self.feet.x() + self._shake_px * 0.3,
+                          self.feet.y() + self._hop_y + self._float_y)
+        colors = (self._palette_color("inner"), self._palette_color("mid")) if paws else None
+        self.log.paint(painter, colors)
+        painter.restore()
 
     def _palette_rgb(self, layer: str) -> tuple[int, int, int]:
         """Current RGB of a flame layer: calm -> night by the night amount, then -> alert."""

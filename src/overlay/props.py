@@ -114,11 +114,18 @@ class LogProp:
             pts.append((x, y))
         return pts
 
-    def paint(self, painter: QPainter, paw_colors: tuple[QColor, QColor]) -> None:
-        """Draw the log (bark, cut end with rings, outline) and the two flame paws on top.
+    @property
+    def knead_phase(self) -> float:
+        """Phase of the paws' slow kneading (radians); the shader's paws use it too."""
+        return self._t * 2.6
+
+    def paint(self, painter: QPainter, paw_colors: tuple[QColor, QColor] | None) -> None:
+        """Draw the log (bark, cut end with rings, outline) and, if ``paw_colors`` is given, the
+        two flame paws on top.
 
         The painter is in body pixels with the origin at the feet. ``paw_colors`` = (yellow fill,
-        orange underside) of the flame, so the paws match the body."""
+        orange underside) of the flame, so the paws match the body. The shader renderer draws the
+        paws as part of the fire instead (one seamless shape) and passes ``None``."""
         amount = self.amount
         if amount <= 0.01:
             return
@@ -179,7 +186,7 @@ class LogProp:
         painter.drawPath(spiral)
         painter.restore()
 
-        if crumble < 0.3:
+        if crumble < 0.3 and paw_colors is not None:
             self._paint_paws(painter, amount, paw_colors)
 
     def _paint_paws(self, painter: QPainter, amount: float,
@@ -195,7 +202,7 @@ class LogProp:
             return
         top = (LOG_CY - LOG_RADIUS) * R
         for side in (-1, 1):
-            phase = self._t * 2.6 + (0.0 if side < 0 else 2.1)
+            phase = self.knead_phase + (0.0 if side < 0 else 2.1)
             press = 0.5 + 0.5 * math.sin(phase)             # 1 = pressed into the log
             half_w = (0.17 + 0.015 * press) * R * grow       # pressing makes it a bit wider ...
             depth = (0.27 - 0.025 * press) * R * grow        # ... and a bit shorter
