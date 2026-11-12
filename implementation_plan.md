@@ -130,23 +130,25 @@ Còn thiếu / cần làm tiếp:
 
 ## Kế hoạch tiếp theo (lập 2026-11-12)
 
-> Checklist Phase 0-12 phía trên được viết từ trước khi code nên nhiều ô `[ ]` đã lỗi thời (code cho Phase 0-9 đã có). **Từ giờ dùng danh sách dưới đây làm việc cần làm chính.** Thứ tự là đề xuất, user có thể đổi.
+> Checklist Phase 0-12 phía trên được viết từ trước khi code nên nhiều ô `[ ]` đã lỗi thời (code cho Phase 0-9 đã có). **Từ giờ dùng danh sách dưới đây làm việc cần làm chính.**
+>
+> **Tiến độ (2026-11-12):** user đồng ý A, B, D → đã làm xong A1-A6, B1-B5, D1-D4 (còn A7: user thử trên desktop thật). F để sau. C và E chờ user quyết.
 
 ### Giai đoạn A — Cho app dùng được hằng ngày (ưu tiên cao nhất)
-- [ ] **A1. Đổi model Gemini — chat đang hỏng hoàn toàn.** `gemini-2.0-flash` đã bị Google ngừng: gọi API trả 404 "no longer available" (kiểm tra 2026-11-12). Ứng viên: `gemini-flash-latest` (bí danh luôn trỏ bản Flash mới nhất, đã gọi thử OK) hoặc chốt một bản cố định như `gemini-3.8-flash` (ổn định hơn, nhưng sẽ lại bị ngừng sau này). Cần kiểm tra cả tool-calling qua `langchain-google-genai` (có thể phải nâng cấp thư viện). *Cần user chọn.*
-- [ ] **A2. Báo lỗi rõ ràng thay vì một câu chung chung.** Hiện mọi lỗi agent đều thành "my flame flickered out" và lý do bị nuốt mất. Phân loại: sai/thiếu key, hết quota, mất mạng, model không còn → câu báo lỗi tiếng Anh phù hợp; ghi chi tiết vào file log.
-- [ ] **A3. Ghi log ra file** (`logging` + file xoay vòng, vd. `%LOCALAPPDATA%\Calcifer\calcifer.log`). Khi chạy bằng `pythonw.exe` (autostart) không có console nên hiện tại lỗi biến mất hoàn toàn.
-- [ ] **A4. Không crash khi thiếu `GEMINI_API_KEY`.** `agent/graph.py` tạo client ngay lúc import → app không mở được. Chuyển sang tạo khi chat lần đầu; thiếu key thì pet vẫn chạy, chat báo cần key.
-- [ ] **A5. Công cụ chịu lỗi mạng.** `weather`/`web_search` hiện ném exception khi mất mạng/API lỗi → hỏng cả lượt chat. Bắt lỗi và trả về câu mô tả lỗi cho LLM.
-- [ ] **A6. Chỉ cho chạy 1 bản** (`QLocalServer`/`QLocalSocket` hoặc named mutex). Tránh 2 con pet khi vừa autostart vừa chạy tay; lần chạy thứ 2 có thể chỉ mở cửa sổ chat của bản đang chạy.
+- [x] **A1. Đổi model Gemini — chat đang hỏng hoàn toàn.** → *Đã đổi sang `gemini-flash-latest` (user chọn), gọi qua endpoint `v1beta`, đọc đúng câu trả lời dạng nhiều khối; đã thử cả 4 tool với key thật.* `gemini-2.0-flash` đã bị Google ngừng: gọi API trả 404 "no longer available" (kiểm tra 2026-11-12). Ứng viên: `gemini-flash-latest` (bí danh luôn trỏ bản Flash mới nhất, đã gọi thử OK) hoặc chốt một bản cố định như `gemini-3.8-flash` (ổn định hơn, nhưng sẽ lại bị ngừng sau này). Cần kiểm tra cả tool-calling qua `langchain-google-genai` (có thể phải nâng cấp thư viện). *Cần user chọn.*
+- [x] **A2. Báo lỗi rõ ràng thay vì một câu chung chung.** Hiện mọi lỗi agent đều thành "my flame flickered out" và lý do bị nuốt mất. Phân loại: sai/thiếu key, hết quota, mất mạng, model không còn → câu báo lỗi tiếng Anh phù hợp; ghi chi tiết vào file log.
+- [x] **A3. Ghi log ra file** (`logging` + file xoay vòng, vd. `%LOCALAPPDATA%\Calcifer\calcifer.log`). Khi chạy bằng `pythonw.exe` (autostart) không có console nên hiện tại lỗi biến mất hoàn toàn.
+- [x] **A4. Không crash khi thiếu `GEMINI_API_KEY`.** `agent/graph.py` tạo client ngay lúc import → app không mở được. Chuyển sang tạo khi chat lần đầu; thiếu key thì pet vẫn chạy, chat báo cần key.
+- [x] **A5. Công cụ chịu lỗi mạng.** `weather`/`web_search` hiện ném exception khi mất mạng/API lỗi → hỏng cả lượt chat. Bắt lỗi và trả về câu mô tả lỗi cho LLM.
+- [x] **A6. Chỉ cho chạy 1 bản** (`QLocalServer`/`QLocalSocket` hoặc named mutex). Tránh 2 con pet khi vừa autostart vừa chạy tay; lần chạy thứ 2 có thể chỉ mở cửa sổ chat của bản đang chạy.
 - [ ] **A7. Thử trên desktop thật** theo checklist: click xuyên vùng trong suốt, luôn nổi trên app khác (kể cả app fullscreen/always-on-top khác), kéo-thả, cảnh báo, hẹn giờ, CPU khi chạy vài giờ.
 
 ### Giai đoạn B — Chat và bong bóng thoại
-- [ ] **B1. Bong bóng thoại đi theo pet.** Hiện bong bóng đặt vị trí 1 lần rồi đứng yên; pet đi chỗ khác thì bong bóng bị bỏ lại (rõ nhất với cảnh báo dính lâu).
-- [ ] **B2. Sửa hiển thị chat:** tin nhắn đang được chèn thẳng dạng HTML nên chữ có `<`, `>`, `&` hiển thị sai — cần escape; hiển thị markdown cơ bản (đậm, danh sách, link) cho câu trả lời của Gemini; tự cuộn xuống cuối.
-- [ ] **B3. Giao diện chat hợp với nhân vật:** màu ấm theo tông lửa, mở cạnh pet thay vì giữa màn hình, phím Esc để đóng, hiển thị "Calcifer is thinking…".
-- [ ] **B4. Câu trả lời ngắn hiện luôn trong bong bóng trên đầu pet** (tùy chọn trong `config.yaml`), để không cần mở cửa sổ chat cũng thấy.
-- [ ] **B5. Hẹn giờ nhắc việc chắc chắn hơn:** tool `set_timer_reminder` đang gọi thẳng vào monitor từ thread của agent → chuyển qua Qt signal cho an toàn; khi nhắc thì pet đổi biểu cảm/nhảy lên cho dễ thấy; kiểm tra số phút âm/quá lớn. (Vẫn chỉ lưu trong RAM theo thiết kế.)
+- [x] **B1. Bong bóng thoại đi theo pet.** Hiện bong bóng đặt vị trí 1 lần rồi đứng yên; pet đi chỗ khác thì bong bóng bị bỏ lại (rõ nhất với cảnh báo dính lâu).
+- [x] **B2. Sửa hiển thị chat:** tin nhắn đang được chèn thẳng dạng HTML nên chữ có `<`, `>`, `&` hiển thị sai — cần escape; hiển thị markdown cơ bản (đậm, danh sách, link) cho câu trả lời của Gemini; tự cuộn xuống cuối.
+- [x] **B3. Giao diện chat hợp với nhân vật:** màu ấm theo tông lửa, mở cạnh pet thay vì giữa màn hình, phím Esc để đóng, hiển thị "Calcifer is thinking…".
+- [x] **B4. Câu trả lời ngắn hiện luôn trong bong bóng trên đầu pet** (tùy chọn trong `config.yaml`), để không cần mở cửa sổ chat cũng thấy.
+- [x] **B5. Hẹn giờ nhắc việc chắc chắn hơn:** tool `set_timer_reminder` đang gọi thẳng vào monitor từ thread của agent → chuyển qua Qt signal cho an toàn; khi nhắc thì pet đổi biểu cảm/nhảy lên cho dễ thấy; kiểm tra số phút âm/quá lớn. (Vẫn chỉ lưu trong RAM theo thiết kế.)
 
 ### Giai đoạn C — Khay hệ thống và tiện ích (Phase 12 cũ)
 - [ ] **C1. Icon khay hệ thống đúng hình nhân vật** — hiện chụp cửa sổ pet trước khi nó hiện lên nên có thể ra icon trống; nên vẽ icon riêng từ `FlameCharacter`.
@@ -154,17 +156,17 @@ Còn thiếu / cần làm tiếp:
 - [ ] **C3. Chạy `install_startup.py`** để tạo autostart (Phase 10), sau khi A3 + A6 xong.
 
 ### Giai đoạn D — Chất lượng code
-- [ ] **D1. Test tự động (pytest)** cho phần không cần màn hình: `config.get`, bộ nhớ TTL, logic monitor (ngưỡng cảnh báo, hẹn giờ, câu idle), các tool (giả lập HTTP), `Expression`/lò xo của `face.py`.
-- [ ] **D2. Linter/formatter** (`ruff`) với cấu hình giữ CRLF.
-- [ ] **D3. Bổ sung docstring còn thiếu** (`main.py`, `chat_window.py`, `background_monitor.py`, `memory.py`, … nhiều class/hàm chưa có — trái quy ước của repo).
-- [ ] **D4. Dọn tài liệu cũ:** sơ đồ kiến trúc trong `CONTEXT.md` vẫn ghi OpenRouter và "PNG cutout"; §4 (câu hỏi mở đã giải quyết), §5 (`.env.example` ghi `OPENROUTER_API_KEY`) lỗi thời; xóa `assets/calcifer/PLACEHOLDER.txt`; cập nhật `CLAUDE.md` (repo giờ ở `D:\workspace\pet`).
+- [x] **D1. Test tự động (pytest)** (46 test, chạy: `.venv-win/Scripts/python.exe -m pytest`) cho phần không cần màn hình: `config.get`, bộ nhớ TTL, logic monitor (ngưỡng cảnh báo, hẹn giờ, câu idle), các tool (giả lập HTTP), `Expression`/lò xo của `face.py`.
+- [x] **D2. Linter/formatter** (`ruff`) với cấu hình giữ CRLF.
+- [x] **D3. Bổ sung docstring còn thiếu** (`main.py`, `chat_window.py`, `background_monitor.py`, `memory.py`, … nhiều class/hàm chưa có — trái quy ước của repo).
+- [x] **D4. Dọn tài liệu cũ:** sơ đồ kiến trúc trong `CONTEXT.md` vẫn ghi OpenRouter và "PNG cutout"; §4 (câu hỏi mở đã giải quyết), §5 (`.env.example` ghi `OPENROUTER_API_KEY`) lỗi thời; xóa `assets/calcifer/PLACEHOLDER.txt`; cập nhật `CLAUDE.md` (repo giờ ở `D:\workspace\pet`).
 
 ### Giai đoạn E — Nhân vật sống động hơn
 - [ ] **E1. Biểu cảm theo nội dung chat:** agent trả kèm "mood" (vui, buồn, ngạc nhiên…) để pet đổi mặt khi trả lời.
 - [ ] **E2. Hành vi theo ngữ cảnh:** ngủ gật khi máy không dùng lâu, buổi đêm lửa dịu lại, chạy lại gần chuột khi được gọi.
 - [ ] **E3. Animation nâng cao theo ảnh mẫu:** tay, ôm/gặm củi, nằm trên củi, chảo + trứng ốp la/thịt xông khói, trứng vỡ.
 
-### Giai đoạn F — Đóng gói (Phase 11)
+### Giai đoạn F — Đóng gói (Phase 11) — *để sau (user chốt 2026-11-12)*
 - [ ] **F1. PyInstaller** ra `.exe` (chú ý: `data/`, `assets/flame/`, shader GLSL, OpenGL trong bản đóng gói).
 - [ ] **F2. Autostart bằng Task Scheduler** cho bản `.exe`.
 
