@@ -115,6 +115,15 @@
 - **Biểu cảm bám theo ảnh user chọn** (`calcipher_picked.jpg`, user nhắc lại trong phiên): vui hình 1 (mắt lim dim liếc ngang, cười há) và hình 2 (mắt đảo lên một bên, cười há chữ D); hoảng hình 3 (lửa bè gần vuông, viền tua tủa, mắt to tròn tách xa, miệng há rất to); giận hình 6 (hai tay lửa mềm chìa ngang rồi cong lên thành nắm đấm) + lông mày chau, mắt nheo; bay hình 4 (bám khúc củi bằng hai tay nhỏ); cất cánh hình 5 (mắt tròn, miệng há); `chill` hình 7 (lửa bẹt, chảo rộng bằng thân đè trên đầu, mắt lim dim liếc ngang, miệng lượn sóng).
 - **Claude tự quyết (user có thể đổi):** đang ngủ mà click trái thì pet tỉnh, chơi một phản ứng rồi ngủ lại; phản ứng không bao giờ lặp lại hai lần liền; khi pet đang bay (trên không) thì phản ứng vẫn chơi trên khúc củi; chọn `Idle` lúc đang bay thì pet lượn xuống đất (tối đa ~3 giây) rồi mới ngủ.
 
+### Lượt 9 (2026-11-12) — user góp ý 7 điểm, đã sửa, chờ duyệt
+- **Mặt bình thường:** miệng chuyển sang "ồ" giờ **biến hình liền một nét** (không còn mờ / chồng hai miệng); chữ "o" tròn thật.
+- **Vui:** miệng bo tròn như hình 1 / 2 và **luôn nằm dưới mắt, có khoảng hở** (áp dụng cho mọi biểu cảm; riêng chỗ giữa hai mắt thì vòm miệng được nhô lên cao hơn, như hình 3).
+- **Hoảng:** lửa tua tủa bằng các lưỡi lửa liền khối **bốc dần lên trên** (cao nhất ở hai góc đỉnh), không còn vệt cắt dọc / mảnh lửa rời; miệng vòm cung to, có cổ họng và lưỡi.
+- **Giận:** theo ảnh a2 — **bỏ lông mày rời**, mí trên cắt chéo đậm (chính nó là lông mày), con ngươi trừng lên từ góc trong, miệng nhỏ có chóp nhọn; mắt miệng cách nhau rõ.
+- **Chill:** mí phẳng lim dim, con ngươi liếc ngang, miệng cười lượn sóng dài; **chảo nằm trong ngọn lửa**: mép lửa trùm lên đáy chảo, lưỡi lửa liếm lên hai bên, thành chảo đỏ rực nóng; hơi nước / mỡ bắn vẫn bay phía trước.
+- **Ngủ:** các thông số mặt chuyển kiểu "tăng tốc rồi giảm tốc" (không giật ngay khung đầu); lúc thiu thiu ngủ mí mắt sụp và mặt giãn ra chậm.
+- **Bay trên củi:** hai tay là **một cục tròn** (như tay Doraemon), mọc ra từ thân, phủ lên mặt trước khúc củi; bỏ vạch ngón.
+
 ## Còn bàn
 
-- Không còn câu hỏi nào chặn. Chờ user duyệt kết quả lượt 8.
+- Không còn câu hỏi nào chặn. Chờ user duyệt kết quả lượt 9.
