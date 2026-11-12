@@ -157,6 +157,7 @@ def main() -> int:
             ch.set_night(1.0 if night["on"] else 0.0)
 
     button("Day / night", 3, 1, toggle_night)
+    button("Yuck", 3, 3, each(lambda ch: ch.play(Mood.YUCK, 2.4)))
 
     def toggle_bg() -> None:
         """Switch the backdrop between dark and light."""

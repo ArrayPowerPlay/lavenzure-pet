@@ -216,7 +216,10 @@ class BehaviorController(QObject):
     def play_random_reaction(self) -> str:
         """Left-click: play one reaction picked at random from the pool (not the same one twice
         in a row). Returns its name."""
-        names = [n for n in REACTIONS if n != self._last_reaction] or list(REACTIONS)
+        skip = {self._last_reaction}
+        if self.character.riding:
+            skip.add("chill")              # the pan does not go with sitting on the log
+        names = [n for n in REACTIONS if n not in skip] or list(REACTIONS)
         name = random.choice(names)
         self._last_reaction = name
         self._start_reaction_with(lambda: REACTIONS[name](self))
@@ -237,7 +240,7 @@ class BehaviorController(QObject):
 
     @reaction("happy")
     def _react_happy(self) -> float:
-        """Big grin (one of two faces), a hop and a shower of sparks."""
+        """Big grin (one of two faces) and a shower of sparks - no jump."""
         return self._play(Mood.HAPPY, 2.2)
 
     @reaction("surprised")
@@ -264,6 +267,11 @@ class BehaviorController(QObject):
     def _react_chill(self) -> float:
         """Flattens out and fries breakfast on its head (pan, bacon and eggs)."""
         return self._play(Mood.CHILL, 5.0)
+
+    @reaction("yuck")
+    def _react_yuck(self) -> float:
+        """Pulls a lopsided, tongue-out "yuck" face, as if it bit on an eggshell (fig. 8)."""
+        return self._play(Mood.YUCK, 2.4)
 
     @reaction("speak")
     def _react_speak(self) -> float:
