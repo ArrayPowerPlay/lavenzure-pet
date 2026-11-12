@@ -2,8 +2,11 @@
 
 llm:
   provider: gemini
-  model: gemini-2.0-flash
+  model: gemini-flash-latest # alias that always points at the newest Flash model (gemini-2.0-flash was shut down)
   temperature: 0.7
+  api_version: v1beta # "-latest" model aliases are only served on v1beta
+  timeout_seconds: 60 # give up on a Gemini call after this long
+  max_retries: 2 # retries before showing an error in the chat
 
 memory:
   idle_timeout_minutes: 10 # clear in-memory chat history after this many minutes of inactivity
