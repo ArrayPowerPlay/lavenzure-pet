@@ -21,8 +21,9 @@ Pieces:
   travel, stretches when moving fast vertically, squashes and wobbles on landings, hops while
   walking. Sleeping adds slow breathing.
 - **Face** - expressions, blinking, gaze, head turn, idle micro-expressions (see ``face.py``).
-- **Props** (``overlay.props``) - the log it rides while flying, the frying pan of the ``chill``
-  mood, and the "z"s of a sleeping pet.
+- **Props** (``overlay.props``) - the log it rides while flying (the face moves up while
+  sitting on it, so the paws and the log never cover the mouth), the frying pan resting on the
+  head in the ``chill`` mood, and the "z"s of a sleeping pet.
 - **Sparks** that drift upward in *screen* space, so they trail behind the pet as it moves, plus
   little "poof" rings when a prop appears or vanishes.
 
@@ -115,7 +116,10 @@ class _Poof:
 _FLARE_RATE = 0.4                  # spontaneous flare-ups per second at wild = 1
 EMBER_RATES = {Mood.ALERT: 8.0, Mood.HAPPY: 7.0, Mood.SURPRISED: 5.0, Mood.THINKING: 1.2,
                Mood.SCARED: 11.0, Mood.ANGRY: 10.0, Mood.CHILL: 1.5, Mood.SLEEP: 0.5,
-               Mood.YAWN: 1.0, Mood.TAKEOFF: 9.0, Mood.FLY: 3.0, Mood.WAKE: 4.0}
+               Mood.YAWN: 1.0, Mood.TAKEOFF: 9.0, Mood.FLY: 3.0, Mood.WAKE: 4.0,
+               Mood.YUCK: 4.0}
+FACE_LIFT_ON_LOG = 0.24            # R: the face moves up while sitting on the log ...
+MOUTH_FLOOR_ON_LOG = -0.56         # ... and the mouth stays above this height (R, feet = 0)
 BREATH_PERIOD = 3.6                # seconds per breath while asleep
 
 
@@ -254,15 +258,18 @@ class FlameCharacter:
     def play(self, mood: Mood, seconds: float | None) -> None:
         """Show a temporary ``mood`` for ``seconds`` (``None`` = until ``stop_transient()``).
 
-        Playing the mood that is already showing restarts it (new variant, new kick)."""
+        Playing the mood that is already showing restarts it (new variant, new kick). ``chill``
+        needs the pan on the head, which does not go with riding the log (the log would hide
+        the face), so while riding it is shown as ``happy`` instead."""
+        if mood == Mood.CHILL and self._riding:
+            mood = Mood.HAPPY
         restart = self._transient == mood or (self._transient is None and self.mood == mood)
         self._transient = mood
         self._transient_until = None if seconds is None else self._t + seconds
         if restart:
             self.face.restart_mood(mood)
         if mood == Mood.HAPPY:
-            self.bounce(1.0)
-            self.burst(12)
+            self.burst(12)                 # sparks and a flare, but no jump
         elif mood == Mood.SURPRISED:
             self._squash.velocity += 3.5   # jolt upward
             self.flame.flare(1.0)
@@ -353,6 +360,9 @@ class FlameCharacter:
         self.face.set_mood(mood)
         if mood != Mood.CHILL:
             self.pan.hide()
+        ride = clamp(self.log.amount, 0.0, 1.0) if self.log.visible else 0.0
+        self.face.lift = FACE_LIFT_ON_LOG * ride
+        self.face.floor_y = MOUTH_FLOOR_ON_LOG * self.R if ride > 0.05 else None
         face_cursor = None
         if cursor is not None:
             face_cursor = QPointF(cursor.x() - self.feet.x(),
@@ -556,11 +566,6 @@ class FlameCharacter:
         painter.scale(self._sx, self._sy)
         painter.shear(-self._lean.value * 0.22, 0.0)  # top of the body leans, feet stay put
         self._paint_glow(painter)
-        # The pan sits *in* the flattened flame, painted behind it: the fire's top edge laps
-        # over the pan's bottom and its tongues lick up around it, so Calcifer is cooking with
-        # his own fire (reference fig. 7).
-        pan_y = -(2.1 * BODY_CY * max(ex.body_h, 0.7) + 0.3) * self.R
-        self.pan.paint_back(painter, pan_y)
         if self.flame.name == "shader":
             self.flame.paint(painter, self._colors())
         else:
@@ -570,7 +575,9 @@ class FlameCharacter:
             painter.restore()
         self._paint_shine(painter)
         self.face.paint(painter)
-        self.pan.paint_front(painter, pan_y)
+        # The pan rests *on* the head, in front of the fire (reference fig. 7): its bottom sits
+        # just above the eyes and the flame shows around and behind it.
+        self.pan.paint(painter, self.face.eye_top() - 0.07 * self.R)
         painter.restore()
 
         if self.log.visible:

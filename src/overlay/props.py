@@ -8,10 +8,11 @@ painting happens in the character's body coordinates (pixels, origin at the feet
 - ``LogProp`` - the log Calcifer rides through the air (reference figures 4 and 5). It pops into
   existence with a springy overshoot when summoned, wobbles gently while flying, and crumbles
   into embers when dismissed (the character spawns the embers from ``ember_points()``). Two small
-  flame "paws" drape over its top edge.
-- ``PanProp`` - the frying pan (bacon and two fried eggs) balanced on the flattened flame for
-  the ``chill`` mood (reference figure 7). It drops in from above with a bounce, sizzles (steam
-  wisps and popping grease) and lifts off again.
+  round flame "paws" drape over its top edge, out toward the sides (clear of the mouth).
+- ``PanProp`` - the frying pan (bacon and two fried eggs) resting on the flattened flame's head
+  for the ``chill`` mood (reference figure 7): drawn in front of the fire, its bottom just
+  above the eyes, tipped a little with the handle hanging down to one side. It drops in from
+  above, settles, sizzles (steam wisps and popping grease) and lifts off again.
 - ``Snores`` - "z" letters that float up from a sleeping pet, sway, grow and fade.
 """
 from __future__ import annotations
@@ -196,9 +197,9 @@ class LogProp:
         for side in (-1, 1):
             phase = self._t * 2.6 + (0.0 if side < 0 else 2.1)
             press = 0.5 + 0.5 * math.sin(phase)             # 1 = pressed into the log
-            half_w = (0.19 + 0.015 * press) * R * grow       # pressing makes it a bit wider ...
+            half_w = (0.17 + 0.015 * press) * R * grow       # pressing makes it a bit wider ...
             depth = (0.27 - 0.025 * press) * R * grow        # ... and a bit shorter
-            cx = side * 0.5 * R
+            cx = side * 0.64 * R                             # out by the sides, clear of the mouth
             y0 = top - 0.1 * R                               # starts inside the body
             y1 = top + depth                                 # round bottom over the log front
             # Outline of the visible part: down one side, around the round bottom, up the other.
@@ -245,6 +246,10 @@ YOLK_SHINE = QColor(255, 236, 160)
 BACON = QColor(226, 92, 86)
 BACON_FAT = QColor(250, 196, 176)
 STEAM = QColor(255, 255, 255)
+PAN_RX = 1.28           # rim half-width (R)
+PAN_RY = 0.52           # rim half-height as seen from a little above (R)
+PAN_DEPTH = 0.21        # height of the side wall (R)
+PAN_BOTTOM = PAN_DEPTH + 0.9 * PAN_RY   # from the rim centre down to the bottom of the wall
 
 
 @dataclass
@@ -271,7 +276,9 @@ class PanProp:
         self._seed = seed
         self._t = 0.0
         self.visible = False
-        self._drop = Spring(0.0, stiffness=150.0, damping=15.0)  # 0 = far above, 1 = resting
+        # 0 = far above, 1 = resting. Nearly critically damped: it settles with one soft dip
+        # instead of bouncing down over the eyes.
+        self._drop = Spring(0.0, stiffness=150.0, damping=20.0)
         self._target = 0.0
         self._alpha = 0.0
         self._wisps: list[_Wisp] = []
@@ -330,31 +337,37 @@ class PanProp:
 
     def landing_impact(self) -> bool:
         """True on the frame the pan first slams down (the character squashes the body)."""
-        return self._drop.value > 0.96 and self._drop.velocity > 1.5
+        return self._drop.value > 0.96 and self._drop.velocity > 1.0
 
-    def _place(self, painter: QPainter, top_y: float) -> None:
-        """Move / rotate ``painter`` to the pan's centre (it sits at ``top_y``, wobbles in the
-        heat and drops in from above)."""
+    def _place(self, painter: QPainter, seat_y: float) -> None:
+        """Move / rotate ``painter`` to the pan's centre: its bottom rests at ``seat_y``; it is
+        tipped (right side up, handle down to the left, as in fig. 7), rocks slightly in the
+        heat and drops in from above."""
         R = self.R
         y_off = (1.0 - self._drop.value) * -2.2 * R
-        sizzle = 0.012 * R * math.sin(self._t * 31.0) * self._alpha
+        sizzle = 0.01 * R * math.sin(self._t * 31.0) * self._alpha
         painter.setOpacity(painter.opacity() * self._alpha)
-        painter.translate(0.12 * R + sizzle, top_y + y_off)
-        painter.rotate(-4.0 + 2.0 * noise1(self._t * 0.8, self._seed + 99))
+        painter.translate(0.1 * R + sizzle, seat_y - PAN_BOTTOM * R + y_off)
+        painter.rotate(-9.0 + 1.5 * noise1(self._t * 0.8, self._seed + 99))
 
-    def paint_back(self, painter: QPainter, top_y: float) -> None:
-        """Draw the pan itself (handle, pan, food) centred at ``top_y`` (body pixels). It is
-        painted *behind* the flame body, so the fire's top edge laps over the pan's bottom and
-        its tongues lick up around it (reference fig. 7: Calcifer cooking with his own fire)."""
+    def paint(self, painter: QPainter, seat_y: float) -> None:
+        """Draw the pan (handle, pan, food) resting on the head with its bottom at ``seat_y``
+        (body pixels), in front of the flame, then the steam and grease above it."""
         if not self.visible or self._alpha <= 0.01:
             return
-        R = self.R
         painter.save()
-        self._place(painter, top_y)
+        self._place(painter, seat_y)
+        self._paint_pan(painter)
+        self._paint_wisps(painter)
+        painter.restore()
+
+    def _paint_pan(self, painter: QPainter) -> None:
+        """The pan itself in its own coordinates (centre of the rim at the origin)."""
+        R = self.R
         ink = QPen(INK, 0.06 * R, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap,
                    Qt.PenJoinStyle.RoundJoin)
-        # As wide as the flattened flame (reference fig. 7), so the fire peeks out at the sides.
-        rx, ry, depth = 1.4 * R, 0.52 * R, 0.21 * R
+        # About as wide as the flattened flame (reference fig. 7): the fire shows at the sides.
+        rx, ry, depth = PAN_RX * R, PAN_RY * R, PAN_DEPTH * R
 
         # Handle, sticking out to the left and slightly down.
         handle = QPainterPath()
@@ -407,16 +420,6 @@ class PanProp:
         painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.drawArc(QRectF(-rx * 0.92, -ry * 0.92, 2 * rx * 0.92, 2 * ry * 0.92),
                         int(110 * 16), int(50 * 16))
-        painter.restore()
-
-    def paint_front(self, painter: QPainter, top_y: float) -> None:
-        """Draw what floats in front of everything: steam puffs and grease pops."""
-        if not self.visible or self._alpha <= 0.01:
-            return
-        painter.save()
-        self._place(painter, top_y)
-        self._paint_wisps(painter)
-        painter.restore()
 
     def _paint_food(self, painter: QPainter) -> None:
         """Two strips of bacon and two sunny-side-up eggs that jiggle in the heat."""
