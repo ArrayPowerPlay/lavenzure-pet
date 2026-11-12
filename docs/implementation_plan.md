@@ -1,4 +1,4 @@
-# Implementation Plan — Calcifer Desktop Pet
+# Implementation Plan — Lavenzure Desktop Pet
 
 > Xem [CONTEXT.md](./CONTEXT.md) để hiểu bối cảnh/kiến trúc tổng thể. File này chỉ liệt kê việc cần làm theo giai đoạn.
 > **Không bắt đầu code Phase 1 trở đi cho tới khi các câu hỏi ở mục "Open Questions" bên dưới được trả lời.**
@@ -29,7 +29,7 @@
 
 ## Phase 0 — Chốt quyết định & chuẩn bị
 - [ ] Trả lời Q1-Q3 ở trên
-- [ ] Chuẩn bị/tách asset layer PNG cho Calcifer (theo `ANIMATION_TUTORIAL.md`)
+- [ ] Chuẩn bị/tách asset layer PNG cho Lavenzure (theo `ANIMATION_TUTORIAL.md`)
 - [ ] Đăng ký API key: `GEMINI_API_KEY` (Google AI Studio, bắt buộc), `TAVILY_API_KEY` (bắt buộc cho web_search)
 
 ## Phase 1 — Khởi tạo project
@@ -47,8 +47,8 @@
 - [ ] **System Tray icon** (`QSystemTrayIcon`): menu tối thiểu gồm "Show/Hide Pet" (ẩn/hiện overlay, không tắt agent/background monitor), "Open Chat", "Quit"
 
 ## Phase 3 — Asset pipeline & rig
-- [ ] Làm theo [ANIMATION_TUTORIAL.md](./ANIMATION_TUTORIAL.md) để tách Calcifer thành các layer PNG (thân/lửa nền, mắt trái/phải mở+nhắm, miệng ngậm+mở, ngọn lửa đỉnh đầu)
-- [ ] Import vào `assets/calcifer/`
+- [ ] Làm theo [ANIMATION_TUTORIAL.md](./ANIMATION_TUTORIAL.md) để tách Lavenzure thành các layer PNG (thân/lửa nền, mắt trái/phải mở+nhắm, miệng ngậm+mở, ngọn lửa đỉnh đầu)
+- [ ] Import vào `assets/lavenzure/`
 - [ ] Dựng "rig" đơn giản: mapping layer → offset/anchor point để ghép lại thành 1 nhân vật hoàn chỉnh trên canvas (theo hướng dẫn trong tutorial)
 
 ## Phase 4 — Hệ thống animation thuần code
@@ -99,7 +99,7 @@
 
 ## Phase 12 — Polish & testing
 - [ ] Hoàn thiện menu System Tray (thoát app, tạm dừng animation, mở config, show/hide pet đã làm ở Phase 2)
-- [ ] Xử lý lỗi API (Gemini timeout/lỗi mạng/hết quota) → Calcifer phản hồi lỗi thân thiện thay vì crash
+- [ ] Xử lý lỗi API (Gemini timeout/lỗi mạng/hết quota) → Lavenzure phản hồi lỗi thân thiện thay vì crash
 - [ ] Kiểm tra hiệu năng (CPU usage khi animation + background monitor chạy liên tục 24/7)
 
 ---
@@ -141,7 +141,7 @@ Còn thiếu / cần làm tiếp:
 ### Giai đoạn A — Cho app dùng được hằng ngày (ưu tiên cao nhất)
 - [x] **A1. Đổi model Gemini — chat đang hỏng hoàn toàn.** → *Đã đổi sang `gemini-flash-latest` (user chọn), gọi qua endpoint `v1beta`, đọc đúng câu trả lời dạng nhiều khối; đã thử cả 4 tool với key thật.* `gemini-2.0-flash` đã bị Google ngừng: gọi API trả 404 "no longer available" (kiểm tra 2026-11-12). Ứng viên: `gemini-flash-latest` (bí danh luôn trỏ bản Flash mới nhất, đã gọi thử OK) hoặc chốt một bản cố định như `gemini-3.8-flash` (ổn định hơn, nhưng sẽ lại bị ngừng sau này). Cần kiểm tra cả tool-calling qua `langchain-google-genai` (có thể phải nâng cấp thư viện). *Cần user chọn.*
 - [x] **A2. Báo lỗi rõ ràng thay vì một câu chung chung.** Hiện mọi lỗi agent đều thành "my flame flickered out" và lý do bị nuốt mất. Phân loại: sai/thiếu key, hết quota, mất mạng, model không còn → câu báo lỗi tiếng Anh phù hợp; ghi chi tiết vào file log.
-- [x] **A3. Ghi log ra file** (`logging` + file xoay vòng, vd. `%LOCALAPPDATA%\Calcifer\calcifer.log`). Khi chạy bằng `pythonw.exe` (autostart) không có console nên hiện tại lỗi biến mất hoàn toàn.
+- [x] **A3. Ghi log ra file** (`logging` + file xoay vòng, vd. `%LOCALAPPDATA%\Lavenzure\lavenzure.log`). Khi chạy bằng `pythonw.exe` (autostart) không có console nên hiện tại lỗi biến mất hoàn toàn.
 - [x] **A4. Không crash khi thiếu `GEMINI_API_KEY`.** `agent/graph.py` tạo client ngay lúc import → app không mở được. Chuyển sang tạo khi chat lần đầu; thiếu key thì pet vẫn chạy, chat báo cần key.
 - [x] **A5. Công cụ chịu lỗi mạng.** `weather`/`web_search` hiện ném exception khi mất mạng/API lỗi → hỏng cả lượt chat. Bắt lỗi và trả về câu mô tả lỗi cho LLM.
 - [x] **A6. Chỉ cho chạy 1 bản** (`QLocalServer`/`QLocalSocket` hoặc named mutex). Tránh 2 con pet khi vừa autostart vừa chạy tay; lần chạy thứ 2 có thể chỉ mở cửa sổ chat của bản đang chạy.
@@ -151,7 +151,7 @@ Còn thiếu / cần làm tiếp:
 ### Giai đoạn B — Chat và bong bóng thoại
 - [x] **B1. Bong bóng thoại đi theo pet.** Hiện bong bóng đặt vị trí 1 lần rồi đứng yên; pet đi chỗ khác thì bong bóng bị bỏ lại (rõ nhất với cảnh báo dính lâu).
 - [x] **B2. Sửa hiển thị chat:** tin nhắn đang được chèn thẳng dạng HTML nên chữ có `<`, `>`, `&` hiển thị sai — cần escape; hiển thị markdown cơ bản (đậm, danh sách, link) cho câu trả lời của Gemini; tự cuộn xuống cuối.
-- [x] **B3. Giao diện chat hợp với nhân vật:** màu ấm theo tông lửa, mở cạnh pet thay vì giữa màn hình, phím Esc để đóng, hiển thị "Calcifer is thinking…".
+- [x] **B3. Giao diện chat hợp với nhân vật:** màu ấm theo tông lửa, mở cạnh pet thay vì giữa màn hình, phím Esc để đóng, hiển thị "Lavenzure is thinking…".
 - [x] **B4. Câu trả lời ngắn hiện luôn trong bong bóng trên đầu pet** (tùy chọn trong `config.yaml`), để không cần mở cửa sổ chat cũng thấy.
 - [x] **B5. Hẹn giờ nhắc việc chắc chắn hơn:** tool `set_timer_reminder` đang gọi thẳng vào monitor từ thread của agent → chuyển qua Qt signal cho an toàn; khi nhắc thì pet đổi biểu cảm/nhảy lên cho dễ thấy; kiểm tra số phút âm/quá lớn. (Vẫn chỉ lưu trong RAM theo thiết kế.)
 
@@ -164,7 +164,7 @@ Còn thiếu / cần làm tiếp:
 - [x] **D1. Test tự động (pytest)** (85 test, chạy: `.venv-win/Scripts/python.exe -m pytest`) cho phần không cần màn hình: `config.get`, bộ nhớ TTL, logic monitor (ngưỡng cảnh báo, hẹn giờ, câu idle), các tool (giả lập HTTP), `Expression`/lò xo của `face.py`.
 - [x] **D2. Linter/formatter** (`ruff`) với cấu hình giữ CRLF.
 - [x] **D3. Bổ sung docstring còn thiếu** (`main.py`, `chat_window.py`, `background_monitor.py`, `memory.py`, … nhiều class/hàm chưa có — trái quy ước của repo).
-- [x] **D4. Dọn tài liệu cũ:** sơ đồ kiến trúc trong `CONTEXT.md` vẫn ghi OpenRouter và "PNG cutout"; §4 (câu hỏi mở đã giải quyết), §5 (`.env.example` ghi `OPENROUTER_API_KEY`) lỗi thời; xóa `assets/calcifer/PLACEHOLDER.txt`; cập nhật `CLAUDE.md` (repo giờ ở `D:\workspace\pet`).
+- [x] **D4. Dọn tài liệu cũ:** sơ đồ kiến trúc trong `CONTEXT.md` vẫn ghi OpenRouter và "PNG cutout"; §4 (câu hỏi mở đã giải quyết), §5 (`.env.example` ghi `OPENROUTER_API_KEY`) lỗi thời; xóa `assets/lavenzure/PLACEHOLDER.txt`; cập nhật `CLAUDE.md` (repo giờ ở `D:\workspace\pet`).
 
 ### Giai đoạn E — Nhân vật sống động hơn
 - [x] **E1. Biểu cảm theo nội dung chat:** agent trả kèm "mood" để pet đổi mặt khi trả lời: `happy`, `scared`, `angry`, `chill`, `surprised`, `thinking`, `yuck` (thêm ở lượt 12), `other` (= không đổi biểu cảm). Thêm tư thế bay trên khúc củi. Ảnh mẫu: `docs/references/calcipher_picked.jpg`; chi tiết: DECISION_LOG lượt 6.

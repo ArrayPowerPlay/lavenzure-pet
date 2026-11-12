@@ -1,10 +1,10 @@
-# CONTEXT.md — Calcifer Desktop Pet
+# CONTEXT.md — Lavenzure Desktop Pet
 
 > File này lưu toàn bộ bối cảnh dự án để đọc lại và hiểu nhanh mục đích, kiến trúc, quyết định kỹ thuật. Cập nhật file này mỗi khi có quyết định mới hoặc thay đổi thiết kế quan trọng.
 
 ## 1. Mục đích dự án
 
-Xây dựng một **desktop pet cá nhân** lấy hình tượng **Calcifer** (fan art phong cách Ghibli, không dùng asset gốc phim) chạy nền trên Windows:
+Xây dựng một **desktop pet cá nhân** tên **Lavenzure**, lấy ý tưởng từ nhân vật **Calcifer** (fan art phong cách Ghibli, không dùng asset gốc phim) chạy nền trên Windows:
 
 - Sống ở **lớp desktop background** (không nổi lên trên các ứng dụng khác đang mở — dùng kỹ thuật gắn cửa sổ vào WorkerW).
 - Tự động di chuyển/animate liên tục theo 3 kiểu: đi dọc mép màn hình, bay lơ lửng tự do, nhảy.
@@ -171,3 +171,4 @@ tests/                          # pytest (chạy headless)
 - 2026-11-12 (cập nhật 8): Lượt 11 (xem `DECISION_LOG.md`): mắt vui / chill thành hình hạnh nhân theo hình 1 / 7, miệng vui bo tròn, miệng chill một đường cong liền có móc nhỏ hai đầu, miệng cách mắt xa hơn; tay trên khúc gỗ là một phần của ngọn lửa (shader), khúc gỗ vẽ sau lửa; bỏ tay của `angry`.
 - 2026-11-12 (cập nhật 9): Lượt 12 (xem `DECISION_LOG.md`): AI chọn được thêm `yuck`; ngủ không nhìn theo chuột; mắt + miệng của vui (hình 1) và chill (hình 7) chép y ảnh mẫu bằng dữ liệu dò từ ảnh (`src/overlay/face_refs.py`); tay trên khúc gỗ theo hình 4 (thân phủ lên gỗ, phần đè lên gỗ toàn vàng).
 - 2026-11-12 (cập nhật 5): Làm xong các mục đã chốt trong `DECISION_LOG.md` (lượt 7). **G4** tắt công cụ hẹn giờ. **G3** bong bóng chat gắn với pet thay cửa sổ chat. **G1** chuột trái chơi 1 hoạt ảnh ngẫu nhiên từ bộ phản ứng (mỗi phản ứng tự đăng ký bằng `@reaction`; không lặp lại liền nhau; đang cảnh báo thì chỉ tắt cảnh báo). **G2** chuột phải mở menu `Chat` / `Idle`↔`Wander`; Idle = nằm ngủ, chat/kéo/cảnh báo làm pet tỉnh rồi ngủ lại. **E1** biểu cảm mới theo ảnh user chọn: vui (2 mặt), hoảng (lửa bè vuông, viền tua tủa, miệng há to), giận (lông mày, mắt nheo, hai tay lửa có nắm đấm), bay trên khúc củi (củi hiện ra kèm tia lửa, tan thành tàn lửa khi đáp), `chill` + chảo thịt xông khói/trứng; AI gắn thẻ cảm xúc đầu mỗi câu trả lời, pet giữ mặt đó ~5 giây; AI trả lời theo ngôn ngữ user. **E2** tư thế ngủ (ngáp, lửa lùn bè, thở chậm, chữ "z"), ngủ gật sau 10 phút không đụng chuột/bàn phím (`GetLastInputInfo`), ban đêm 20h–5h lửa dịu và cử động chậm. **C1/C2** icon khay vẽ từ chính nhân vật, menu khay `Hide/Show Pet`, `Settings` (cửa sổ trống), `Quit App`. Thêm `src/ui/`, `overlay/props.py`, `agent/emotion.py`, `monitor/user_activity.py`; 85 test.
+- 2026-11-13: Đổi tên pet từ **Calcifer** thành **Lavenzure** ở mọi nơi (README, giao diện, system prompt, tên class `LavenzureApp`, biến môi trường `LAVENZURE_FRAME_STATS_SECONDS`, thư mục/file log, shortcut autostart `Lavenzure.lnk`, tài liệu). Calcifer chỉ còn được nhắc như nguồn cảm hứng ý tưởng trong README và `CONTEXT.md`. Tên file ảnh tham khảo `docs/references/calcipher*.jpg` giữ nguyên.

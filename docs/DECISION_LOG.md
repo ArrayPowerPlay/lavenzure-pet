@@ -1,4 +1,4 @@
-# DECISION_LOG — Calcifer Desktop Pet
+# DECISION_LOG — Lavenzure Desktop Pet
 
 > Nhật ký các quyết định đã chốt giữa user và AI agent, mới nhất ở dưới cùng. Mỗi mục ghi: quyết định, lý do (nếu có), và trạng thái (đã làm / chờ làm / còn bàn).
 > Các quyết định kỹ thuật tổng thể từ trước ngày 2026-11-12 nằm trong [CONTEXT.md](./CONTEXT.md) (§3 bảng quyết định, §7 lịch sử thay đổi); file này bắt đầu ghi từ 2026-11-12.
@@ -94,7 +94,7 @@
 - **Tư thế bay (FLOAT):** **hình 4** khi bay bình thường, **hình 5** lúc vừa cất cánh ("triệu hồi" khúc củi để bay). Khúc củi được làm sớm, riêng cho lúc bay.
 - **Giữ** `surprised`, `thinking` có sẵn. **Bỏ** `sad` và các cảm xúc Claude đề xuất trước đó.
 - **Danh sách AI chọn:** `happy`, `scared`, `angry`, `chill`, `surprised`, `thinking`, `other`.
-- **Dáng người không cố định:** Calcifer là ngọn lửa biến dạng tùy ý, nên mỗi biểu cảm được tự do đổi hình dáng cơ thể (phình to, bè thành gần hình chữ nhật, kéo dài theo chiều dọc…) sao cho hợp nhất với cảm xúc, không bó buộc vào một khuôn dáng chung.
+- **Dáng người không cố định:** Lavenzure là ngọn lửa biến dạng tùy ý, nên mỗi biểu cảm được tự do đổi hình dáng cơ thể (phình to, bè thành gần hình chữ nhật, kéo dài theo chiều dọc…) sao cho hợp nhất với cảm xúc, không bó buộc vào một khuôn dáng chung.
 
 ## Chốt sau (user chủ động để lại)
 

@@ -2,7 +2,7 @@
 
 > **Đã thay thế (2026-11-11):** nhân vật hiện được vẽ hoàn toàn bằng code trong `src/overlay/character.py`, không dùng PNG nữa. File này chỉ giữ lại để tham khảo.
 
-> Mục tiêu: tạo chuyển động mượt cho Calcifer chỉ từ vài ảnh PNG tĩnh + code Python (PySide6), không cần biết vẽ hoạt ảnh, không cần After Effects/Spine/DragonBones.
+> Mục tiêu: tạo chuyển động mượt cho Lavenzure chỉ từ vài ảnh PNG tĩnh + code Python (PySide6), không cần biết vẽ hoạt ảnh, không cần After Effects/Spine/DragonBones.
 
 ## 1. Ý tưởng cốt lõi
 
@@ -12,9 +12,9 @@ Ví dụ: để nháy mắt, ta không cần vẽ animation — chỉ cần 2 �
 
 Để "thở"/bồng bềnh, ta không cần vẽ gì thêm — chỉ cần code dịch chuyển layer thân lên xuống vài pixel theo hàm sin/easing.
 
-## 2. Danh sách layer cần tách từ ảnh Calcifer
+## 2. Danh sách layer cần tách từ ảnh Lavenzure
 
-Từ ảnh fan art bạn có, dùng công cụ tách nền (xem mục 3) để tạo các file PNG **nền trong suốt (alpha channel)** sau, đặt trong `assets/calcifer/`:
+Từ ảnh fan art bạn có, dùng công cụ tách nền (xem mục 3) để tạo các file PNG **nền trong suốt (alpha channel)** sau, đặt trong `assets/lavenzure/`:
 
 | File | Mô tả | Dùng cho animation nào |
 |---|---|---|
@@ -23,7 +23,7 @@ Từ ảnh fan art bạn có, dùng công cụ tách nền (xem mục 3) để t
 | `eye_right_open.png` / `eye_right_closed.png` | Mắt phải, 2 trạng thái | Chớp mắt |
 | `mouth_closed.png` / `mouth_open.png` | Miệng, 2 trạng thái (có thể thêm `mouth_smile.png`, `mouth_shock.png` cho phản ứng click) | Lip-flap khi "nói chuyện" trong chat, phản ứng khi click |
 | `flame_top.png` | Ngọn lửa/tóc lửa phía trên đầu | Lập lòe (flicker) liên tục |
-| `log.png` (tuỳ chọn) | Khúc gỗ Calcifer ôm (nếu ảnh gốc có) | Lắc nhẹ theo nhịp thở |
+| `log.png` (tuỳ chọn) | Khúc gỗ Lavenzure ôm (nếu ảnh gốc có) | Lắc nhẹ theo nhịp thở |
 
 > Bạn không bắt buộc phải có đủ tất cả — tối thiểu cần `body_base.png` + 1 cặp mắt + 1 cặp miệng + `flame_top.png` là đã animate được khá sống động rồi. Có thể bổ sung dần.
 
@@ -37,7 +37,7 @@ Vì bạn không có kinh nghiệm phần mềm animation, đây là quy trình 
    - GIMP (cài đặt) nếu bạn muốn công cụ mạnh hơn, cũng miễn phí.
 
 2. **Quy trình từng bước (dùng Photopea)**:
-   - Mở ảnh Calcifer trong Photopea.
+   - Mở ảnh Lavenzure trong Photopea.
    - Dùng công cụ **Magic Wand** (đũa thần) hoặc **Lasso** để chọn từng bộ phận (mắt, miệng, ngọn lửa...).
    - `Ctrl+J` để copy vùng chọn ra layer riêng.
    - Ẩn/xóa layer nền, chỉ giữ lại layer bộ phận đó.
@@ -58,16 +58,16 @@ from PySide6.QtWidgets import QWidget, QLabel
 from PySide6.QtGui import QPixmap
 from PySide6.QtCore import Qt, QPoint
 
-class CalciferSprite(QWidget):
+class LavenzureSprite(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setAttribute(Qt.WA_TranslucentBackground)
 
-        self.body = self._make_layer("assets/calcifer/body_base.png", QPoint(0, 0))
-        self.eye_l = self._make_layer("assets/calcifer/eye_left_open.png", QPoint(40, 60))
-        self.eye_r = self._make_layer("assets/calcifer/eye_right_open.png", QPoint(90, 60))
-        self.mouth = self._make_layer("assets/calcifer/mouth_closed.png", QPoint(60, 100))
-        self.flame = self._make_layer("assets/calcifer/flame_top.png", QPoint(20, -20))
+        self.body = self._make_layer("assets/lavenzure/body_base.png", QPoint(0, 0))
+        self.eye_l = self._make_layer("assets/lavenzure/eye_left_open.png", QPoint(40, 60))
+        self.eye_r = self._make_layer("assets/lavenzure/eye_right_open.png", QPoint(90, 60))
+        self.mouth = self._make_layer("assets/lavenzure/mouth_closed.png", QPoint(60, 100))
+        self.flame = self._make_layer("assets/lavenzure/flame_top.png", QPoint(20, -20))
 
         # thứ tự chồng lớp: flame dưới cùng (phía sau đầu), rồi body, rồi mắt/miệng trên cùng
         self.flame.lower()
@@ -88,16 +88,16 @@ class CalciferSprite(QWidget):
 import random
 from PySide6.QtCore import QTimer
 
-def schedule_next_blink(sprite: CalciferSprite):
+def schedule_next_blink(sprite: LavenzureSprite):
     delay_ms = random.randint(2000, 6000)  # chớp mắt ngẫu nhiên mỗi 2-6 giây
     QTimer.singleShot(delay_ms, lambda: do_blink(sprite))
 
-def do_blink(sprite: CalciferSprite):
-    sprite.eye_l.setPixmap(QPixmap("assets/calcifer/eye_left_closed.png"))
-    sprite.eye_r.setPixmap(QPixmap("assets/calcifer/eye_right_closed.png"))
+def do_blink(sprite: LavenzureSprite):
+    sprite.eye_l.setPixmap(QPixmap("assets/lavenzure/eye_left_closed.png"))
+    sprite.eye_r.setPixmap(QPixmap("assets/lavenzure/eye_right_closed.png"))
     QTimer.singleShot(150, lambda: (
-        sprite.eye_l.setPixmap(QPixmap("assets/calcifer/eye_left_open.png")),
-        sprite.eye_r.setPixmap(QPixmap("assets/calcifer/eye_right_open.png")),
+        sprite.eye_l.setPixmap(QPixmap("assets/lavenzure/eye_left_open.png")),
+        sprite.eye_r.setPixmap(QPixmap("assets/lavenzure/eye_right_open.png")),
         schedule_next_blink(sprite),
     ))
 ```
@@ -107,7 +107,7 @@ def do_blink(sprite: CalciferSprite):
 ```python
 from PySide6.QtCore import QPropertyAnimation, QEasingCurve
 
-def start_idle_bob(sprite: CalciferSprite):
+def start_idle_bob(sprite: LavenzureSprite):
     anim = QPropertyAnimation(sprite, b"pos")
     anim.setDuration(1200)
     anim.setStartValue(sprite.pos())
@@ -124,7 +124,7 @@ def start_idle_bob(sprite: CalciferSprite):
 ```python
 from PySide6.QtWidgets import QGraphicsOpacityEffect
 
-def start_flame_flicker(sprite: CalciferSprite):
+def start_flame_flicker(sprite: LavenzureSprite):
     effect = QGraphicsOpacityEffect(sprite.flame)
     sprite.flame.setGraphicsEffect(effect)
     anim = QPropertyAnimation(effect, b"opacity")
@@ -140,25 +140,25 @@ def start_flame_flicker(sprite: CalciferSprite):
 ### 4.5. Nói chuyện (lip-flap) khi agent đang trả lời
 
 ```python
-def start_talking(sprite: CalciferSprite):
+def start_talking(sprite: LavenzureSprite):
     sprite._talk_timer = QTimer()
     state = {"open": False}
     def toggle():
         state["open"] = not state["open"]
         path = "mouth_open.png" if state["open"] else "mouth_closed.png"
-        sprite.mouth.setPixmap(QPixmap(f"assets/calcifer/{path}"))
+        sprite.mouth.setPixmap(QPixmap(f"assets/lavenzure/{path}"))
     sprite._talk_timer.timeout.connect(toggle)
     sprite._talk_timer.start(180)  # đổi miệng mỗi 180ms trong lúc "nói"
 
-def stop_talking(sprite: CalciferSprite):
+def stop_talking(sprite: LavenzureSprite):
     sprite._talk_timer.stop()
-    sprite.mouth.setPixmap(QPixmap("assets/calcifer/mouth_closed.png"))
+    sprite.mouth.setPixmap(QPixmap("assets/lavenzure/mouth_closed.png"))
 ```
 
 ### 4.6. Squash & stretch khi nhảy/kéo thả (hiệu ứng "cao su")
 
 ```python
-def squash_stretch(sprite: CalciferSprite, stretch: bool):
+def squash_stretch(sprite: LavenzureSprite, stretch: bool):
     # stretch=True: kéo dài theo chiều đứng lúc bật nhảy lên
     # stretch=False: dẹt theo chiều ngang lúc chạm đất (squash)
     sy = 1.15 if stretch else 0.85
@@ -205,9 +205,9 @@ Vòng lặp chính: mỗi khi 1 animation di chuyển kết thúc (idle/walk/flo
 - Không cần học giao diện phần mềm rig chuyên dụng.
 - Toàn bộ chuyển động là **code Python thuần** — dễ debug, dễ chỉnh tốc độ/độ mượt bằng cách sửa số (duration, easing curve) thay vì phải mở lại phần mềm vẽ.
 - Đủ mượt cho một desktop pet cá nhân vì mắt người khó nhận ra sự khác biệt giữa "cutout rig" và animation frame-by-thật sự khi chuyển động đủ nhanh (>15-20 lần cập nhật/giây, Qt animation mặc định làm được).
-- Nếu sau này muốn nâng cấp: hoàn toàn có thể thay `assets/calcifer/*.png` bằng bộ layer chi tiết hơn mà không cần đổi code animation logic.
+- Nếu sau này muốn nâng cấp: hoàn toàn có thể thay `assets/lavenzure/*.png` bằng bộ layer chi tiết hơn mà không cần đổi code animation logic.
 
 ## 7. Việc bạn cần làm
 
-- [ ] Chuẩn bị (tách) các file PNG theo bảng ở mục 2, đặt đúng tên vào `assets/calcifer/`.
+- [ ] Chuẩn bị (tách) các file PNG theo bảng ở mục 2, đặt đúng tên vào `assets/lavenzure/`.
 - [ ] Nếu thiếu bộ layer thứ 2 (mắt nhắm, miệng mở...), có thể để tôi hỗ trợ tạo bằng biến đổi hình học từ layer gốc trong code (không cần vẽ thêm) — báo tôi biết khi tới Phase 3.
