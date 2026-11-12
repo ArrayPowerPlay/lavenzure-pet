@@ -118,6 +118,8 @@ Còn thiếu / cần làm tiếp:
 - [x] Nhân vật thật: thay placeholder bằng nhân vật vẽ bằng code (`src/overlay/character.py`) — không cần PNG (2026-11-11). Xem thử: `.venv-win/Scripts/python.exe src/character_preview.py`
 - [x] Vẽ lại đồ họa theo ảnh mẫu fan-art (sticker phẳng, dáng giọt nước, viền liền, lưỡi lửa chạy dọc sườn lên đỉnh + bùng lửa ngẫu nhiên) — chờ user duyệt (2026-11-12)
 - [x] Animation lửa kiểu mô phỏng lưỡi lửa + metaball (`src/overlay/fire_field.py`, cần `numpy`), kích thước 0.75, giữ glow, không thêm viền sticker (2026-11-12)
+- [x] Làm lại mặt (`face.py`: nằm gọn trên thân vàng, biểu cảm lò xo + lấy đà, mí mắt, quay đầu) + "thời tiết lửa" + 3 bộ vẽ thân lửa để so sánh: `metaball`, `shader` (GPU), `baked` (mô phỏng chất lỏng, tạo lại bằng `src/bake_flame.py`) — chọn bằng `character.flame_renderer` (2026-11-12)
+- [ ] User so sánh 3 bộ vẽ trong `character_preview.py` và chốt bộ mặc định
 - [x] Chuyển động mượt: vị trí cửa sổ sub-pixel (`exactPos`) + vòng frame chung đồng hồ animation Qt; mặt sống động hơn (saccade, chớp mắt, biểu cảm lò xo, miệng nói theo nhiễu) (2026-11-12)
 - [ ] Chờ user xem thử trên desktop thật và góp ý
 - [ ] Animation nâng cao theo ảnh mẫu: tay, ôm/gặm củi, nằm trên củi, chảo + trứng ốp la/thịt xông khói, trứng vỡ
