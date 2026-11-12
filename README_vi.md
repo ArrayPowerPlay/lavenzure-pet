@@ -9,7 +9,7 @@ Một "thú cưng" ngọn lửa sống trên màn hình Windows, lấy cảm h�
 ## Tính năng
 
 - **Nhân vật vẽ hoàn toàn bằng code** (không cần ảnh): thân lửa 3 lớp đỏ/cam/vàng viền nâu đậm, có quầng sáng và tàn lửa bay. Mặc định vẽ thân lửa bằng GPU shader; tự chuyển sang cách vẽ dự phòng nếu máy không hỗ trợ OpenGL 3.3.
-- **Khuôn mặt và dáng người có cảm xúc**: chớp mắt, đảo mắt nhìn theo chuột, mí mắt, lông mày, miệng nói; vui (hai kiểu mặt), ngạc nhiên, hoảng hốt, tức giận (bùng tay lửa), chill (rán trứng bằng chảo trên đầu), suy nghĩ, cảnh báo. Mỗi biểu cảm còn đổi cả hình dáng ngọn lửa.
+- **Khuôn mặt và dáng người có cảm xúc**: chớp mắt, đảo mắt nhìn theo chuột, mí mắt, lông mày, miệng nói; vui (hai kiểu mặt), ngạc nhiên, hoảng hốt, tức giận, chill (rán trứng bằng chảo trên đầu), ghê (`yuck`), suy nghĩ, cảnh báo. Mỗi biểu cảm còn đổi cả hình dáng ngọn lửa.
 - **Tự di chuyển**: đứng yên, đi dọc đáy màn hình, cưỡi khúc củi bay lượn, nhảy — chọn ngẫu nhiên.
 - **Ngủ**: chọn `Idle` thì pet nằm ngủ (thở chậm, bay chữ "z"); sau 10 phút không đụng chuột/bàn phím pet tự ngủ gật, dùng máy lại thì tỉnh.
 - **Ban đêm**: từ 20h đến 5h sáng lửa dịu và trầm màu hơn, pet cử động chậm hơn.

@@ -142,6 +142,13 @@
 - **Ngồi trên khúc gỗ:** hai tay giờ **là một phần của ngọn lửa** (vẽ trong shader): đáy thân đặt phẳng lên khúc gỗ (khúc gỗ vẽ phía sau lửa), tay mọc ra từ thân với cùng viền đỏ, dải cam, lõi vàng → liền một khối, không còn viền chèn lên dải màu. Bộ vẽ dự phòng (`metaball` / `baked`) vẫn dùng tay vẽ riêng như cũ.
 - **Giận:** **bỏ hẳn tay** (xóa cả phần code tay trong shader).
 
+### Lượt 12 (2026-11-12) — user góp ý 4 điểm + 1 nhắc thêm, đã sửa, chờ duyệt
+- **`yuck` vào danh sách cảm xúc AI chọn** (user trả lời câu hỏi lượt 10/11): AI giờ chọn được `[yuck]` (ghê / kinh / dở tệ). **Không vẽ vỏ trứng** trong miệng.
+- **Ngủ không nhìn theo chuột:** lúc ngáp / ngủ (cả Idle lẫn ngủ gật) mặt và mắt không dõi theo con trỏ nữa, từ từ quay về nhìn thẳng.
+- **Vui hình 1 và chill hình 7 — chép y hệt ảnh mẫu, không tự chế:** mắt và miệng của hai biểu cảm này được **dò lại (trace) từ chính ảnh `calcipher_picked.jpg`** rồi lưu thành dữ liệu (`src/overlay/face_refs.py`), không còn ước lượng bằng tham số. Mặt chuyển dần (morph) từ mặt thường sang mặt chép, vẫn chớp mắt được. Vui hình 1: mắt nửa vòm đáy phẳng, con ngươi dài treo dưới mép trên liếc phải; miệng mở có **chỗ lõm nhẹ giữa môi trên** đúng như hình (thay quyết định "bỏ chỗ lõm" ở lượt 11), lưỡi hồng nửa dưới. Chill hình 7: mặt nghiêng (bên phải cao hơn), mắt nửa vòm con ngươi to liếc phải, miệng một nét lượn sóng dài, mỗi khóe có một nét ngắn cắt ngang (lúm má).
+- **Claude tự quyết (user có thể đổi):** hai mặt chép **không lật trái/phải** ngẫu nhiên nữa (để giống y ảnh); mặt vui hình 2 giữ nguyên (vẫn chọn ngẫu nhiên hình 1 / hình 2); khi đang nói, miệng chép của vui khép mở theo lời, miệng chill (đang khép) thì tạm mở ra như miệng nói thường.
+- **Tay trên khúc gỗ theo hình 4:** thân ngồi đè lên khúc gỗ (nửa dưới bè rộng ra như có sức nặng), mép dưới thân phủ nhẹ xuống mặt trước khúc gỗ, hai tay là hai thùy tròn của chính thân đó buông xuống. Phần đè lên gỗ **toàn màu vàng tới tận viền** (hết dải cam / đỏ quanh tay và vệt cam ngang đáy), dải đỏ / cam hai bên thân chạy xuống tới khúc gỗ như hình 4.
+
 ## Còn bàn
 
-- Chờ user duyệt kết quả lượt 11. Hỏi user: có thêm `yuck` vào danh sách cảm xúc AI chọn không? Có cần vẽ vỏ trứng trong miệng không?
+- Chờ user duyệt kết quả lượt 12.

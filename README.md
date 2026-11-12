@@ -9,7 +9,7 @@ A little flame "pet" that lives on your Windows desktop, inspired by Calcifer (f
 ## Features
 
 - **Character drawn entirely in code** (no image files): a three-layer red/orange/yellow flame with a dark maroon outline, a soft glow and drifting embers. The flame body is rendered with a GPU shader by default and automatically falls back to a CPU renderer if OpenGL 3.3 is unavailable.
-- **Expressive face and body**: blinking, eyes that follow the mouse, eyelids, brows, a talking mouth; happy (two faces), surprised, scared, angry (flame arms), chill (frying breakfast in a pan on its head), thinking and alert. Each expression also reshapes the whole flame.
+- **Expressive face and body**: blinking, eyes that follow the mouse, eyelids, brows, a talking mouth; happy (two faces), surprised, scared, angry, chill (frying breakfast in a pan on its head), yuck, thinking and alert. Each expression also reshapes the whole flame.
 - **Moves on its own**: idles, walks along the bottom of the screen, flies around on a log, jumps — picked at random.
 - **Sleeps**: lies down and sleeps (slow breathing, floating "z"s) when you choose `Idle`, and dozes off by itself after 10 minutes without mouse/keyboard input, waking up when you come back.
 - **Night look**: from 20:00 to 05:00 the fire is calmer and dimmer and the pet moves slower.

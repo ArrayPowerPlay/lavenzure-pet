@@ -166,7 +166,7 @@ Còn thiếu / cần làm tiếp:
 - [x] **D4. Dọn tài liệu cũ:** sơ đồ kiến trúc trong `CONTEXT.md` vẫn ghi OpenRouter và "PNG cutout"; §4 (câu hỏi mở đã giải quyết), §5 (`.env.example` ghi `OPENROUTER_API_KEY`) lỗi thời; xóa `assets/calcifer/PLACEHOLDER.txt`; cập nhật `CLAUDE.md` (repo giờ ở `D:\workspace\pet`).
 
 ### Giai đoạn E — Nhân vật sống động hơn
-- [x] **E1. Biểu cảm theo nội dung chat:** agent trả kèm "mood" để pet đổi mặt khi trả lời: `happy`, `scared`, `angry`, `chill`, `surprised`, `thinking`, `other` (= không đổi biểu cảm). Thêm tư thế bay trên khúc củi. Ảnh mẫu: `docs/references/calcipher_picked.jpg`; chi tiết: DECISION_LOG lượt 6.
+- [x] **E1. Biểu cảm theo nội dung chat:** agent trả kèm "mood" để pet đổi mặt khi trả lời: `happy`, `scared`, `angry`, `chill`, `surprised`, `thinking`, `yuck` (thêm ở lượt 12), `other` (= không đổi biểu cảm). Thêm tư thế bay trên khúc củi. Ảnh mẫu: `docs/references/calcipher_picked.jpg`; chi tiết: DECISION_LOG lượt 6.
 - [x] **E2. Hành vi theo ngữ cảnh:** ngủ gật sau 10 phút không dùng máy, ban đêm (20h–5h) lửa dịu lại. ("Gọi pet chạy lại gần chuột": tạm bỏ.)
 - [ ] **E3. Animation nâng cao theo ảnh mẫu:** tay (bắt buộc làm sau cho mặt `angry`), ôm/gặm củi, nằm trên củi, chảo + trứng ốp la/thịt xông khói, trứng vỡ — *chưa quyết*.
 
