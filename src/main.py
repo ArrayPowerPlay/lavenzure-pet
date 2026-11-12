@@ -1,4 +1,4 @@
-"""Entry point: wires the overlay sprite, chat window, agent, and background monitor together.
+"""Entry point: wires the overlay sprite, chat bubble, agent, and background monitors together.
 
 Components never reference each other directly; ``CalciferApp._wire_signals`` connects their Qt
 signals. Startup order: logging -> single-instance check -> build components -> show the pet.
@@ -12,31 +12,41 @@ import sys
 from pathlib import Path
 
 from PySide6.QtCore import QObject, QThread, QTimer, Signal
-from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
+from PySide6.QtGui import QCursor
+from PySide6.QtWidgets import QApplication, QSystemTrayIcon
 
 import app_logging
 import config
+from agent.emotion import split_emotion
 from agent.errors import friendly_error
 from agent.graph import run_agent
 from agent.memory import SessionMemory
 from chat.chat_bubble import ChatBubble
 from monitor.background_monitor import BackgroundMonitor
+from monitor.user_activity import UserActivityWatcher
 from overlay.behavior import BehaviorController, PetState
 from overlay.character import Mood
 from overlay.overlay_window import OverlaySprite
 from overlay.speech_bubble import SpeechBubble
 from single_instance import SingleInstance
+from ui.menus import PetMenu, themed_menu
+from ui.settings_window import SettingsWindow
+from ui.tray_icon import make_tray_icon
 
 log = logging.getLogger(__name__)
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
+# Emotion tag of an AI reply -> face the pet shows while the reply appears (decision E1).
+EMOTION_MOODS = {"happy": Mood.HAPPY, "scared": Mood.SCARED, "angry": Mood.ANGRY,
+                 "chill": Mood.CHILL, "surprised": Mood.SURPRISED, "thinking": Mood.THINKING}
+EMOTION_SECONDS = 5.0
+
 
 class AgentWorker(QObject):
     """Runs the (potentially slow) LangGraph agent call off the Qt UI thread."""
 
-    finished = Signal(str)  # the reply text
+    finished = Signal(str)  # the reply text (still starting with its emotion tag)
     failed = Signal(str)    # a friendly, in-character explanation of what went wrong
 
     def __init__(self, history: list[dict], message: str) -> None:
@@ -68,6 +78,9 @@ class CalciferApp:
         self.behavior = BehaviorController(self.sprite)
         self.chat = ChatBubble(self.sprite.body_rect)
         self.monitor = BackgroundMonitor()
+        self.activity = UserActivityWatcher()
+        self.pet_menu = PetMenu()
+        self.settings: SettingsWindow | None = None
         self.memory = SessionMemory(
             ttl_seconds=config.get("memory.idle_timeout_minutes", 15) * 60
         )
@@ -85,6 +98,7 @@ class CalciferApp:
 
         self._wire_signals()
         self._build_tray_icon()
+        self.activity.check()   # apply night / dozing right away instead of after a second
 
         self.sprite.show()
 
@@ -92,32 +106,41 @@ class CalciferApp:
         """Connect component signals to the app's handlers (the only place components meet)."""
         self.instance.activated.connect(self._open_chat)
         self.sprite.clicked.connect(self._on_pet_clicked)
-        self.sprite.right_clicked.connect(self._open_chat)
+        self.sprite.right_clicked.connect(self._show_pet_menu)
+        self.pet_menu.chat_requested.connect(self._open_chat)
+        self.pet_menu.rest_requested.connect(self.behavior.set_resting)
+        self.behavior.speak_requested.connect(self._say_random_line)
         self.chat.message_sent.connect(self._on_chat_message)
         self.chat.closed.connect(lambda: self.behavior.set_chatting(False))
+
+        self.activity.dozing_changed.connect(self.behavior.set_dozing)
+        self.activity.night_changed.connect(self.behavior.set_night)
 
         self.monitor.alert_triggered.connect(self._on_alert)
         self.monitor.joke_triggered.connect(self._on_joke)
         self.monitor.reminder_triggered.connect(self._on_reminder)
 
     def _build_tray_icon(self) -> None:
-        """Create the system-tray icon and its menu (Show/Hide Pet, Open Chat, Quit)."""
-        # Windows has no icon theme, so fall back to a snapshot of the drawn character.
-        icon = QIcon.fromTheme("weather-clear")
-        if icon.isNull():
-            icon = QIcon(self.sprite.grab())
-        self.tray = QSystemTrayIcon(icon, self.app)
+        """Create the system-tray icon (a portrait drawn by the character itself) and its menu:
+        Hide/Show Pet, Settings, Quit App."""
+        self.tray = QSystemTrayIcon(make_tray_icon(), self.app)
         self.tray.setToolTip("Calcifer")
 
-        menu = QMenu()
-        self.toggle_action = menu.addAction("Hide Pet")
+        self._tray_menu = themed_menu()
+        self.toggle_action = self._tray_menu.addAction("Hide Pet")
         self.toggle_action.triggered.connect(self._toggle_visibility)
-        menu.addAction("Open Chat", self._open_chat)
-        menu.addSeparator()
-        menu.addAction("Quit", self.app.quit)
+        self._tray_menu.addAction("Settings", self._open_settings)
+        self._tray_menu.addSeparator()
+        self._tray_menu.addAction("Quit App", self.app.quit)
 
-        self.tray.setContextMenu(menu)
+        self.tray.setContextMenu(self._tray_menu)
         self.tray.show()
+
+    def _open_settings(self) -> None:
+        """Open the (for now empty) Settings window."""
+        if self.settings is None:
+            self.settings = SettingsWindow()
+        self.settings.open()
 
     # ------------------------------------------------------------------ bubble / pet reactions
 
@@ -130,7 +153,7 @@ class CalciferApp:
                                   auto_hide_ms or 10_000)
 
     def _on_pet_clicked(self) -> None:
-        """A click clears an active alert; otherwise the pet hops and says a random line."""
+        """A click only clears an active alert; otherwise the pet plays a random reaction."""
         self.monitor.notify_activity()
         if self.behavior.state == PetState.ALERT:
             self.behavior.clear_alert()
@@ -138,8 +161,17 @@ class CalciferApp:
             self._alert_message = ""
             self.bubble.hide()
             return
-        self.behavior.trigger_reaction()
-        self._say(random.choice(self._click_lines), auto_hide_ms=3000)
+        self.behavior.play_random_reaction()
+
+    def _say_random_line(self) -> None:
+        """The "speak" reaction: one random line from ``data/click_reactions.json``."""
+        if not self.bubble.is_sticky():
+            self._say(random.choice(self._click_lines), auto_hide_ms=3000)
+
+    def _show_pet_menu(self) -> None:
+        """Right-click on the pet: the small Chat / Idle (Wander) menu at the cursor."""
+        self.monitor.notify_activity()
+        self.pet_menu.popup(QCursor.pos(), self.behavior.resting)
 
     def _on_alert(self, message: str) -> None:
         """System-status alert: alert face + a bubble that stays until the pet is clicked."""
@@ -148,8 +180,9 @@ class CalciferApp:
         self._say(message, auto_hide_ms=None)
 
     def _on_joke(self, text: str) -> None:
-        """Ambient fact/joke after idle time (never covers an alert, skipped while hidden)."""
-        if self.sprite.isVisible() and not self.bubble.is_sticky():
+        """Ambient fact/joke after idle time (never covers an alert; skipped while hidden or
+        asleep)."""
+        if self.sprite.isVisible() and not self.bubble.is_sticky() and not self.behavior.sleeping:
             self.bubble.show_text(text, auto_hide_ms=5000)
 
     def _on_reminder(self, message: str) -> None:
@@ -205,13 +238,19 @@ class CalciferApp:
         self._agent_thread.start()
 
     def _on_agent_reply(self, reply: str) -> None:
-        """Show the reply in the chat bubble and animate the mouth."""
-        self.memory.add("assistant", reply)
-        self.chat.append_message("Calcifer", reply)
+        """Show the reply (without its emotion tag) in the chat bubble, show the emotion on the
+        pet's face for a few seconds and move its mouth."""
+        emotion, text = split_emotion(reply)
+        self.memory.add("assistant", reply)   # keep the tag: the model sees its own format
+        self.chat.append_message("Calcifer", text)
         self.chat.set_thinking(False)
-        self.sprite.character.set_thinking(False)
+        character = self.sprite.character
+        character.set_thinking(False)
+        mood = EMOTION_MOODS.get(emotion or "")
+        if mood is not None:
+            character.play(mood, EMOTION_SECONDS)
         # Move the mouth for roughly as long as it would take to say the reply.
-        self.sprite.character.play(Mood.TALKING, min(5.0, max(1.2, len(reply) * 0.045)))
+        character.talk(min(5.0, max(1.2, len(text) * 0.045)))
 
     def _on_agent_error(self, message: str) -> None:
         """Show the friendly error message (details are already in the log file)."""

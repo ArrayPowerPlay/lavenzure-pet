@@ -1,1 +1,1 @@
-"""The chat window UI."""
+"""The chat bubble UI."""
