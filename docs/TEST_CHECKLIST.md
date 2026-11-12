@@ -82,3 +82,4 @@ Mục tiêu (đề xuất, chỉnh nếu muốn):
 | Ngày | Phiên bản | Thời gian | CPU tb / max | GPU tb | RAM | RAM tăng/giờ | Frame (fps, ms) | Ghi chú |
 |---|---|---|---|---|---|---|---|---|
 | 2026-11-12 | trước tối ưu | 1.5 phút | 3.7% / 4.7% | 11.9% | 657 → 690 MB | — (quá ngắn) | 57-61 fps, 9.9 ms | OpenBLAS chiếm ~490 MB; đọc ảnh lửa từ GPU chiếm ~6 ms/khung |
+| 2026-11-13 | sau tối ưu (đọc ảnh lửa bất đồng bộ, OpenBLAS 1 luồng) | 60 phút (pet chạy ~21 phút, sau đó màn hình tắt nên pet tự ngừng vẽ) | 3.0–4.1% | 12–13% | 207 → 223 MB rồi đứng yên | ~0 | 61–62 fps, 6.6–7.0 ms (max ~70 ms) | không rò rỉ RAM/handle/GDI; CPU và GPU vẫn trên mục tiêu |
