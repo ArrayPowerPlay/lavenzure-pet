@@ -151,6 +151,8 @@ The repo uses two virtual environments (neither is committed):
 .venv-win/Scripts/python.exe -m pytest                            # run the tests (no display needed)
 .venv-win/Scripts/python.exe -m ruff check .                      # lint
 .venv-win/Scripts/python.exe src/character_preview.py [renderer]  # try every mood/motion, compare flame renderers
+.venv-win/Scripts/python.exe src/perf_check.py --minutes 60  # measure CPU / RAM / GPU of the real app
+.venv-win/Scripts/python.exe src/desktop_check.py              # check always-on-top / click-through of the running pet
 .venv-win/Scripts/python.exe src/bake_flame.py                    # regenerate the data for the `baked` renderer
 QT_QPA_PLATFORM=offscreen WSLENV=QT_QPA_PLATFORM .venv-win/Scripts/python.exe src/main.py  # headless smoke run
 ```
@@ -191,6 +193,7 @@ The design documents are written in Vietnamese:
 - [`docs/CONTEXT.md`](./docs/CONTEXT.md) — goals, architecture, locked technical decisions, change log.
 - [`docs/implementation_plan.md`](./docs/implementation_plan.md) — progress and the **next-steps roadmap**.
 - [`docs/DECISION_LOG.md`](./docs/DECISION_LOG.md) — log of the decisions agreed so far (and the ones still open).
+- [`docs/TEST_CHECKLIST.md`](./docs/TEST_CHECKLIST.md) — real-desktop test checklist and performance measurements.
 - [`CLAUDE.md`](./CLAUDE.md) — guidance for AI coding agents working in this repo (English).
 - [`docs/ANIMATION_TUTORIAL.md`](./docs/ANIMATION_TUTORIAL.md) — the abandoned PNG-cutout approach, kept for reference only.
 

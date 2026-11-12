@@ -27,6 +27,8 @@ The repo lives on the Windows drive at `D:\workspace\pet` (WSL path `/mnt/d/work
 QT_QPA_PLATFORM=offscreen .venv-win/Scripts/python.exe src/main.py   # headless smoke test
 .venv-win/Scripts/python.exe src/autostart/install_startup.py   # create Startup-folder shortcut (pythonw.exe)
 .venv-win/Scripts/python.exe src/character_preview.py [renderer ...]  # compare flame renderers, try every mood/motion
+.venv-win/Scripts/python.exe src/perf_check.py --minutes 60          # CPU/RAM/GPU of the real app (quit the running pet first)
+.venv-win/Scripts/python.exe src/desktop_check.py                     # read-only always-on-top / click-through checks of the running pet
 .venv-win/Scripts/python.exe src/bake_flame.py                  # re-run the offline fire sim for the `baked` renderer
 .venv/bin/python src/character_preview.py                       # same preview via WSLg (Linux venv)
 .venv-win/Scripts/python.exe -m pip install -r requirements-dev.txt  # pytest + ruff

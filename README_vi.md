@@ -151,6 +151,8 @@ Repo dùng 2 môi trường ảo (đều không đưa lên git):
 .venv-win/Scripts/python.exe -m pytest                            # chạy test (không cần màn hình)
 .venv-win/Scripts/python.exe -m ruff check .                      # kiểm tra code
 .venv-win/Scripts/python.exe src/character_preview.py [renderer]  # thử mọi biểu cảm/chuyển động, so sánh cách vẽ lửa
+.venv-win/Scripts/python.exe src/perf_check.py --minutes 60  # đo CPU / RAM / GPU của app thật
+.venv-win/Scripts/python.exe src/desktop_check.py              # kiểm tra luôn nổi / click xuyên của pet đang chạy
 .venv-win/Scripts/python.exe src/bake_flame.py                    # tạo lại dữ liệu lửa cho renderer `baked`
 QT_QPA_PLATFORM=offscreen WSLENV=QT_QPA_PLATFORM .venv-win/Scripts/python.exe src/main.py  # chạy thử không cần màn hình
 ```
@@ -189,6 +191,7 @@ assets/flame/               # dữ liệu lửa đã tính sẵn cho renderer `b
 - [`docs/CONTEXT.md`](./docs/CONTEXT.md) — mục tiêu, kiến trúc, các quyết định kỹ thuật đã chốt, lịch sử thay đổi.
 - [`docs/implementation_plan.md`](./docs/implementation_plan.md) — tiến độ và **kế hoạch các bước tiếp theo**.
 - [`docs/DECISION_LOG.md`](./docs/DECISION_LOG.md) — nhật ký các quyết định đã chốt (và những việc còn bàn).
+- [`docs/TEST_CHECKLIST.md`](./docs/TEST_CHECKLIST.md) — checklist thử trên desktop thật và kết quả đo hiệu năng.
 - [`CLAUDE.md`](./CLAUDE.md) — hướng dẫn cho AI coding agent làm việc trong repo.
 - [`docs/ANIMATION_TUTORIAL.md`](./docs/ANIMATION_TUTORIAL.md) — hướng làm bằng ảnh PNG cũ, đã bỏ, chỉ giữ để tham khảo.
 

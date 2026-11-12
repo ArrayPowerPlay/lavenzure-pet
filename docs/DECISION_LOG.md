@@ -149,6 +149,14 @@
 - **Claude tự quyết (user có thể đổi):** hai mặt chép **không lật trái/phải** ngẫu nhiên nữa (để giống y ảnh); mặt vui hình 2 giữ nguyên (vẫn chọn ngẫu nhiên hình 1 / hình 2); khi đang nói, miệng chép của vui khép mở theo lời, miệng chill (đang khép) thì tạm mở ra như miệng nói thường.
 - **Tay trên khúc gỗ theo hình 4:** thân ngồi đè lên khúc gỗ (nửa dưới bè rộng ra như có sức nặng), mép dưới thân phủ nhẹ xuống mặt trước khúc gỗ, hai tay là hai thùy tròn của chính thân đó buông xuống. Phần đè lên gỗ **toàn màu vàng tới tận viền** (hết dải cam / đỏ quanh tay và vệt cam ngang đáy), dải đỏ / cam hai bên thân chạy xuống tới khúc gỗ như hình 4.
 
+### Lượt 13 (2026-11-12) — user duyệt hoạt ảnh lượt 12; làm README, A7 và hiệu năng
+- **User duyệt hoạt ảnh** ("khá đẹp và ưng ý") → chuyển sang A7 (thử trên desktop thật) và Phase 12 (hiệu năng).
+- **README** (cả hai bản): đầu trang là ảnh pet cắt từ khung hình thật của bộ vẽ shader (`docs/images/hero.png`), thêm dải biểu cảm (`docs/images/expressions.png`) và mục giới thiệu hoạt ảnh. Ảnh do code của repo tự vẽ, không dùng ảnh tham khảo của họa sĩ khác.
+- **A7:** checklist ở `docs/TEST_CHECKLIST.md`; phần tự kiểm bằng `src/desktop_check.py` đã PASS.
+- **Hiệu năng — Claude tự quyết (không đổi hình ảnh):** numpy chỉ dùng 1 luồng OpenBLAS (trước đó giữ sẵn ~490 MB RAM); đọc ảnh lửa từ GPU qua 2 bộ đệm PBO, ảnh lửa trễ 1 khung (~16 ms, mắt không thấy), hình giống hệt từng pixel.
+- **Mục tiêu hiệu năng đề xuất** (user có thể đổi): CPU dưới 2% cả máy, GPU dưới 10%, RAM dưới 250 MB, không tăng dần theo giờ, ~60 fps.
+
 ## Còn bàn
 
-- Chờ user duyệt kết quả lượt 12.
+- Kết quả đo hiệu năng 60 phút sau tối ưu (cần user tắt pet đang chạy để đo, hoặc cho phép Claude tắt).
+- Nếu vẫn vượt mục tiêu: có giảm độ phân giải lửa / vẽ lửa 30 khung/giây / tạm dừng khi có app toàn màn hình không (đều ảnh hưởng hình ảnh hoặc hành vi → cần user chọn).

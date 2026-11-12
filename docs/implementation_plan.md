@@ -145,7 +145,8 @@ Còn thiếu / cần làm tiếp:
 - [x] **A4. Không crash khi thiếu `GEMINI_API_KEY`.** `agent/graph.py` tạo client ngay lúc import → app không mở được. Chuyển sang tạo khi chat lần đầu; thiếu key thì pet vẫn chạy, chat báo cần key.
 - [x] **A5. Công cụ chịu lỗi mạng.** `weather`/`web_search` hiện ném exception khi mất mạng/API lỗi → hỏng cả lượt chat. Bắt lỗi và trả về câu mô tả lỗi cho LLM.
 - [x] **A6. Chỉ cho chạy 1 bản** (`QLocalServer`/`QLocalSocket` hoặc named mutex). Tránh 2 con pet khi vừa autostart vừa chạy tay; lần chạy thứ 2 có thể chỉ mở cửa sổ chat của bản đang chạy.
-- [ ] **A7. Thử trên desktop thật** theo checklist: click xuyên vùng trong suốt, luôn nổi trên app khác (kể cả app fullscreen/always-on-top khác), kéo-thả, cảnh báo, hẹn giờ, CPU khi chạy vài giờ.
+- [ ] **A7. Thử trên desktop thật** theo checklist: click xuyên vùng trong suốt, luôn nổi trên app khác (kể cả app fullscreen/always-on-top khác), kéo-thả, cảnh báo, hẹn giờ, CPU khi chạy vài giờ. → *Đang làm (2026-11-12, lượt 13):* checklist ở [TEST_CHECKLIST.md](./TEST_CHECKLIST.md); phần máy tự kiểm (`src/desktop_check.py`: luôn nổi, click xuyên góc trong suốt, thân lửa nhận click, nằm trên taskbar) đã PASS; phần cần người thử đang chờ user.
+- [ ] **A8. Hiệu năng (Phase 12 cũ)** → *Đang làm (lượt 13):* có công cụ đo `src/perf_check.py` + dòng `frame stats` trong log. Đo lần đầu: CPU ~3.7% cả máy, GPU ~12%, RAM 657 MB, ~10 ms/khung. Đã sửa: giới hạn OpenBLAS 1 luồng (RAM lúc mở 657 → ~173 MB) và đọc ảnh lửa từ GPU không chờ (PBO, ~6 ms → ~1 ms/khung, hình giống hệt). Còn: đo lại 60 phút sau khi user tắt pet đang chạy.
 
 ### Giai đoạn B — Chat và bong bóng thoại
 - [x] **B1. Bong bóng thoại đi theo pet.** Hiện bong bóng đặt vị trí 1 lần rồi đứng yên; pet đi chỗ khác thì bong bóng bị bỏ lại (rõ nhất với cảnh báo dính lâu).
