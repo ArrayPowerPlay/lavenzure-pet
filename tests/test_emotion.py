@@ -9,6 +9,7 @@ from agent.emotion import split_emotion
     ("[Scared]\nOh no, 98% CPU!", "scared", "Oh no, 98% CPU!"),
     ("**[angry]** Hmph.", "angry", "Hmph."),
     ("  [ thinking ]  Let me see...", "thinking", "Let me see..."),
+    ("[yuck] Eww, raw broccoli.", "yuck", "Eww, raw broccoli."),
     ("[other] Just a fact.", None, "Just a fact."),
     ("No tag at all.", None, "No tag at all."),
     ("[sleepy] Unknown tag stays.", None, "[sleepy] Unknown tag stays."),
@@ -23,3 +24,10 @@ def test_markdown_link_is_not_a_tag():
     """A reply that starts with a markdown link keeps it (``[text](url)`` is not a tag)."""
     emotion, text = split_emotion("[docs](https://example.com) say hi")
     assert emotion is None and text.startswith("[docs](")
+
+
+def test_yuck_is_offered_to_the_model():
+    """The AI may pick the ``yuck`` face (round 12), and main maps it to the yuck mood."""
+    from agent.emotion import EMOTION_INSTRUCTIONS, EMOTIONS
+
+    assert "yuck" in EMOTIONS and "[yuck]" in EMOTION_INSTRUCTIONS
