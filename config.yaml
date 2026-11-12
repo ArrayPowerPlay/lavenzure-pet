@@ -39,6 +39,9 @@ ambient:
     idle_minutes: 15 # trigger a random line after this many minutes without chat/click activity
     facts_file: data/facts_jokes.json
 
+chat:
+  reply_bubble_max_chars: 140 # short replies also appear in the bubble above the pet (0 = never)
+
 click_reaction:
   lines_file: data/click_reactions.json
 
