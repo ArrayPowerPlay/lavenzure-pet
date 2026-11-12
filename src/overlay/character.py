@@ -556,6 +556,11 @@ class FlameCharacter:
         painter.scale(self._sx, self._sy)
         painter.shear(-self._lean.value * 0.22, 0.0)  # top of the body leans, feet stay put
         self._paint_glow(painter)
+        # The pan sits *in* the flattened flame, painted behind it: the fire's top edge laps
+        # over the pan's bottom and its tongues lick up around it, so Calcifer is cooking with
+        # his own fire (reference fig. 7).
+        pan_y = -(2.1 * BODY_CY * max(ex.body_h, 0.7) + 0.3) * self.R
+        self.pan.paint_back(painter, pan_y)
         if self.flame.name == "shader":
             self.flame.paint(painter, self._colors())
         else:
@@ -564,10 +569,8 @@ class FlameCharacter:
             self.flame.paint(painter, self._colors())
             painter.restore()
         self._paint_shine(painter)
-        # The pan rests on the flattened flame, just above the eyes; the low tongues peek out
-        # around its rim.
-        self.pan.paint(painter, -(2.1 * BODY_CY * max(ex.body_h, 0.7) + 0.02) * self.R)
         self.face.paint(painter)
+        self.pan.paint_front(painter, pan_y)
         painter.restore()
 
         if self.log.visible:

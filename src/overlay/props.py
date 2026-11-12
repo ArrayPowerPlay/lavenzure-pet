@@ -21,7 +21,7 @@ import random
 from dataclasses import dataclass
 
 from PySide6.QtCore import QPointF, QRectF, Qt
-from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen
+from PySide6.QtGui import QColor, QLinearGradient, QPainter, QPainterPath, QPen
 
 from overlay.flame_common import Spring, clamp, lerp, noise1, smoothstep
 
@@ -150,13 +150,13 @@ class LogProp:
         painter.setBrush(BARK_LIGHT)
         painter.drawRoundedRect(QRectF(-L * 0.78, -r * 0.72, L * 1.4, r * 0.32), r * 0.16,
                                 r * 0.16)                         # light catching the top
-        painter.restore()
-        # A few bark grooves.
+        # A few bark grooves (as fractions of the log's radius, so they stay on the bark).
         painter.setPen(QPen(BARK_LINE, 0.045 * R, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
-        for x0, x1, y in ((-0.95, -0.35, 0.18), (0.05, 0.75, 0.02), (-0.55, 0.1, -0.38)):
-            groove = QPainterPath(QPointF(x0 * R, y * R))
-            groove.quadTo(QPointF((x0 + x1) / 2 * R, (y - 0.05) * R), QPointF(x1 * R, y * R))
+        for x0, x1, y in ((-0.95, -0.35, 0.55), (0.05, 0.75, 0.1), (-0.55, 0.1, -0.15)):
+            groove = QPainterPath(QPointF(x0 * R, y * r))
+            groove.quadTo(QPointF((x0 + x1) / 2 * R, y * r - 0.05 * R), QPointF(x1 * R, y * r))
             painter.drawPath(groove)
+        painter.restore()
         painter.setPen(ink)
         painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.drawPath(body)
@@ -183,7 +183,10 @@ class LogProp:
 
     def _paint_paws(self, painter: QPainter, amount: float,
                     paw_colors: tuple[QColor, QColor]) -> None:
-        """Two little flame paws hugging the top of the log (they knead slowly)."""
+        """Two round flame paws draped over the front of the log (reference fig. 4): each is a
+        single soft blob, like a mitten - no fingers or toe lines. It grows out of the body
+        (no outline across its top, so it reads as part of the flame) and hangs over the log
+        with a round bottom. The paws knead slowly, each squashing a little in turn."""
         R = self.R
         fill, under = paw_colors
         grow = smoothstep(0.55, 1.0, amount)
@@ -191,29 +194,42 @@ class LogProp:
             return
         top = (LOG_CY - LOG_RADIUS) * R
         for side in (-1, 1):
-            knead = 0.025 * R * math.sin(self._t * 2.6 + (0.0 if side < 0 else 2.1))
-            cx = side * 0.52 * R
-            cy = top + 0.05 * R + knead
-            rx, ry = 0.21 * R * grow, 0.15 * R * grow
-            paw = QPainterPath()
-            paw.addEllipse(QPointF(cx, cy), rx, ry)
+            phase = self._t * 2.6 + (0.0 if side < 0 else 2.1)
+            press = 0.5 + 0.5 * math.sin(phase)             # 1 = pressed into the log
+            half_w = (0.19 + 0.015 * press) * R * grow       # pressing makes it a bit wider ...
+            depth = (0.27 - 0.025 * press) * R * grow        # ... and a bit shorter
+            cx = side * 0.5 * R
+            y0 = top - 0.1 * R                               # starts inside the body
+            y1 = top + depth                                 # round bottom over the log front
+            # Outline of the visible part: down one side, around the round bottom, up the other.
+            rim = QPainterPath(QPointF(cx - half_w, y0))
+            rim.cubicTo(QPointF(cx - half_w * 1.08, y0 + (y1 - y0) * 0.45),
+                        QPointF(cx - half_w * 1.02, y1),
+                        QPointF(cx, y1))
+            rim.cubicTo(QPointF(cx + half_w * 1.02, y1),
+                        QPointF(cx + half_w * 1.08, y0 + (y1 - y0) * 0.45),
+                        QPointF(cx + half_w, y0))
+            blob = QPainterPath(rim)
+            blob.closeSubpath()
             painter.save()
             painter.setPen(Qt.PenStyle.NoPen)
             painter.setBrush(fill)
-            painter.drawPath(paw)
-            painter.setClipPath(paw)
+            painter.drawPath(blob)
+            # A warm shade along the bottom and a small shine dot give it a soft, round volume.
+            painter.setClipPath(blob)
             painter.setBrush(under)
-            painter.drawEllipse(QPointF(cx, cy + ry * 1.05), rx * 1.1, ry * 0.55)
+            painter.drawEllipse(QPointF(cx + side * 0.03 * R, y1 + 0.02 * R),
+                                half_w * 1.15, depth * 0.38)
             painter.setClipping(False)
+            painter.setBrush(QColor(255, 255, 255, 150))
+            painter.drawEllipse(QPointF(cx - side * half_w * 0.38, y0 + (y1 - y0) * 0.5),
+                                0.035 * R * grow, 0.05 * R * grow)
+            # Ink only where the paw hangs over the log; above it the paw melts into the body.
+            painter.setClipRect(QRectF(cx - R, top - 0.03 * R, 2 * R, 2 * R))
             painter.setPen(QPen(INK, 0.055 * R, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap,
                                 Qt.PenJoinStyle.RoundJoin))
             painter.setBrush(Qt.BrushStyle.NoBrush)
-            painter.drawPath(paw)
-            # Two tiny toe creases.
-            painter.setPen(QPen(INK, 0.035 * R, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
-            for dx in (-0.3, 0.3):
-                painter.drawLine(QPointF(cx + dx * rx, cy + ry * 0.35),
-                                 QPointF(cx + dx * rx * 0.9, cy + ry * 0.85))
+            painter.drawPath(rim)
             painter.restore()
 
 
@@ -316,18 +332,25 @@ class PanProp:
         """True on the frame the pan first slams down (the character squashes the body)."""
         return self._drop.value > 0.96 and self._drop.velocity > 1.5
 
-    def paint(self, painter: QPainter, top_y: float) -> None:
-        """Draw the pan resting at ``top_y`` (body pixels: the flattened flame's top)."""
-        if not self.visible or self._alpha <= 0.01:
-            return
+    def _place(self, painter: QPainter, top_y: float) -> None:
+        """Move / rotate ``painter`` to the pan's centre (it sits at ``top_y``, wobbles in the
+        heat and drops in from above)."""
         R = self.R
-        drop = self._drop.value
-        y_off = (1.0 - drop) * -2.2 * R
+        y_off = (1.0 - self._drop.value) * -2.2 * R
         sizzle = 0.012 * R * math.sin(self._t * 31.0) * self._alpha
-        painter.save()
         painter.setOpacity(painter.opacity() * self._alpha)
         painter.translate(0.12 * R + sizzle, top_y + y_off)
         painter.rotate(-4.0 + 2.0 * noise1(self._t * 0.8, self._seed + 99))
+
+    def paint_back(self, painter: QPainter, top_y: float) -> None:
+        """Draw the pan itself (handle, pan, food) centred at ``top_y`` (body pixels). It is
+        painted *behind* the flame body, so the fire's top edge laps over the pan's bottom and
+        its tongues lick up around it (reference fig. 7: Calcifer cooking with his own fire)."""
+        if not self.visible or self._alpha <= 0.01:
+            return
+        R = self.R
+        painter.save()
+        self._place(painter, top_y)
         ink = QPen(INK, 0.06 * R, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap,
                    Qt.PenJoinStyle.RoundJoin)
         # As wide as the flattened flame (reference fig. 7), so the fire peeks out at the sides.
@@ -356,6 +379,18 @@ class PanProp:
         painter.setPen(ink)
         painter.setBrush(PAN_DARK)
         painter.drawPath(wall)
+        # The fire heats the pan: a hot orange glow creeps up its wall from below, pulsing.
+        heat = QLinearGradient(0.0, depth + ry * 0.9, 0.0, 0.0)
+        pulse = 0.8 + 0.2 * math.sin(self._t * 4.3) * math.sin(self._t * 2.9 + 1.0)
+        heat.setColorAt(0.0, QColor(255, 120, 40, int(230 * pulse)))
+        heat.setColorAt(0.55, QColor(230, 70, 40, int(120 * pulse)))
+        heat.setColorAt(1.0, QColor(200, 50, 40, 0))
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(heat)
+        painter.drawPath(wall)
+        painter.setPen(ink)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawPath(wall)
         painter.setBrush(PAN_MID)
         painter.drawEllipse(QPointF(0.0, 0.0), rx, ry)
         inner = QPainterPath()
@@ -372,6 +407,14 @@ class PanProp:
         painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.drawArc(QRectF(-rx * 0.92, -ry * 0.92, 2 * rx * 0.92, 2 * ry * 0.92),
                         int(110 * 16), int(50 * 16))
+        painter.restore()
+
+    def paint_front(self, painter: QPainter, top_y: float) -> None:
+        """Draw what floats in front of everything: steam puffs and grease pops."""
+        if not self.visible or self._alpha <= 0.01:
+            return
+        painter.save()
+        self._place(painter, top_y)
         self._paint_wisps(painter)
         painter.restore()
 
