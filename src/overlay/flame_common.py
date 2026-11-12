@@ -79,6 +79,24 @@ def smoothstep(edge0: float, edge1: float, x: float) -> float:
     return t * t * (3.0 - 2.0 * t)
 
 
+class Spring:
+    """Damped spring (semi-implicit Euler). Under-damped settings give a jelly-like wobble."""
+
+    def __init__(self, value: float, stiffness: float, damping: float) -> None:
+        """Start at rest at ``value``."""
+        self.value = value
+        self.velocity = 0.0
+        self.stiffness = stiffness
+        self.damping = damping
+
+    def step(self, target: float, dt: float) -> float:
+        """Advance the spring toward ``target`` by ``dt`` seconds and return the new value."""
+        accel = self.stiffness * (target - self.value) - self.damping * self.velocity
+        self.velocity += accel * dt
+        self.value += self.velocity * dt
+        return self.value
+
+
 def _hash(i: int, seed: int) -> float:
     """Deterministic pseudo-random value in ``[-1, 1]``.
 
@@ -125,6 +143,16 @@ class FlameDrive:
     wind_y: float
     sway: float
     breath: float
+    # Body shape (expressions reshape the flame freely; only the shader renderer draws all of it,
+    # the others get a plain scale): width / height multipliers, boxiness 0..1, raggedness 0..1,
+    # side flares ("arms") 0..1 and their flapping phase / strength.
+    body_w: float = 1.0
+    body_h: float = 1.0
+    boxy: float = 0.0
+    jag: float = 0.0
+    arms: float = 0.0
+    arms_phase: float = 0.0
+    arms_flap: float = 0.0
 
 
 @dataclass

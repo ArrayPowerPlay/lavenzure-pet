@@ -55,11 +55,19 @@ class Mood(Enum):
     """Facial expression / energy level the character is showing."""
 
     NORMAL = auto()
-    HAPPY = auto()
+    HAPPY = auto()       # two looks, picked at random: sly side-glance grin / beaming upward
     SURPRISED = auto()
+    SCARED = auto()      # fire bursts big and boxy, tiny pupils, huge open mouth
+    ANGRY = auto()       # brows down, narrowed eyes, shouting, fire flares out at the sides
+    CHILL = auto()       # flattened and relaxed under a frying pan (the pan is a prop)
     ALERT = auto()
     THINKING = auto()
     TALKING = auto()
+    SLEEP = auto()       # closed smiling eyes, low wide flame, slow breathing
+    YAWN = auto()        # on the way to sleep
+    WAKE = auto()        # just woke up: eyes pop open, a little stretch
+    FLY = auto()         # riding the log through the air (calm, content)
+    TAKEOFF = auto()     # the moment the log is summoned (excited)
 
 
 @dataclass
@@ -69,6 +77,12 @@ class Expression:
     eye_open: float = 1.0      # upper lid: 1 = fully open, 0 = closed
     lower_lid: float = 0.0     # 1 = cheeks push the lower lid up (smiling / squinting eyes)
     eye_scale: float = 1.0     # overall eye size
+    eye_wide: float = 1.0      # horizontal stretch of the eyes (sly / sleepy looks are wide)
+    eye_y: float = 0.0         # moves the eyes down (+) or up (-), in R
+    gaze_x: float = 0.0        # forced look direction (-1..1, x right, y down) ...
+    gaze_y: float = 0.0
+    gaze_lock: float = 0.0     # ... and how strongly it overrides cursor tracking (0..1)
+    brow: float = 0.0          # 1 = angry brows slanting down to the nose, -1 = worried brows
     pupil: float = 1.0         # pupil size relative to the eye
     happy_eyes: float = 0.0    # 1 = closed "^ ^" smiling eyes
     slant: float = 0.0         # +1 = lids slope down toward the nose (cross), -1 = up (worried)
@@ -84,20 +98,64 @@ class Expression:
     wild: float = 1.0          # flicker strength and how often the flame flares up
     alert: float = 0.0         # 0 = calm palette, 1 = alert palette
     shake: float = 0.0         # nervous horizontal jitter
+    body_w: float = 1.0        # body shape: width / height multipliers (feet stay put) ...
+    body_h: float = 1.0
+    boxy: float = 0.0          # ... round (0) to almost rectangular (1) ...
+    jag: float = 0.0           # ... smooth (0) to ragged, bursting edges all round (1) ...
+    arms: float = 0.0          # ... and flame "arms" flaring out at the sides (0..1)
+    snooze: float = 0.0        # 1 = slow sleepy breathing (and floating "z"s)
 
 
-MOOD_TARGETS: dict[Mood, Expression] = {
-    Mood.NORMAL: Expression(),
-    Mood.HAPPY: Expression(happy_eyes=1.0, mouth_open=0.8, smile=1.0, mouth_width=1.1,
-                           flame=1.15, flicker=1.4, wild=1.5),
-    Mood.SURPRISED: Expression(eye_scale=1.2, pupil=0.6, mouth_open=0.55, smile=0.0,
-                               mouth_round=1.0, flame=1.12, flicker=1.7, wild=1.6),
-    Mood.ALERT: Expression(eye_scale=1.05, pupil=0.78, slant=1.0, mouth_open=0.9, smile=-0.8,
-                           mouth_width=1.1, flame=1.12, flicker=2.0, wild=1.9, alert=1.0,
-                           shake=1.0),
-    Mood.THINKING: Expression(eye_open=0.72, smile=0.15, smirk=0.55, mouth_width=0.75,
-                              tilt=0.08, flame=0.9, flicker=0.6, wild=0.55),
-    Mood.TALKING: Expression(smile=0.6, flame=1.05, flicker=1.25, wild=1.15),
+# Each mood is one target expression, or several variants of which one is picked at random every
+# time the mood starts (``happy``: the reference sheet's sly side-glance grin and upward beam).
+MOOD_TARGETS: dict[Mood, tuple[Expression, ...]] = {
+    Mood.NORMAL: (Expression(),),
+    Mood.HAPPY: (
+        # sly: half-lidded wide eyes glancing sideways, big open grin
+        Expression(eye_open=0.6, eye_wide=1.4, eye_scale=0.96, pupil=0.85, gaze_x=1.0,
+                   gaze_y=0.3, gaze_lock=1.0, mouth_open=0.9, smile=0.55, mouth_width=1.32,
+                   flame=0.95, flicker=1.35, wild=1.3, body_w=1.1, body_h=0.98),
+        # beaming: round eyes rolled up to one side, a wide open "D" smile
+        Expression(eye_scale=1.08, pupil=0.72, gaze_x=-0.6, gaze_y=-0.8, gaze_lock=1.0,
+                   mouth_open=0.75, smile=0.9, mouth_width=1.4, flame=1.0, flicker=1.4, wild=1.4,
+                   body_w=1.04, body_h=1.03),
+    ),
+    Mood.SURPRISED: (Expression(eye_scale=1.2, pupil=0.6, mouth_open=0.55, smile=0.0,
+                                mouth_round=1.0, flame=1.12, flicker=1.7, wild=1.6,
+                                body_h=1.08, body_w=0.97),),
+    Mood.SCARED: (Expression(eye_scale=1.2, pupil=0.4, gaze_lock=1.0, eye_y=-0.16,
+                             mouth_open=1.15, smile=-0.4, mouth_width=2.5, flame=1.0,
+                             flicker=2.1, wild=1.9, shake=0.55, body_w=1.24, body_h=1.02,
+                             boxy=0.85, jag=1.0),),
+    Mood.ANGRY: (Expression(eye_open=0.8, eye_scale=0.98, pupil=0.66, slant=0.6, brow=1.0,
+                            lower_lid=0.2, mouth_open=1.1, smile=-0.55, mouth_width=1.85,
+                            flame=1.1, flicker=1.9, wild=1.3, alert=0.45, shake=0.35,
+                            body_w=1.1, body_h=1.02, arms=1.1),),
+    Mood.CHILL: (Expression(eye_open=0.62, eye_scale=1.12, eye_wide=1.15, lower_lid=0.12,
+                            slant=-0.22, pupil=0.9, gaze_x=0.6, gaze_y=0.1, gaze_lock=1.0,
+                            eye_y=0.14, smile=0.1, mouth_wave=1.0, mouth_width=1.55,
+                            flame=0.42, flicker=0.65, wild=0.6,
+                            body_w=1.3, body_h=0.8, boxy=0.35),),
+    Mood.ALERT: (Expression(eye_scale=1.05, pupil=0.78, slant=1.0, mouth_open=0.9, smile=-0.8,
+                            mouth_width=1.1, flame=1.12, flicker=2.0, wild=1.9, alert=1.0,
+                            shake=1.0),),
+    Mood.THINKING: (Expression(eye_open=0.72, smile=0.15, smirk=0.55, mouth_width=0.75,
+                               tilt=0.08, flame=0.9, flicker=0.6, wild=0.55),),
+    Mood.TALKING: (Expression(smile=0.6, flame=1.05, flicker=1.25, wild=1.15),),
+    Mood.SLEEP: (Expression(happy_eyes=1.0, eye_y=0.07, eye_wide=1.05, smile=0.55,
+                            mouth_width=0.85, flame=0.5, flicker=0.42, wild=0.4, body_w=1.14,
+                            body_h=0.85, snooze=1.0),),
+    Mood.YAWN: (Expression(mouth_round=1.0, mouth_open=1.15, eye_open=0.08, slant=-0.35,
+                           flame=0.85, flicker=0.6, wild=0.55, body_w=0.96, body_h=1.08,
+                           tilt=-0.06),),
+    Mood.WAKE: (Expression(eye_scale=1.14, pupil=0.72, mouth_round=0.7, mouth_open=0.3,
+                           smile=0.2, flame=1.15, flicker=1.4, wild=1.3, body_w=0.95,
+                           body_h=1.1),),
+    Mood.FLY: (Expression(pupil=0.9, mouth_open=0.5, smile=0.75, mouth_width=0.95, flame=1.05,
+                          flicker=1.1, wild=1.05),),
+    Mood.TAKEOFF: (Expression(eye_scale=1.14, pupil=0.72, gaze_lock=0.6, mouth_open=1.05,
+                              smile=0.35, mouth_width=1.2, flame=1.1, flicker=1.6, wild=1.3,
+                              body_h=1.04),),
 }
 
 # Small expressions the idle face drifts through: name -> (weight, (min, max) seconds, values).
@@ -111,19 +169,25 @@ MICRO_EXPRESSIONS: dict[str, tuple[float, tuple[float, float], dict[str, float]]
                                 "slant": -0.3}),
 }
 
-EYE_FIELDS = frozenset({"eye_open", "lower_lid", "eye_scale", "pupil", "happy_eyes", "slant",
-                        "tilt"})
 MOUTH_FIELDS = frozenset({"mouth_open", "smile", "mouth_round", "mouth_width", "mouth_wave",
                           "smirk"})
-# Parameters that blend with a slightly under-damped spring (a little overshoot = "pop").
-SPRUNG_FIELDS = frozenset({"eye_scale", "pupil", "mouth_open", "smile", "mouth_width",
-                           "lower_lid"})
+# Parameters that blend with an under-damped spring (a little overshoot = "pop"), as
+# (stiffness, damping). The body is softer and wobblier than the face: it puffs up like jelly.
+SPRUNG_FIELDS: dict[str, tuple[float, float]] = {
+    "eye_scale": (240.0, 21.0), "pupil": (240.0, 21.0), "mouth_open": (240.0, 21.0),
+    "smile": (240.0, 21.0), "mouth_width": (240.0, 21.0), "lower_lid": (240.0, 21.0),
+    "eye_wide": (240.0, 21.0), "brow": (260.0, 20.0),
+    "body_w": (150.0, 12.5), "body_h": (150.0, 12.5), "arms": (110.0, 9.0),
+}
 # Parameters that switch between two different drawings are cross-faded quickly, so the two
 # shapes are never seen as a ghostly double for long.
 FAST_FIELDS = frozenset({"mouth_round", "happy_eyes"})
 
-FACE_STIFFNESS = 240.0
-FACE_DAMPING = 21.0
+# Slow fields: the fire's shape settles calmly instead of snapping (e.g. going to sleep).
+SLOW_FIELDS = frozenset({"boxy", "jag", "snooze"})
+# Falling asleep: the body sinks slowly into its low, wide sleeping shape instead of popping.
+BODY_FIELDS = frozenset({"body_w", "body_h"})
+DROWSY_MOODS = frozenset({Mood.SLEEP, Mood.YAWN})
 MOUTH_DELAY = 0.075     # seconds the mouth lags behind the eyes when the mood changes
 
 EYE_X = 0.34            # eye centres, left/right of the face centre (R)
@@ -147,8 +211,10 @@ class Face:
         self.expr = Expression()
         self._vel: dict[str, float] = {name: 0.0 for name in SPRUNG_FIELDS}
         self._mood = Mood.NORMAL
-        self._mouth_mood = Mood.NORMAL
+        self._goal = MOOD_TARGETS[Mood.NORMAL][0]        # the variant picked for the mood
+        self._mouth_goal = self._goal                    # ... which the mouth follows later
         self._mouth_switch_at: float | None = None
+        self._talk_until = -1.0
 
         # Idle micro-expressions
         self._micro: str | None = None
@@ -177,28 +243,70 @@ class Face:
 
     # ------------------------------------------------------------------ simulation
 
+    @property
+    def mood(self) -> Mood:
+        """The mood the face is currently showing (or blending toward)."""
+        return self._mood
+
     def set_mood(self, mood: Mood) -> None:
         """Switch the target mood (called every frame; only real changes do anything)."""
         if mood == self._mood:
             return
+        self._start_mood(mood)
+
+    def restart_mood(self, mood: Mood) -> None:
+        """Start ``mood`` again even if it is already showing (picks a fresh variant and gives
+        the anticipation kick again, e.g. when the pet is clicked twice)."""
+        self._start_mood(mood)
+
+    def talk(self, seconds: float) -> None:
+        """Move the mouth like speaking for ``seconds``, on top of whatever expression is shown."""
+        self._talk_until = max(self._talk_until, self._t + seconds)
+
+    def _start_mood(self, mood: Mood) -> None:
+        """Pick a variant of ``mood``, schedule the mouth to follow, and kick the springs."""
         self._mood = mood
+        variants = MOOD_TARGETS[mood]
+        goal = self._rng.choice(variants) if len(variants) > 1 else variants[0]
+        if goal.gaze_x != 0.0 and self._rng.random() < 0.5:
+            goal = replace(goal, gaze_x=-goal.gaze_x)   # glance left or right
+        self._goal = goal
         self._mouth_switch_at = self._t + MOUTH_DELAY
         self._micro = None
+        vel = self._vel
         # Anticipation: squeeze a little the "wrong" way first, then the spring pops past.
         if mood == Mood.SURPRISED:
-            self._vel["eye_scale"] -= 2.5
-            self._vel["mouth_open"] -= 2.0
+            vel["eye_scale"] -= 2.5
+            vel["mouth_open"] -= 2.0
+            vel["body_h"] -= 1.2
         elif mood == Mood.HAPPY:
-            self._vel["lower_lid"] += 4.0
+            vel["lower_lid"] += 4.0
+            vel["body_w"] += 0.8
         elif mood == Mood.ALERT:
-            self._vel["eye_scale"] += 4.0
+            vel["eye_scale"] += 4.0
+        elif mood == Mood.SCARED:
+            vel["eye_scale"] -= 3.0      # eyes squeeze, then pop wide
+            vel["body_h"] -= 1.5         # a flinch down before the fire bursts up
+            vel["body_w"] -= 1.0
+        elif mood == Mood.ANGRY:
+            vel["body_h"] -= 1.8         # crouch / wind up before flaring
+            vel["brow"] += 3.0
+            vel["arms"] -= 1.0
+        elif mood == Mood.WAKE:
+            vel["eye_scale"] += 2.5
+            vel["body_h"] += 1.2
+        elif mood == Mood.TAKEOFF:
+            vel["body_h"] -= 1.2
+            vel["eye_scale"] += 2.0
+        elif mood == Mood.CHILL:
+            vel["body_h"] -= 1.0         # flops down under the pan
 
     def update(self, dt: float, cursor: QPointF | None, body_vy: float) -> None:
         """Advance ``dt`` seconds. ``cursor`` is the mouse relative to the face centre (pixels,
         or ``None``); ``body_vy`` is the body's vertical speed in R/s (for the lagging face)."""
         self._t += dt
         if self._mouth_switch_at is not None and self._t >= self._mouth_switch_at:
-            self._mouth_mood = self._mood
+            self._mouth_goal = self._goal
             self._mouth_switch_at = None
         self._update_micro()
         self._update_expression(dt)
@@ -227,9 +335,8 @@ class Face:
 
     def _target(self) -> Expression:
         """Current goal: eyes follow the mood now, the mouth a beat later, plus micro-overlay."""
-        eye_goal = MOOD_TARGETS[self._mood]
-        mouth_goal = MOOD_TARGETS[self._mouth_mood]
-        goal = replace(eye_goal, **{name: getattr(mouth_goal, name) for name in MOUTH_FIELDS})
+        mouth_goal = self._mouth_goal
+        goal = replace(self._goal, **{name: getattr(mouth_goal, name) for name in MOUTH_FIELDS})
         if self._micro is not None:
             _, _, values = MICRO_EXPRESSIONS[self._micro]
             env = (smoothstep(self._micro_start, self._micro_start + 0.3, self._t)
@@ -247,16 +354,20 @@ class Face:
             name = f.name
             current = getattr(self.expr, name)
             goal = getattr(target, name)
-            if name in SPRUNG_FIELDS:
+            spring = SPRUNG_FIELDS.get(name)
+            if spring is not None:
+                stiffness, damping = spring
+                if name in BODY_FIELDS and self._mood in DROWSY_MOODS:
+                    stiffness, damping = 22.0, 8.0     # melt down slowly when dozing off
                 vel = self._vel[name]
-                vel += (FACE_STIFFNESS * (goal - current) - FACE_DAMPING * vel) * dt
+                vel += (stiffness * (goal - current) - damping * vel) * dt
                 self._vel[name] = vel
                 setattr(self.expr, name, current + vel * dt)
             else:
-                rate = 20.0 if name in FAST_FIELDS else 9.0
+                rate = 20.0 if name in FAST_FIELDS else 2.5 if name in SLOW_FIELDS else 9.0
                 setattr(self.expr, name, approach(current, goal, rate, dt))
 
-        if self._mood == Mood.TALKING:
+        if self._mood == Mood.TALKING or self._t < self._talk_until:
             # Irregular "syllables" from noise, gated by a slower noise so phrases have pauses.
             syllable = clamp(0.5 + 1.2 * noise1(self._t * 7.0, self._seed + 501), 0.0, 1.0)
             phrase = smoothstep(-0.3, 0.05, noise1(self._t * 0.9, self._seed + 502))
@@ -303,8 +414,10 @@ class Face:
                         self._blink_start = self._t  # people often blink with a big glance
                         self._blink_len = 0.2
                 target_x, target_y = self._wander_target
-        target_x += self._jitter[0]
-        target_y += self._jitter[1]
+        # Expressions with a set look (sly side-glance, beaming up) override the free gaze.
+        lock = clamp(self.expr.gaze_lock, 0.0, 1.0)
+        target_x = lerp(target_x, self.expr.gaze_x, lock) + self._jitter[0] * (1.0 - 0.6 * lock)
+        target_y = lerp(target_y, self.expr.gaze_y, lock) + self._jitter[1] * (1.0 - 0.6 * lock)
         # Saccade: a far target is reached with one quick dart; near ones are followed smoothly.
         gap = math.hypot(target_x - self._look_x, target_y - self._look_y)
         if gap > 0.25:
@@ -332,23 +445,37 @@ class Face:
         """Map a face-space point (R, relative to the face centre) through head turn, tilt and
         lag into body pixels. Returns (x, y, horizontal foreshortening factor)."""
         R = self.R
-        turn = self._look_x * 0.38
-        nod = self._look_y * 0.08
+        ex = self.expr
+        lock = clamp(ex.gaze_lock, 0.0, 1.0)
+        turn = self._look_x * 0.38 * (1.0 - 0.7 * lock)   # set looks are eyes-only, not the head
+        nod = self._look_y * 0.08 * (1.0 - 0.7 * lock)
         theta0 = x / SPHERE_R
         theta = clamp(theta0 + turn, -1.3, 1.3)
         fx = SPHERE_R * math.sin(theta)
         squeeze = math.cos(theta) / max(0.2, math.cos(theta0))
         fy = y + nod
-        tilt = self.expr.tilt
+        tilt = ex.tilt
         ct, st = math.cos(tilt), math.sin(tilt)
         rx, ry = fx * ct - fy * st, fx * st + fy * ct
-        return rx * R, (ry - FACE_CY + self._lag) * R, squeeze
+        return rx * R, (ry - self._face_cy() + self._lag) * R, squeeze
+
+    def _face_cy(self) -> float:
+        """Height of the face centre above the feet (R); it rides up/down with the body height."""
+        return FACE_CY * self.expr.body_h
+
+    def _spread(self) -> float:
+        """How far apart features sit: a wider (or boxier) body spreads the face a little."""
+        return 1.0 + 0.45 * (self.expr.body_w - 1.0) + 0.3 * self.expr.boxy
 
     def _fit(self, cx: float, cy: float, pts: list[tuple[float, float]]) -> float:
         """Largest scale (<= 1) about (``cx``, ``cy``) that keeps ``pts`` (body pixels, relative to
         that centre) inside the face safe area."""
         R = self.R
-        ex, ey, ax, ay = 0.0, -FACE_CY * R, FACE_RX * R, FACE_RY * R
+        bw, bh = self.expr.body_w, self.expr.body_h
+        ex, ey, ax, ay = 0.0, -self._face_cy() * R, FACE_RX * bw * R, FACE_RY * bh * R
+        # A boxy body has more room in its corners, so the face may grow wider and taller.
+        ax *= 1.0 + 0.6 * self.expr.boxy
+        ay *= 1.0 + 0.35 * self.expr.boxy
         scale = 1.0
         for _ in range(3):
             worst = max(((cx + px * scale - ex) / ax) ** 2 + ((cy + py * scale - ey) / ay) ** 2
@@ -361,18 +488,45 @@ class Face:
     # ------------------------------------------------------------------ painting
 
     def paint(self, painter: QPainter) -> None:
-        """Draw both eyes and the mouth (painter in body coordinates)."""
+        """Draw both eyes, the brows (if any) and the mouth (painter in body coordinates)."""
         for side in (-1, 1):
             self._paint_eye(painter, side)
+        if abs(self.expr.brow) > 0.03:
+            for side in (-1, 1):
+                self._paint_brow(painter, side)
         self._paint_mouth(painter)
+
+    def _paint_brow(self, painter: QPainter, side: int) -> None:
+        """A thick rounded brow stroke over one eye. ``brow`` > 0 slants it down toward the nose
+        (angry), < 0 up toward the middle (worried); it also presses down on the eye a bit."""
+        R = self.R
+        ex = self.expr
+        amount = clamp(ex.brow, -1.0, 1.2)
+        cx, cy, squeeze = self._place(side * EYE_X * self._spread(), EYE_Y + ex.eye_y)
+        ry = EYE_RY * R * ex.eye_scale
+        half = EYE_RX * R * 1.15 * ex.eye_wide * squeeze
+        lift = ry * (1.05 - 0.25 * max(amount, 0.0))
+        drop = 0.42 * ry * amount               # inner end goes down (angry) or up (worried)
+        inner = QPointF(cx - side * half, cy - lift + drop)
+        outer = QPointF(cx + side * half, cy - lift - drop * 0.45)
+        mid = QPointF((inner.x() + outer.x()) / 2, (inner.y() + outer.y()) / 2 - 0.05 * R)
+        path = QPainterPath(inner)
+        path.quadTo(mid, outer)
+        painter.save()
+        painter.setOpacity(painter.opacity() * smoothstep(0.03, 0.4, abs(amount)))
+        painter.setPen(QPen(INK, 0.11 * R, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap,
+                            Qt.PenJoinStyle.RoundJoin))
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawPath(path)
+        painter.restore()
 
     def _paint_eye(self, painter: QPainter, side: int) -> None:
         """One eye: outlined white with a tracking pupil, cut by the lids, or a "^" arc, or a
         closed line while blinking."""
         R = self.R
         ex = self.expr
-        cx, cy, squeeze = self._place(side * EYE_X, EYE_Y)
-        rx = EYE_RX * R * ex.eye_scale * squeeze
+        cx, cy, squeeze = self._place(side * EYE_X * self._spread(), EYE_Y + ex.eye_y)
+        rx = EYE_RX * R * ex.eye_scale * ex.eye_wide * squeeze
         ry = EYE_RY * R * ex.eye_scale
         angles = (i * math.tau / 12 for i in range(12))
         ring = [(rx * math.cos(a), ry * math.sin(a)) for a in angles]
@@ -457,17 +611,21 @@ class Face:
         painter.save()
         painter.setClipPath(eye)
         painter.setPen(Qt.PenStyle.NoPen)
-        px = self._look_x * rx * 0.5
-        py = cy + self._look_y * ry_b * 0.42 + ry_b * 0.2 * max(0.0, slant)
-        pr = rx * 0.56 * ex.pupil
+        lock = clamp(ex.gaze_lock, 0.0, 1.0)
+        pr = min(rx, EYE_RX * R * ex.eye_scale) * 0.56 * ex.pupil
+        # Pupils travel further when an expression sets the look (they touch the eye's edge).
+        px = self._look_x * rx * (0.5 + 0.18 * lock)
+        py = cy + self._look_y * ry_b * (0.42 + 0.22 * lock) + ry_b * 0.2 * max(0.0, slant)
         painter.setBrush(PUPIL)
         painter.drawEllipse(QPointF(px, py), pr, pr * max(0.65, openness))
         painter.restore()
 
-        if lid_cut and abs(slant) > 0.05:
-            # A firm lid line that runs a bit past the eye, like a brow (cross / worried looks).
+        lid_weight = max(abs(slant) * 1.5, (0.9 - lid_open) * 4.0)
+        if lid_cut and lid_weight > 0.05:
+            # A firm lid line that runs a bit past the eye, like a brow (cross / worried / sly
+            # half-lidded looks).
             painter.save()
-            painter.setOpacity(painter.opacity() * min(1.0, abs(slant) * 1.5))
+            painter.setOpacity(painter.opacity() * min(1.0, lid_weight))
             painter.setPen(QPen(INK, 0.075 * R, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
             a, b = QPointF(inner_x, inner_y), QPointF(outer_x, outer_y)
             painter.drawLine(QPointF(lerp(a.x(), b.x(), 0.14), lerp(a.y(), b.y(), 0.14)),
@@ -510,11 +668,11 @@ class Face:
         """Mouth: closed curve / open "D" smile or scream, cross-faded with a round "o"."""
         R = self.R
         ex = self.expr
-        cx, cy, squeeze = self._place(0.0, MOUTH_Y)
+        cx, cy, squeeze = self._place(0.0, MOUTH_Y * (0.85 + 0.15 * self.expr.body_h))
         w = MOUTH_W * R * ex.mouth_width * (1.0 + 0.15 * max(ex.smile, 0.0)) * squeeze
         top, bottom, open_amount = self._mouth_curves(w)
         # Round "o" mouth size, needed for the safe-area fit too.
-        o_size = 0.7 + 0.55 * open_amount
+        o_size = 0.7 + 0.55 * open_amount + 0.9 * max(open_amount - 0.85, 0.0)  # big yawn
         o_rx, o_ry = 0.15 * R * o_size * squeeze, 0.18 * R * o_size
         ct, st = math.cos(ex.tilt), math.sin(ex.tilt)
         pts = top + bottom + [(o_rx * math.cos(a), 0.06 * R + o_ry * math.sin(a))

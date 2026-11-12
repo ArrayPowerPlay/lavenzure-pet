@@ -125,29 +125,45 @@ def main() -> int:
         return lambda: [fn(ch) for ch in chars]
 
     def reset(ch: FlameCharacter) -> None:
-        """Back to the calm base mood."""
+        """Back to the calm base mood (no props, awake, daytime)."""
         ch.stop_transient()
         ch.set_alert(False)
         ch.set_thinking(False)
+        ch.set_sleeping(False)
+        ch.set_riding(False)
 
     button("Normal", 0, 0, each(reset))
-    button("Happy (click)", 0, 1, each(lambda ch: ch.play(Mood.HAPPY, 1.4)))
-    button("Surprised (drag)", 0, 2, each(lambda ch: ch.play(Mood.SURPRISED, 2.0)))
-    button("Talking", 0, 3, each(lambda ch: ch.play(Mood.TALKING, 4.0)))
-    button("Thinking", 1, 0, each(lambda ch: (reset(ch), ch.set_thinking(True))))
-    button("Alert", 1, 1, each(lambda ch: (reset(ch), ch.set_alert(True))))
-    button("Walk", 1, 2, lambda: [s.start_motion("walk") for s in stages])
-    button("Float", 1, 3, lambda: [s.start_motion("float") for s in stages])
-    button("Jump", 2, 0, lambda: [s.start_motion("jump") for s in stages])
-    button("Stop moving", 2, 1, lambda: [s.start_motion(None) for s in stages])
-    button("Hop", 2, 2, each(lambda ch: ch.bounce(1.0)))
+    button("Happy", 0, 1, each(lambda ch: ch.play(Mood.HAPPY, 2.2)))
+    button("Surprised", 0, 2, each(lambda ch: ch.play(Mood.SURPRISED, 2.0)))
+    button("Scared", 0, 3, each(lambda ch: ch.play(Mood.SCARED, 2.5)))
+    button("Angry", 0, 4, each(lambda ch: ch.play(Mood.ANGRY, 2.5)))
+    button("Chill (pan)", 1, 0, each(lambda ch: ch.play(Mood.CHILL, 5.0)))
+    button("Thinking", 1, 1, each(lambda ch: (reset(ch), ch.set_thinking(True))))
+    button("Talking", 1, 2, each(lambda ch: ch.talk(3.0)))
+    button("Alert", 1, 3, each(lambda ch: (reset(ch), ch.set_alert(True))))
+    button("Sleep / wake", 1, 4, each(lambda ch: ch.set_sleeping(not ch.sleeping)))
+    button("Log on / off", 2, 0, each(lambda ch: ch.set_riding(not ch.riding, takeoff=True)))
+    button("Walk", 2, 1, lambda: [s.start_motion("walk") for s in stages])
+    button("Float", 2, 2, lambda: [s.start_motion("float") for s in stages])
+    button("Jump", 2, 3, lambda: [s.start_motion("jump") for s in stages])
+    button("Stop moving", 2, 4, lambda: [s.start_motion(None) for s in stages])
+    button("Hop", 3, 0, each(lambda ch: ch.bounce(1.0)))
+    night = {"on": False}
+
+    def toggle_night() -> None:
+        """Switch the night look on or off."""
+        night["on"] = not night["on"]
+        for ch in chars:
+            ch.set_night(1.0 if night["on"] else 0.0)
+
+    button("Day / night", 3, 1, toggle_night)
 
     def toggle_bg() -> None:
         """Switch the backdrop between dark and light."""
         for s in stages:
             s.dark = not s.dark
 
-    button("Dark/Light bg", 2, 3, toggle_bg)
+    button("Dark/Light bg", 3, 2, toggle_bg)
     root.show()
     return app.exec()
 
