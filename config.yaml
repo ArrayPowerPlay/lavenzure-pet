@@ -2,7 +2,7 @@
 
 llm:
   provider: gemini
-  model: gemini-flash-latest # alias that always points at the newest Flash model (gemini-2.0-flash was shut down)
+  model: gemini-flash-lite-latest # alias for the newest Flash-Lite: no "thinking", 2-3x faster replies than gemini-flash-latest (decision 2026-11-13)
   temperature: 0.7
   api_version: v1beta # "-latest" model aliases are only served on v1beta
   timeout_seconds: 60 # give up on a Gemini call after this long
