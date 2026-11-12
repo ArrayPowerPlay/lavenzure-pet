@@ -469,7 +469,12 @@ class Face:
             self._next_jitter = self._t + rng.uniform(0.35, 1.1)
 
         target_x, target_y = 0.0, 0.0
-        if self._mood == Mood.THINKING:
+        drowsy = self._mood in DROWSY_MOODS
+        if drowsy:
+            # Dozing off / asleep: the closed eyes (and the head turn that follows them) settle
+            # facing forward; the mouse and the small fixation jumps below are ignored.
+            self._jitter = (0.0, 0.0)
+        elif self._mood == Mood.THINKING:
             target_x, target_y = 0.55, -0.75
         elif self._micro == "yawn":
             target_x, target_y = 0.0, -0.3
@@ -501,7 +506,7 @@ class Face:
             self._saccade = True
         elif gap < 0.03:
             self._saccade = False
-        rate = 30.0 if self._saccade else 11.0
+        rate = 2.5 if drowsy else 30.0 if self._saccade else 11.0
         self._look_x = approach(self._look_x, target_x, rate, dt)
         self._look_y = approach(self._look_y, target_y, rate, dt)
 
