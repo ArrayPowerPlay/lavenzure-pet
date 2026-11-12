@@ -89,7 +89,7 @@ class Expression:
     pupil_in: float = 0.0      # pulls both pupils toward the nose (a fierce, focused glare)
     happy_eyes: float = 0.0    # 1 = closed "^ ^" smiling eyes
     slant: float = 0.0         # +1 = lids slope down toward the nose (cross), -1 = up (worried)
-    lid_arc: float = 0.0       # how much a half-closed upper lid bows upward (0 = straight)
+    almond: float = 0.0        # 1 = almond / lens-shaped eye: low arched top, pointed corners
     eye_wonk: float = 0.0      # 1 = mismatched, lopsided eyes: one squints, one bulges (fig. 8)
     mouth_open: float = 0.0    # 0 = closed line, 1 = wide open
     smile: float = 0.5         # -1 = frown, 1 = big smile
@@ -101,7 +101,7 @@ class Expression:
     mouth_dip: float = 0.0     # pushes the middle of the upper lip down (a soft "m" top)
     mouth_cat: float = 0.0     # lifts the middle of a closed mouth: a relaxed "w" line
     smirk: float = 0.0         # -1..1: lifts the left / right mouth corner
-    mouth_curl: float = 0.0    # closed smile: flat bottom and both corners curling up (fig. 7)
+    mouth_curl: float = 0.0    # closed smile: both ends curl up into small dimples (fig. 7)
     mouth_tilt: float = 0.0    # extra rotation of the mouth alone (radians, lopsided grimace)
     tongue_out: float = 0.0    # 1 = the tongue sticks out over one corner of the lower lip
     tilt: float = 0.0          # head tilt in radians (positive = clockwise)
@@ -114,7 +114,6 @@ class Expression:
     body_h: float = 1.0
     boxy: float = 0.0          # ... round (0) to almost rectangular (1) ...
     jag: float = 0.0           # ... smooth (0) to ragged, bursting edges all round (1) ...
-    arms: float = 0.0          # ... and flame "arms" flaring out at the sides (0..1)
     snooze: float = 0.0        # 1 = slow sleepy breathing (and floating "z"s)
 
 
@@ -123,13 +122,11 @@ class Expression:
 MOOD_TARGETS: dict[Mood, tuple[Expression, ...]] = {
     Mood.NORMAL: (Expression(),),
     Mood.HAPPY: (
-        # fig. 1 - sly: wide eyes whose upper lid is lowered into a soft, slightly bowed edge
-        # (the lid is the eye's own outline - no brow line), big pupils tucked right under the
-        # lid glancing sideways; a soft oval grin whose upper lip dips in the middle
-        Expression(eye_open=0.55, lid_arc=0.9, eye_wide=1.38, eye_scale=1.0, pupil=1.1,
-                   gaze_x=0.9, gaze_y=-0.4, gaze_lock=1.0, mouth_open=1.1, smile=0.3,
-                   mouth_width=1.5,
-                   mouth_top=0.62, mouth_bottom=1.0, mouth_dip=0.6,
+        # fig. 1 - sly: wide almond eyes (a low arched top, a round bottom, pointed corners),
+        # big pupils tucked under the top edge glancing sideways; a soft, round open grin
+        Expression(almond=1.0, eye_wide=1.3, eye_scale=1.1, pupil=1.0, eye_y=-0.05,
+                   gaze_x=0.55, gaze_y=-0.55, gaze_lock=1.0, mouth_open=1.1, smile=0.3,
+                   mouth_width=1.6, mouth_top=0.8, mouth_bottom=1.0, mouth_dip=0.0,
                    flame=0.95, flicker=1.35, wild=1.3, body_w=1.1, body_h=0.98),
         # fig. 2 - beaming: round eyes rolled up to one side, a wide rounded "D" smile
         Expression(eye_scale=1.08, pupil=0.72, gaze_x=-0.6, gaze_y=-0.8, gaze_lock=1.0,
@@ -156,13 +153,13 @@ MOOD_TARGETS: dict[Mood, tuple[Expression, ...]] = {
                             smile=-0.15, mouth_width=2.4, mouth_top=0.3, mouth_bottom=1.6,
                             mouth_dip=0.0,
                             flame=1.1, flicker=1.9, wild=1.3, alert=0.45, shake=0.35,
-                            body_w=1.1, body_h=1.02, arms=1.1),),
-    # fig. 7 - lazy, content: wide eyes with heavy, softly bowed half-closed lids, big pupils
-    # glancing to the side right under them, head tipped a little; a long closed smile with a
-    # flat bottom whose corners curl up
-    Mood.CHILL: (Expression(eye_open=0.5, lid_arc=0.75, eye_scale=1.0, eye_wide=1.35,
-                            slant=0.0, pupil=1.1, gaze_x=0.85, gaze_y=-0.35, gaze_lock=1.0,
-                            eye_y=0.0, tilt=-0.05, smile=0.55, mouth_curl=1.0,
+                            body_w=1.1, body_h=1.02),),
+    # fig. 7 - lazy, content: wide almond eyes, big pupils glancing to the side right under
+    # their top edge, head tipped a little; one long, gentle closed smile whose ends curl up
+    # into small dimples
+    Mood.CHILL: (Expression(almond=1.0, eye_scale=1.0, eye_wide=1.3,
+                            slant=0.0, pupil=1.15, gaze_x=0.85, gaze_y=-0.55, gaze_lock=1.0,
+                            eye_y=0.0, tilt=-0.05, smile=0.6, mouth_curl=1.0,
                             mouth_width=2.2, flame=0.45, flicker=0.65, wild=0.6,
                             body_w=1.32, body_h=0.72, boxy=0.35, jag=0.7),),
     Mood.ALERT: (Expression(eye_scale=1.05, pupil=0.78, slant=1.0, mouth_open=0.9, smile=-0.8,
@@ -222,7 +219,7 @@ SPRUNG_FIELDS: dict[str, tuple[float, float]] = {
     "mouth_round": (170.0, 22.0),
     "smile": (240.0, 21.0), "mouth_width": (240.0, 21.0), "lower_lid": (240.0, 21.0),
     "eye_wide": (240.0, 21.0), "brow": (260.0, 20.0),
-    "body_w": (150.0, 12.5), "body_h": (150.0, 12.5), "arms": (110.0, 9.0),
+    "body_w": (150.0, 12.5), "body_h": (150.0, 12.5),
 }
 # Parameters that switch between two different drawings are cross-faded quickly, so the two
 # shapes are never seen as a ghostly double for long.
@@ -353,7 +350,6 @@ class Face:
         elif mood == Mood.ANGRY:
             vel["body_h"] -= 1.8         # crouch / wind up before flaring
             vel["brow"] += 3.0
-            vel["arms"] -= 1.0
         elif mood == Mood.WAKE:
             vel["eye_scale"] += 2.5
             vel["body_h"] += 1.2
@@ -693,10 +689,33 @@ class Face:
         painter.restore()
 
     @staticmethod
-    def _eye_outline(rx: float, ry: float, cy: float, egg: float) -> QPainterPath:
-        """The white of the eye: an ellipse, or for ``egg`` > 0 a lopsided egg (narrower on
-        top, a slight dent) drawn as one smooth closed curve."""
+    def _eye_outline(rx: float, ry: float, cy: float, egg: float,
+                     almond: float = 0.0) -> QPainterPath:
+        """The white of the eye: an ellipse; for ``almond`` > 0 it morphs into a lens shape
+        (figs. 1 and 7: a low, gently arched top edge, a round bottom, pointed corners); for
+        ``egg`` > 0 a lopsided egg (narrower on top, a slight dent). Always one smooth closed
+        curve."""
         path = QPainterPath()
+        if almond > 0.01:
+            # Each edge is h * (1 - u^2)^p: p = 0.5 is the ellipse, p near 1 gives the corners
+            # a point. Sampled densely toward the corners (u = -cos(theta)).
+            top_h = ry * lerp(1.0, 0.42, almond)
+            bot_h = ry * lerp(1.0, 0.88, almond)
+            p_top, p_bot = lerp(0.5, 1.0, almond), lerp(0.5, 0.78, almond)
+            shift = -0.3 * (bot_h - top_h)        # keep the eye roughly where it was
+            n = 40
+            pts = []
+            for i in range(n + 1):
+                u = -math.cos(math.pi * i / n)
+                pts.append(QPointF(u * rx, cy + shift - top_h * (1.0 - u * u) ** p_top))
+            for i in range(1, n):
+                u = math.cos(math.pi * i / n)
+                pts.append(QPointF(u * rx, cy + shift + bot_h * (1.0 - u * u) ** p_bot))
+            path.moveTo(pts[0])
+            for pt in pts[1:]:
+                path.lineTo(pt)
+            path.closeSubpath()
+            return path
         if egg < 0.01:
             path.addEllipse(QPointF(0.0, cy), rx, ry)
             return path
@@ -724,10 +743,9 @@ class Face:
         ex = self.expr
         ry_b = ry * openness
         cy = ry * (1.0 - openness) * 0.5  # blinking eyes close toward their lower half
-        eye = self._eye_outline(rx, ry_b, cy, tweak[6])
+        eye = self._eye_outline(rx, ry_b, cy, tweak[6], clamp(ex.almond, 0.0, 1.0))
 
-        # Upper lid: a soft edge that drops with ``eye_open``, tilts with ``slant`` and bows
-        # up a little with ``lid_arc`` (the sleepy / sly lids of figs. 1 and 7).
+        # Upper lid: a straight edge that drops with ``eye_open`` and tilts with ``slant``.
         slant = ex.slant + tweak[2]
         lid_y = cy - ry_b + 2.0 * ry_b * (1.0 - lid_open) * 0.85
         if slant >= 0.0:
@@ -735,9 +753,8 @@ class Face:
         else:
             inner_y, outer_y = lid_y + slant * ry_b * 0.25, lid_y - slant * ry_b * 0.75
         inner_x, outer_x = -side * rx * 1.35, side * rx * 1.35
-        bow = clamp(ex.lid_arc, -1.0, 1.0) * ry_b
         lid_line = QPainterPath(QPointF(inner_x, inner_y))
-        lid_line.quadTo(QPointF(0.0, (inner_y + outer_y) / 2 - bow), QPointF(outer_x, outer_y))
+        lid_line.lineTo(QPointF(outer_x, outer_y))
         lid_cut = lid_open < 0.97 or abs(slant) > 0.03
         if lid_cut:
             top = cy - 3 * ry
@@ -835,10 +852,7 @@ class Face:
             s = -1.0 + 2.0 * i / (n - 1)
             x = s * half_w
             bow = 1.0 - s * s
-            # ``mouth_curl`` flattens the bottom of the smile so the corners turn up late and
-            # steeply, like the lazy grin of fig. 7 (same middle depth and corner height).
-            curve = lerp(0.42 * bow - 0.3, 0.12 - 0.42 * s ** 4, clamp(ex.mouth_curl, 0.0, 1.0))
-            centre = (bend * smile * w * curve
+            centre = (bend * smile * w * (0.42 * bow - 0.3)
                       + lerp(y_left, y_right, (s + 1.0) * 0.5) * (1.0 - rnd)
                       + ex.mouth_wave * 0.09 * w * math.sin(3.0 * math.pi * s) * (1.0 - rnd)
                       - ex.mouth_cat * 0.13 * w * math.exp(-(s / 0.28) ** 2) * (1.0 - rnd))
@@ -876,7 +890,7 @@ class Face:
         # downward like in the reference art); the safe-area fit then scales it about that edge,
         # so it can never creep up onto the eyes. Only the part of the lip that is right below
         # an eye counts: between the eyes a screaming arch may rise higher (fig. 3).
-        clearance = self._eye_bottom() + 0.08 * R
+        clearance = self._eye_bottom() + 0.14 * R
         right_cx, _, right_rx, _ = self._eye_geom(1)
         left_cx, _, left_rx, _ = self._eye_geom(-1)
         inner = 0.5 * (right_cx - left_cx) - 1.1 * max(right_rx, left_rx)
@@ -957,9 +971,9 @@ class Face:
         curl = clamp(self.expr.mouth_curl, 0.0, 1.0)
         if curl < 0.02 or len(line) < 2:
             return line
-        steps = 8
-        length = 0.24 * w * curl
-        turn = 1.7 * curl
+        steps = 14
+        length = 0.17 * w * curl
+        turn = 2.3 * curl
 
         def hook(end: tuple[float, float], before: tuple[float, float],
                  direction: float) -> list[tuple[float, float]]:
