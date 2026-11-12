@@ -1,7 +1,12 @@
-"""Entry point: wires the overlay sprite, chat window, agent, and background monitor together."""
+"""Entry point: wires the overlay sprite, chat window, agent, and background monitor together.
+
+Components never reference each other directly; ``CalciferApp._wire_signals`` connects their Qt
+signals. Startup order: logging -> single-instance check -> build components -> show the pet.
+"""
 from __future__ import annotations
 
 import json
+import logging
 import random
 import sys
 from pathlib import Path
@@ -11,6 +16,8 @@ from PySide6.QtCore import QObject, QThread, Signal
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
+import app_logging
+from agent.errors import friendly_error
 from agent.graph import run_agent
 from agent.memory import SessionMemory
 from chat.chat_window import ChatWindow
@@ -19,6 +26,9 @@ from overlay.behavior import BehaviorController, PetState
 from overlay.character import Mood
 from overlay.overlay_window import OverlaySprite
 from overlay.speech_bubble import SpeechBubble
+from single_instance import SingleInstance
+
+log = logging.getLogger(__name__)
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
@@ -26,26 +36,32 @@ DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 class AgentWorker(QObject):
     """Runs the (potentially slow) LangGraph agent call off the Qt UI thread."""
 
-    finished = Signal(str)
-    failed = Signal(str)
+    finished = Signal(str)  # the reply text
+    failed = Signal(str)    # a friendly, in-character explanation of what went wrong
 
     def __init__(self, history: list[dict], message: str) -> None:
+        """Store the conversation so far and the new user message for ``run``."""
         super().__init__()
         self._history = history
         self._message = message
 
     def run(self) -> None:
+        """Call the agent (in the worker thread) and emit ``finished`` or ``failed``."""
         try:
             reply = run_agent(self._history, self._message)
             self.finished.emit(reply)
         except Exception as exc:  # noqa: BLE001 - surface any failure to the chat UI
-            self.failed.emit(str(exc))
+            log.exception("Agent call failed")
+            self.failed.emit(friendly_error(exc))
 
 
 class CalciferApp:
-    def __init__(self) -> None:
-        self.app = QApplication(sys.argv)
-        self.app.setQuitOnLastWindowClosed(False)
+    """Builds every component, connects them with signals and runs the Qt event loop."""
+
+    def __init__(self, app: QApplication, instance: SingleInstance) -> None:
+        """Create the pet, bubble, chat, monitor and tray; show the pet."""
+        self.app = app
+        self.instance = instance
 
         self.sprite = OverlaySprite()
         self.bubble = SpeechBubble()
@@ -68,6 +84,8 @@ class CalciferApp:
         self.sprite.show()
 
     def _wire_signals(self) -> None:
+        """Connect component signals to the app's handlers (the only place components meet)."""
+        self.instance.activated.connect(self._open_chat)
         self.sprite.clicked.connect(self._on_pet_clicked)
         self.sprite.right_clicked.connect(self._open_chat)
         self.chat_window.message_sent.connect(self._on_chat_message)
@@ -154,16 +172,30 @@ class CalciferApp:
         # Move the mouth for roughly as long as it would take to say the reply.
         self.sprite.character.play(Mood.TALKING, min(5.0, max(1.2, len(reply) * 0.045)))
 
-    def _on_agent_error(self, error: str) -> None:
-        self.chat_window.append_message(
-            "Calcifer", "Oops, my flame flickered out for a second. Try again?"
-        )
+    def _on_agent_error(self, message: str) -> None:
+        """Show the friendly error message (details are already in the log file)."""
+        self.chat_window.append_message("Calcifer", message)
         self.chat_window.set_thinking(False)
         self.sprite.character.set_thinking(False)
 
     def run(self) -> int:
+        """Run the Qt event loop until the user quits; returns the exit code."""
         return self.app.exec()
 
 
+def main() -> int:
+    """Start logging, make sure only one pet runs, then run the app."""
+    log_file = app_logging.setup_logging()
+    log.info("Calcifer starting (log file: %s)", log_file)
+    app = QApplication(sys.argv)
+    app.setQuitOnLastWindowClosed(False)
+    instance = SingleInstance()
+    if not instance.acquire():
+        return 0  # the running pet was asked to open its chat window instead
+    code = CalciferApp(app, instance).run()
+    log.info("Calcifer exiting (code %s)", code)
+    return code
+
+
 if __name__ == "__main__":
-    sys.exit(CalciferApp().run())
+    sys.exit(main())
