@@ -59,11 +59,18 @@
 ### `CLAUDE.md`
 - **Quyết định:** giữ ở thư mục gốc (ngoại lệ duy nhất của quy tắc "mọi `.md` ngoài README nằm trong `docs/`"), vì Claude Code chỉ tự đọc file này ở thư mục gốc hoặc `.claude/`.
 
+### Chốt thêm (2026-11-12, lượt 3)
+- **Menu khay hệ thống:** sửa lại thành **3 mục: `Hide Pet`/`Show Pet`, `Settings`, `Quit App`** (thay cho quyết định 2 mục ở trên).
+- **Hẹn giờ (`set_timer_reminder`):** **tạm tắt** — gỡ khỏi danh sách công cụ của AI cho tới khi user quyết phát triển lại (giữ code để bật lại sau).
+- **Chuột trái — bộ phản ứng ngẫu nhiên:** mỗi lần click, pet chọn ngẫu nhiên **một** phản ứng trong bộ; "nói một câu ngẫu nhiên" (từ `data/click_reactions.json`) là **một phản ứng trong bộ**, không đi kèm mọi lần. Bộ gồm **tất cả hoạt ảnh của pet đã có và sẽ có** → khi làm, mỗi hoạt ảnh mới phải tự đăng ký vào bộ này.
+- **Idle:** khi pet đang Idle, mục trong menu chuột phải đổi thành **`Wander`** để cho pet đi lại tiếp. Idle có **tư thế nằm nghỉ / ngủ riêng** (hoạt ảnh mới cần vẽ).
+- **Bong bóng chat — đếm 30 giây:** **không đếm** khi user đang gõ hoặc khi AI đang trả lời.
+- **Bong bóng chat — lịch sử:** cuộn lên để đọc lại tin cũ, chat bao nhiêu cũng được. Không chat trong **15 phút** thì xóa toàn bộ lịch sử (cả phần AI nhớ), không có cách nào lấy lại. Bong bóng tự đóng sau 30 giây **không** xóa lịch sử — mở lại trong vòng 15 phút vẫn thấy tin cũ. (User đề xuất, Claude đồng ý; thay mốc 10 phút cũ trong CONTEXT.md, code vẫn đang 10 phút cho tới khi làm.)
+- **Pet hiện ở đâu:** giữ quyết định cũ (2026-08-13) — pet **luôn nổi trên mọi ứng dụng/web**, không chỉ ở desktop.
+
 ## Còn bàn
 
 - **Settings:** cửa sổ Settings cho chỉnh những cấu hình nào.
-- **Thoát app:** menu khay hệ thống không còn `Quit` và `Open Chat` → nút thoát app đặt ở đâu (trong cửa sổ Settings, giữ `Quit` trong menu, hay cách khác)?
-- **Hẹn giờ:** công cụ `set_timer_reminder` hiện đã có và đang chạy — giữ nguyên như hiện tại, hay tạm tắt cho tới khi user quyết?
-- **Chuột trái:** bộ hoạt ảnh ngẫu nhiên gồm những gì; pet còn nói câu thoại ngẫu nhiên kèm theo không.
-- **Idle:** thoát khỏi Idle bằng cách nào (bấm lại mục đó, hay menu đổi thành `Wander`…); "nằm yên" là chỉ đứng yên hay có tư thế nằm/nghỉ riêng.
-- **Bong bóng chat:** có thay hẳn cửa sổ chat hiện tại không; mốc 30 giây tính từ lúc nào (tin nhắn cuối / câu trả lời cuối), và có tạm dừng đếm khi đang gõ hoặc khi AI đang trả lời không; lịch sử chat hiển thị thế nào trong bong bóng.
+- **Bong bóng chat hay cửa sổ chat:** user hỏi hai cái khác nhau thế nào → chờ user chọn sau khi được giải thích.
+- **Bộ phản ứng ngẫu nhiên:** có loại trừ mặt cảnh báo (`alert`, vốn báo máy có vấn đề thật) và tư thế ngủ (thuộc Idle) khỏi bộ không.
+- **Ứng dụng toàn màn hình:** có cần tự ẩn pet khi đang xem phim/chơi game toàn màn hình không (ý tưởng, chưa bàn).
