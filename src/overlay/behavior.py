@@ -184,6 +184,19 @@ class BehaviorController(QObject):
         self.character.play(Mood.HAPPY, REACT_SECONDS)
         self._react_timer.start(int(REACT_SECONDS * 1000))
 
+    def trigger_notice(self) -> None:
+        """Called when a reminder fires: a surprised hop to catch the user's eye.
+
+        Unlike ``trigger_reaction`` it never clears an alert and leaves a drag alone."""
+        if self.state in (PetState.ALERT, PetState.DRAGGED):
+            return
+        self._locked = True
+        self.state = PetState.REACT
+        self._stop_motion()
+        self.character.play(Mood.SURPRISED, REACT_SECONDS)
+        self.character.bounce(1.0)
+        self._react_timer.start(int(REACT_SECONDS * 1000))
+
     def trigger_alert(self) -> None:
         """Called by the background monitor when a system_status threshold is crossed."""
         self._locked = True
