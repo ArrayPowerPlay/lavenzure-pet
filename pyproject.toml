@@ -1,0 +1,26 @@
+# Tool configuration only (the app is run as scripts from src/, it is not an installable package).
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+extend-exclude = [".scratch", ".venv", ".venv-win"]
+
+[tool.ruff.format]
+# Files in this repo mix CRLF and LF; keep whatever each file already uses.
+line-ending = "auto"
+
+[tool.ruff.lint]
+# pyflakes, pycodestyle, import order, bugbear, pyupgrade, naming
+select = ["F", "E", "W", "I", "B", "UP", "N"]
+ignore = [
+    "N802",  # Qt overrides must keep camelCase names (paintEvent, mousePressEvent, ...)
+    "N803",  # `R` (radius) is used as an argument name throughout the drawing code
+    "N806",  # ... and as a local variable
+    "N815",  # Qt Property names are camelCase (exactPos)
+]
