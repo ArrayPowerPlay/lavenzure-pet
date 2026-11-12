@@ -62,7 +62,7 @@ The goal was a flat, hand-inked "sticker" look that *moves* like real fire and *
 - **Always on top, transparent, click-through**: only the visible flame catches the mouse; the empty area around it passes clicks to the app underneath.
 - **Mouse interaction**: left-click → a random animation (never the same twice in a row); press and drag → carry the pet; right-click → a small menu with `Chat` and `Idle` / `Wander`.
 - **Speech bubbles follow the pet** as it moves.
-- **Chat with an AI agent** (LangGraph + Google Gemini `gemini-flash-latest`) that answers in your language, picks an emotion for each reply (the pet shows that face for a few seconds) and has 3 tools:
+- **Chat with an AI agent** (LangGraph + Google Gemini `gemini-flash-lite-latest`) that answers in your language, streams its reply into the bubble word by word, picks an emotion for each reply (the pet shows that face as soon as the reply starts) and has 3 tools:
   - `weather` — current weather for a place name (Open-Meteo, no key needed)
   - `web_search` — web search (Tavily)
   - `system_status` — current CPU / RAM / battery
@@ -126,7 +126,7 @@ Non-secret settings live in [`config.yaml`](./config.yaml):
 
 | Key | Meaning |
 |---|---|
-| `llm.model`, `llm.temperature` | Gemini model used for chat (default `gemini-flash-latest`) |
+| `llm.model`, `llm.temperature` | Gemini model used for chat (default `gemini-flash-lite-latest`: fast, no thinking; `gemini-flash-latest` is smarter but 2-3x slower) |
 | `llm.timeout_seconds`, `llm.max_retries` | How long to wait / how often to retry before reporting an error |
 | `character.scale` | Character size (0.75 = 150×177 px) |
 | `character.fps` | Frames per second; lower it to 30 to save CPU |

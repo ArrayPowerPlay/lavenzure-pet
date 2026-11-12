@@ -62,7 +62,7 @@ Mục tiêu: nét vẽ phẳng, viền mực như sticker vẽ tay, nhưng *chuy
 - **Luôn nổi trên cùng, trong suốt, click xuyên qua**: chỉ phần có hình nhân vật mới nhận chuột, vùng xung quanh vẫn bấm được vào app bên dưới.
 - **Tương tác chuột**: click trái → một hoạt ảnh ngẫu nhiên (không lặp lại hai lần liền); giữ và kéo → mang nhân vật đi; chuột phải → menu nhỏ `Chat` và `Idle` / `Wander`.
 - **Bong bóng thoại đi theo pet** khi nó di chuyển.
-- **Chat với AI agent** (LangGraph + Google Gemini `gemini-flash-latest`), trả lời theo ngôn ngữ bạn gõ, tự chọn cảm xúc cho mỗi câu trả lời (pet làm mặt đó vài giây), có 3 công cụ:
+- **Chat với AI agent** (LangGraph + Google Gemini `gemini-flash-lite-latest`), trả lời theo ngôn ngữ bạn gõ, chữ hiện dần trong bong bóng ngay khi model bắt đầu trả lời, tự chọn cảm xúc cho mỗi câu trả lời (pet làm mặt đó ngay khi câu trả lời bắt đầu), có 3 công cụ:
   - `weather` — thời tiết theo địa danh (Open-Meteo, không cần key)
   - `web_search` — tìm kiếm web (Tavily)
   - `system_status` — CPU / RAM / pin hiện tại
@@ -126,7 +126,7 @@ Các cài đặt không bí mật nằm trong [`config.yaml`](./config.yaml):
 
 | Khóa | Ý nghĩa |
 |---|---|
-| `llm.model`, `llm.temperature` | Model Gemini dùng cho chat (mặc định `gemini-flash-latest`) |
+| `llm.model`, `llm.temperature` | Model Gemini dùng cho chat (mặc định `gemini-flash-lite-latest`: nhanh, không "suy nghĩ"; `gemini-flash-latest` thông minh hơn nhưng chậm gấp 2-3 lần) |
 | `llm.timeout_seconds`, `llm.max_retries` | Chờ bao lâu / thử lại mấy lần trước khi báo lỗi |
 | `character.scale` | Kích thước nhân vật (0.75 = 150×177 px) |
 | `character.fps` | Số khung hình/giây; giảm xuống 30 để tiết kiệm CPU |

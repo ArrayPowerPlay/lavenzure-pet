@@ -154,6 +154,9 @@
 - **README** (cả hai bản): đầu trang là ảnh pet cắt từ khung hình thật của bộ vẽ shader (`docs/images/hero.png`), thêm dải biểu cảm (`docs/images/expressions.png`) và mục giới thiệu hoạt ảnh. Ảnh do code của repo tự vẽ, không dùng ảnh tham khảo của họa sĩ khác.
 - **A7:** checklist ở `docs/TEST_CHECKLIST.md`; phần tự kiểm bằng `src/desktop_check.py` đã PASS.
 - **Hiệu năng — Claude tự quyết (không đổi hình ảnh):** numpy chỉ dùng 1 luồng OpenBLAS (trước đó giữ sẵn ~490 MB RAM); đọc ảnh lửa từ GPU qua 2 bộ đệm PBO, ảnh lửa trễ 1 khung (~16 ms, mắt không thấy), hình giống hệt từng pixel.
+- **Chat chậm (user hỏi, 2026-11-13):** API và mạng ổn (ping ~0,09 giây, không lỗi, không gọi lại). Nguyên nhân: `gemini-flash-latest` giờ là gemini-3.8-flash, bản Flash đầy đủ luôn "suy nghĩ" (~180-260 token) → 2,7-5,4 giây mỗi lần gọi, câu cần công cụ gọi 2 lần → 4-8 giây. **User chọn:** đổi sang **`gemini-flash-lite-latest`** (1,4-3,7 giây/câu) và **làm streaming luôn** (chữ hiện dần, mặt cảm xúc hiện ngay khi thẻ cảm xúc tới).
+- **Claude tự quyết (user có thể đổi):** nếu model viết vài chữ rồi mới gọi công cụ, phần chữ đó bị thay bằng câu trả lời sau; nếu lỗi giữa chừng, phần chữ đã hiện vẫn giữ và câu báo lỗi hiện bên dưới; miệng pet nhép liên tục khi chữ đang tới.
+- **Sửa lỗi có sẵn (phát hiện khi thử streaming):** câu trả lời của AI trước giờ được xử lý ở luồng phụ của agent chứ không phải luồng giao diện (vì `LavenzureApp` không phải `QObject`, PySide gọi thẳng hàm trong luồng phụ) → có thể làm app crash ngẫu nhiên khi chat. Giờ `LavenzureApp` là `QObject`, các hàm nhận câu trả lời là `@Slot` nối kiểu queued → luôn chạy ở luồng giao diện (đã thử 3 câu hỏi trên app thật).
 - **Mục tiêu hiệu năng đề xuất** (user có thể đổi): CPU dưới 2% cả máy, GPU dưới 10%, RAM dưới 250 MB, không tăng dần theo giờ, ~60 fps.
 
 ## Còn bàn
