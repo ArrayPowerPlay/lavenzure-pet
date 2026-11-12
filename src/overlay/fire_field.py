@@ -1,4 +1,4 @@
-"""Metaball fire for the flame character: rising flame tongues melted together into one shape.
+"""Metaball fire renderer (``character.flame_renderer: metaball``): rising tongues melted into one shape.
 
 How it works (all lengths in units of R in body coordinates: x right, y *up is negative*, origin
 at the feet):
@@ -23,7 +23,11 @@ import random
 from dataclasses import dataclass
 
 import numpy as np
-from PySide6.QtGui import QPainterPath
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QPainter, QPainterPath, QPen
+
+from overlay.flame_common import (BODY_CY, BODY_RX, BODY_RY, FlameColors, FlameDrive,
+                                  FlameRenderer, noise1 as _noise1, smoothstep as _smoothstep)
 
 # Base iso-levels of the three colour layers (outer red rim, orange band, yellow body).
 _LEVELS = (0.16, 0.27, 0.38)
@@ -74,21 +78,23 @@ def _segment_table() -> np.ndarray:
 _SEGMENT_TABLE = _segment_table()
 
 
-class FireField:
+class MetaballFlame(FlameRenderer):
     """Simulates the tongues and traces the three layer outlines every frame.
 
-    ``R`` is the character's base radius in pixels. Call ``step()`` once per frame, then read
-    ``paths`` (outer, middle, inner layer; pixels, body coordinates), ``outer_points`` and
-    ``tip``.
+    ``R`` is the character's base radius in pixels. Call ``step()`` once per frame, then
+    ``paint()``; ``paths`` holds the outer, middle and inner layer outlines (pixels, body
+    coordinates).
     """
+
+    name = "metaball"
 
     GRID_STEP_PX = 2.4       # spacing of the field samples in pixels (finer = smoother, slower)
     X_RANGE = (-2.2, 2.2)    # field area in units of R
     Y_RANGE = (-4.0, 0.3)
 
     def __init__(self, R: float, rng: random.Random) -> None:
-        self.R = R
-        self._rng = rng
+        """Build the sample grid and the per-node colour levels for radius ``R`` (pixels)."""
+        super().__init__(R, rng)
         self.tongues: list[_Tongue] = []
         self._spawn_debt = 0.0
 
@@ -101,16 +107,14 @@ class FireField:
 
         # Per-node level of every layer: lower near the feet (thin rim around the bottom),
         # higher toward the top for the inner layers (red-tipped tongues).
-        bottom = np.clip((self._Y + 0.9) / 0.9, 0.0, 1.0)
-        top = np.clip((-self._Y - 1.3) / 1.2, 0.0, 1.0)
+        bottom = np.clip((self._Y + BODY_CY) / BODY_CY, 0.0, 1.0)
+        top = np.clip((-self._Y - BODY_CY - 0.4) / 1.2, 0.0, 1.0)
         self._levels = [
             (lvl - (lvl - _LEVELS[0]) * 0.55 * bottom ** 2 + gain * top).astype(np.float32)
             for lvl, gain in zip(_LEVELS, _TOP_GAIN)
         ]
 
         self.paths: list[QPainterPath] = [QPainterPath() for _ in _LEVELS]
-        self.outer_points: list[tuple[float, float]] = []  # outer outline (pixels)
-        self.tip = (0.0, -2.6 * R)                          # highest outer point (pixels)
 
     # ------------------------------------------------------------------ simulation
 
@@ -121,14 +125,10 @@ class FireField:
         for _ in range(2):
             self._spawn("top", boost=strength * self._rng.uniform(0.85, 1.1))
 
-    def step(self, dt: float, *, clock: float, seed: int, wild: float, flame: float,
-             wind_x: float, wind_y: float, sway: float, body_breath: float) -> None:
-        """Advance the tongues by ``dt`` simulation seconds and rebuild the layer outlines.
-
-        ``wild`` = flicker strength, ``flame`` = height multiplier, ``wind_x/wind_y`` = apparent
-        wind in R/s caused by the pet's own movement (tongues trail behind), ``sway`` = lean of
-        the main tip in radians, ``body_breath`` = slow -1..1 breathing of the body.
-        """
+    def step(self, drive: FlameDrive) -> None:
+        """Advance the tongues by one frame and rebuild the layer outlines."""
+        dt, clock, seed = drive.dt, drive.clock, drive.seed
+        wild, flame, wind_x, wind_y = drive.wild, drive.flame, drive.wind_x, drive.wind_y
         rng = self._rng
         # Irregular emission: a noisy rate, so tongues come in little clusters and lulls.
         rate = (7.0 + 4.0 * wild) * (0.7 + 0.6 * _noise1(clock * 0.9, seed + 11))
@@ -154,7 +154,20 @@ class FireField:
             alive.append(t)
         self.tongues = alive
 
-        self._rebuild(clock, seed, wild, flame, sway, body_breath)
+        self._rebuild(clock, seed, wild, flame, drive.sway, drive.breath)
+
+    def paint(self, painter: QPainter, colors: FlameColors) -> None:
+        """Red rim with the dark outline, then the orange band and the yellow body."""
+        outer, mid, inner = self.paths
+        painter.setPen(QPen(colors.ink, colors.outline_px, Qt.PenStyle.SolidLine,
+                            Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
+        painter.setBrush(colors.outer)
+        painter.drawPath(outer)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(colors.mid)
+        painter.drawPath(mid)
+        painter.setBrush(colors.inner)
+        painter.drawPath(inner)
 
     def _spawn(self, where: str, boost: float) -> None:
         """Create one tongue just inside the body: up the middle, on top, or on a flank."""
@@ -163,8 +176,8 @@ class FireField:
             # Low on the shoulders: these become the small licks running up the sides.
             side = rng.choice((-1.0, 1.0))
             phi = rng.uniform(0.75, 1.2)  # angle from straight up
-            x = side * 1.26 * math.sin(phi)
-            y = -0.9 - 0.84 * math.cos(phi)
+            x = side * (BODY_RX - 0.08) * math.sin(phi)
+            y = -BODY_CY - (BODY_RY - 0.06) * math.cos(phi)
             size = rng.uniform(0.3, 0.42)
             vx = -side * rng.uniform(0.0, 0.3)
         else:
@@ -172,9 +185,9 @@ class FireField:
                 x = rng.gauss(0.0, 0.22)
                 size = rng.uniform(0.4, 0.52) * boost
             else:
-                x = rng.uniform(-1.05, 1.05)
+                x = rng.uniform(-0.8, 0.8) * BODY_RX
                 size = rng.uniform(0.38, 0.52) * (1.0 - 0.15 * abs(x)) * boost
-            y = -0.9 - 0.88 * math.sqrt(max(0.0, 1.0 - (x / 1.34) ** 2)) + 0.12
+            y = -BODY_CY - (BODY_RY - 0.02) * math.sqrt(max(0.0, 1.0 - (x / BODY_RX) ** 2)) + 0.12
             vx = rng.uniform(-0.25, 0.25) + 0.1 * x
         self.tongues.append(_Tongue(
             x=x, y=y, vx=vx, vy=-rng.uniform(0.5, 1.0) * boost, size=size,
@@ -190,10 +203,10 @@ class FireField:
         X, Y = self._X, self._Y
         # Body: a soft-edged ellipse. Its field grows steadily inside (so the inner colour
         # layers are even bands) and dies off quickly outside (so tongues stay distinct).
-        bx = 1.34 * (1.0 + 0.02 * breath)
-        by = 0.9 * (1.0 - 0.02 * breath)
+        bx = BODY_RX * (1.0 + 0.02 * breath)
+        by = BODY_RY * (1.0 - 0.02 * breath)
         u = X * (1.0 / bx)
-        v = (Y + 0.9) * (1.0 / by)
+        v = (Y + BODY_CY) * (1.0 / by)
         q = np.sqrt(u * u + v * v) + 1e-6
         gradient = np.sqrt((u * (1.0 / bx)) ** 2 + (v * (1.0 / by)) ** 2) / q
         d = (q - 1.0) / gradient  # approximate signed distance to the ellipse (in R)
@@ -204,7 +217,7 @@ class FireField:
         # Tongues: (x, y, half-width, half-height, tip length, tip angle, weight, bend).
         prims = [
             # Spine: the main tip. It sways and flutters on its own noise.
-            (0.1 * _noise1(clock * 0.7, seed + 5), -1.45, 0.74, 0.74,
+            (0.1 * _noise1(clock * 0.7, seed + 5), -BODY_CY - 0.55, 0.7, 0.7,
              flame * (3.7 + 0.6 * wild * _noise1(clock * 2.6, seed + 6)), sway, 0.62,
              0.07 * _noise1(clock * 1.1, seed + 7)),
         ]
@@ -262,9 +275,10 @@ class FireField:
             self.paths.append(path)
             if i == 0:
                 pts = [(x * R, y * R) for loop in loops for (x, y) in loop]
-                self.outer_points = pts
                 if pts:
                     self.tip = min(pts, key=lambda p: p[1])
+                cut = -(BODY_CY + 0.5) * R
+                self.top_points = [p for p in pts if p[1] < cut]
 
 # ---------------------------------------------------------------------- contour helpers
 
@@ -398,30 +412,3 @@ def _add_smooth_loop(path: QPainterPath, loop: list[tuple[float, float]], scale:
         quad(x, y, (x + nx_) * 0.5, (y + ny_) * 0.5)
     quad(lx, ly, (lx + fx) * 0.5, (ly + fy) * 0.5)
     path.closeSubpath()
-
-
-# ---------------------------------------------------------------------- tiny noise helpers
-
-def _hash(i: int, seed: int) -> float:
-    """Deterministic pseudo-random value in ``[-1, 1]`` for lattice point ``i``."""
-    h = (i * 0x27D4EB2D ^ seed * 0x165667B1) & 0xFFFFFFFF
-    h = ((h ^ (h >> 15)) * 0x85EBCA6B) & 0xFFFFFFFF
-    h = ((h ^ (h >> 13)) * 0xC2B2AE35) & 0xFFFFFFFF
-    h ^= h >> 16
-    return h / 0x7FFFFFFF - 1.0
-
-
-def _noise1(x: float, seed: int) -> float:
-    """Smooth 1D gradient noise, roughly within ``[-1, 1]``."""
-    i = math.floor(x)
-    f = x - i
-    u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0)
-    a = _hash(i, seed) * f
-    b = _hash(i + 1, seed) * (f - 1.0)
-    return 2.0 * (a + (b - a) * u)
-
-
-def _smoothstep(edge0: float, edge1: float, x: float) -> float:
-    """0 below ``edge0``, 1 above ``edge1``, smooth S-curve in between."""
-    t = min(1.0, max(0.0, (x - edge0) / (edge1 - edge0)))
-    return t * t * (3.0 - 2.0 * t)

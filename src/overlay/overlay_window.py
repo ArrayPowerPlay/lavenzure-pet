@@ -67,7 +67,10 @@ class OverlaySprite(QWidget):
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
-        self.character = FlameCharacter(scale=float(config.get("character.scale", 1.0)))
+        self.character = FlameCharacter(
+            scale=float(config.get("character.scale", 1.0)),
+            renderer=str(config.get("character.flame_renderer", "metaball")),
+        )
         self.resize(self.character.width, self.character.height)
 
         fps = max(10, int(config.get("character.fps", 60)))
