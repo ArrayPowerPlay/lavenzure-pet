@@ -19,6 +19,9 @@ mechanical:
   wiggle) at irregular times.
 - **Safe area** - eyes and mouth are always fitted inside ``FACE_*`` (an ellipse on the yellow
   body), so even the biggest grin never spills onto the orange/red rim.
+- **Copied faces** - some expressions are traced straight from the reference sheet
+  (``overlay.face_refs``: fig. 1 for ``happy``, fig. 7 for ``chill``). The ``fig1`` / ``fig7``
+  weights morph the eye outlines, pupils and lips point-for-point into those traced shapes.
 
 All sizes are in units of R (the character's base radius); drawing happens in the character's
 body coordinates (pixels, origin at the feet, y up is negative).
@@ -33,6 +36,7 @@ from enum import Enum, auto
 from PySide6.QtCore import QPointF, Qt
 from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen
 
+from overlay.face_refs import MOUTH_SAMPLES, REF_FACES, RefFace, mouth_s
 from overlay.flame_common import (
     FACE_CY,
     FACE_RX,
@@ -115,6 +119,8 @@ class Expression:
     boxy: float = 0.0          # ... round (0) to almost rectangular (1) ...
     jag: float = 0.0           # ... smooth (0) to ragged, bursting edges all round (1) ...
     snooze: float = 0.0        # 1 = slow sleepy breathing (and floating "z"s)
+    fig1: float = 0.0          # 1 = eyes and mouth copied from reference fig. 1 (face_refs)
+    fig7: float = 0.0          # 1 = eyes and mouth copied from reference fig. 7 (face_refs)
 
 
 # Each mood is one target expression, or several variants of which one is picked at random every
@@ -122,11 +128,12 @@ class Expression:
 MOOD_TARGETS: dict[Mood, tuple[Expression, ...]] = {
     Mood.NORMAL: (Expression(),),
     Mood.HAPPY: (
-        # fig. 1 - sly: wide almond eyes (a low arched top, a round bottom, pointed corners),
-        # big pupils tucked under the top edge glancing sideways; a soft, round open grin
-        Expression(almond=1.0, eye_wide=1.3, eye_scale=1.1, pupil=1.0, eye_y=-0.05,
-                   gaze_x=0.55, gaze_y=-0.55, gaze_lock=1.0, mouth_open=1.1, smile=0.3,
-                   mouth_width=1.6, mouth_top=0.8, mouth_bottom=1.0, mouth_dip=0.0,
+        # fig. 1 - sly: eyes and mouth copied from the reference (``fig1``): half-dome eyes,
+        # tall pupils hanging from the top edge, an open mouth with a notched upper lip and a
+        # tongue. The other face values only shape the way there (sizes close to the copy).
+        Expression(fig1=1.0, eye_wide=2.35, eye_scale=0.62, pupil=1.0,
+                   gaze_x=0.16, gaze_y=-0.47, gaze_lock=1.0, mouth_open=1.1, smile=0.3,
+                   mouth_width=1.5, mouth_top=0.8, mouth_bottom=1.0, mouth_dip=0.4,
                    flame=0.95, flicker=1.35, wild=1.3, body_w=1.1, body_h=0.98),
         # fig. 2 - beaming: round eyes rolled up to one side, a wide rounded "D" smile
         Expression(eye_scale=1.08, pupil=0.72, gaze_x=-0.6, gaze_y=-0.8, gaze_lock=1.0,
@@ -154,13 +161,13 @@ MOOD_TARGETS: dict[Mood, tuple[Expression, ...]] = {
                             mouth_dip=0.0,
                             flame=1.1, flicker=1.9, wild=1.3, alert=0.45, shake=0.35,
                             body_w=1.1, body_h=1.02),),
-    # fig. 7 - lazy, content: wide almond eyes, big pupils glancing to the side right under
-    # their top edge, head tipped a little; one long, gentle closed smile whose ends curl up
-    # into small dimples
-    Mood.CHILL: (Expression(almond=1.0, eye_scale=1.0, eye_wide=1.3,
-                            slant=0.0, pupil=1.15, gaze_x=0.85, gaze_y=-0.55, gaze_lock=1.0,
-                            eye_y=0.0, tilt=-0.05, smile=0.6, mouth_curl=1.0,
-                            mouth_width=2.2, flame=0.45, flicker=0.65, wild=0.6,
+    # fig. 7 - lazy, content: eyes and mouth copied from the reference (``fig7``): tipped
+    # half-dome eyes with big pupils glancing right, a long wavy closed smile with a short
+    # stroke crossing each corner. The other face values only shape the way there.
+    Mood.CHILL: (Expression(fig7=1.0, eye_scale=0.6, eye_wide=2.45,
+                            slant=0.0, pupil=1.6, gaze_x=0.07, gaze_y=-0.5, gaze_lock=1.0,
+                            eye_y=0.0, smile=0.3, mouth_wave=0.4,
+                            mouth_width=3.0, flame=0.45, flicker=0.65, wild=0.6,
                             body_w=1.32, body_h=0.72, boxy=0.35, jag=0.7),),
     Mood.ALERT: (Expression(eye_scale=1.05, pupil=0.78, slant=1.0, mouth_open=0.9, smile=-0.8,
                             mouth_width=1.1, flame=1.12, flicker=2.0, wild=1.9, alert=1.0,
@@ -325,7 +332,9 @@ class Face:
         variants = MOOD_TARGETS[mood]
         goal = self._rng.choice(variants) if len(variants) > 1 else variants[0]
         # Mirror lopsided looks at random (glance left or right, tongue out of either corner).
-        self._mirror = self._rng.choice((-1.0, 1.0))
+        # Faces copied from the reference sheet are never mirrored: they stay exact copies.
+        copied = goal.fig1 > 0.0 or goal.fig7 > 0.0
+        self._mirror = 1.0 if copied else self._rng.choice((-1.0, 1.0))
         if self._mirror < 0.0:
             goal = replace(goal, gaze_x=-goal.gaze_x, tilt=-goal.tilt, smirk=-goal.smirk,
                            mouth_tilt=-goal.mouth_tilt)
@@ -579,6 +588,15 @@ class Face:
                 self._paint_brow(painter, side)
         self._paint_mouth(painter)
 
+    def _refs(self) -> list[tuple[RefFace, float]]:
+        """The reference faces currently blended in, with their weights (0..1)."""
+        out = []
+        for name, weight in (("fig1", self.expr.fig1), ("fig7", self.expr.fig7)):
+            w = clamp(weight, 0.0, 1.0)
+            if w > 0.003:
+                out.append((REF_FACES[name], w))
+        return out
+
     def _eye_tweak(self, side: int) -> tuple[float, float, float, float, float, float, float]:
         """Per-eye changes for the lopsided ``eye_wonk`` look (fig. 8), all fading with it:
         (size, upper-lid limit, extra slant, rotation in radians, pupil x / y offsets as
@@ -600,9 +618,18 @@ class Face:
         R = self.R
         ex = self.expr
         size = self._eye_tweak(side)[0]
-        cx, cy, squeeze = self._place(side * EYE_X * self._spread(), EYE_Y + ex.eye_y)
-        rx = EYE_RX * R * ex.eye_scale * ex.eye_wide * squeeze * size
-        ry = EYE_RY * R * ex.eye_scale * size
+        x, y = side * EYE_X * self._spread(), EYE_Y + ex.eye_y
+        rx, ry = EYE_RX * ex.eye_scale * ex.eye_wide, EYE_RY * ex.eye_scale     # in R
+        for ref, w in self._refs():
+            # Copied faces: the traced eye's own position and size (pixels -> R).
+            eye = ref.eyes[0 if side < 0 else 1]
+            u = ref.scale
+            x = lerp(x, (eye.centre[0] - ref.origin[0]) * u, w)
+            y = lerp(y, EYE_Y + ex.eye_y + (eye.centre[1] - ref.origin[1]) * u, w)
+            rx, ry = lerp(rx, eye.half[0] * u, w), lerp(ry, eye.half[1] * u, w)
+        cx, cy, squeeze = self._place(x, y)
+        rx *= R * squeeze * size
+        ry *= R * size
         angles = (i * math.tau / 12 for i in range(12))
         k = self._fit(cx, cy, [(rx * math.cos(a), ry * math.sin(a)) for a in angles])
         return cx, cy, rx * k, ry * k
@@ -694,6 +721,25 @@ class Face:
         painter.restore()
 
     @staticmethod
+    def _ref_eye_outline(side: int, rx: float, ry: float, cy: float,
+                         refs: list[tuple[RefFace, float]]) -> QPainterPath:
+        """The white of the eye morphing from an ellipse (radius 1 in every direction) into the
+        traced reference eyes, by blending their radial profiles angle by angle."""
+        n = 96
+        pts = []
+        for i in range(n):
+            a = i * math.tau / n
+            r = 1.0
+            for ref, w in refs:
+                r = lerp(r, ref.eyes[0 if side < 0 else 1].radius(a), w)
+            pts.append(QPointF(r * math.cos(a) * rx, cy + r * math.sin(a) * ry))
+        path = QPainterPath(pts[0])
+        for pt in pts[1:]:
+            path.lineTo(pt)
+        path.closeSubpath()
+        return path
+
+    @staticmethod
     def _eye_outline(rx: float, ry: float, cy: float, egg: float,
                      almond: float = 0.0) -> QPainterPath:
         """The white of the eye: an ellipse; for ``almond`` > 0 it morphs into a lens shape
@@ -748,7 +794,11 @@ class Face:
         ex = self.expr
         ry_b = ry * openness
         cy = ry * (1.0 - openness) * 0.5  # blinking eyes close toward their lower half
-        eye = self._eye_outline(rx, ry_b, cy, tweak[6], clamp(ex.almond, 0.0, 1.0))
+        refs = self._refs()
+        if refs:
+            eye = self._ref_eye_outline(side, rx, ry_b, cy, refs)
+        else:
+            eye = self._eye_outline(rx, ry_b, cy, tweak[6], clamp(ex.almond, 0.0, 1.0))
 
         # Upper lid: a straight edge that drops with ``eye_open`` and tilts with ``slant``.
         slant = ex.slant + tweak[2]
@@ -779,7 +829,10 @@ class Face:
             cheek.closeSubpath()
             eye = eye.subtracted(cheek)
 
-        pen = QPen(INK, 0.07 * R, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap,
+        pen_w = 0.07 * R
+        for ref, w in refs:
+            pen_w = lerp(pen_w, ref.eye_ink * ref.scale * R, w)
+        pen = QPen(INK, pen_w, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap,
                    Qt.PenJoinStyle.RoundJoin)
         painter.setPen(pen)
         painter.setBrush(EYE_WHITE)
@@ -795,8 +848,14 @@ class Face:
               + tweak[4] * rx)
         py = (cy + self._look_y * ry_b * (0.42 + 0.22 * lock) + ry_b * 0.2 * max(0.0, slant)
               + tweak[5] * ry_b)
+        prx, pry = pr, pr * max(0.65, openness)
+        for ref, w in refs:
+            # Copied faces: the traced pupil, fixed in place like in the reference.
+            rpx, rpy, rprx, rpry = ref.eyes[0 if side < 0 else 1].pupil
+            px, py = lerp(px, rpx * rx, w), lerp(py, cy + rpy * ry_b, w)
+            prx, pry = lerp(prx, rprx * rx, w), lerp(pry, rpry * ry_b, w)
         painter.setBrush(PUPIL)
-        painter.drawEllipse(QPointF(px, py), pr, pr * max(0.65, openness))
+        painter.drawEllipse(QPointF(px, py), prx, pry)
         painter.restore()
 
         if not lid_cut:
@@ -814,8 +873,9 @@ class Face:
                              QPointF(lerp(a.x(), b.x(), 0.9), lerp(a.y(), b.y(), 0.9)))
             painter.restore()
 
-    def _mouth_curves(self, w: float) -> tuple[list[tuple[float, float]],
-                                               list[tuple[float, float]], float]:
+    def _mouth_curves(self, w: float, squeeze: float = 1.0) -> tuple[list[tuple[float, float]],
+                                                                     list[tuple[float, float]],
+                                                                     float]:
         """Top and bottom lip polylines (local pixels, origin = mouth centre, y down) and the
         largest gap between them.
 
@@ -827,7 +887,10 @@ class Face:
         - when open, a rounded superellipse grows around that line: ``mouth_top`` sets how high
           the upper lip arches (0 = flat "D" top, 1 = oval, more = scream arch), ``mouth_bottom``
           how deep the lower lip hangs, ``mouth_dip`` pushes the middle of the upper lip down;
-        - ``mouth_round`` pulls all of that toward a small round "o".
+        - ``mouth_round`` pulls all of that toward a small round "o";
+        - copied faces (``fig1`` / ``fig7``) then pull every lip point toward the traced mouth
+          (``squeeze`` = head-turn foreshortening for those). Talking opens a copied closed mouth
+          by fading the copy out for a moment, and makes a copied open mouth chatter.
         """
         R = self.R
         ex = self.expr
@@ -852,9 +915,8 @@ class Face:
         y_left = -max(-ex.smirk, 0.0) * 0.35 * w + max(ex.smirk, 0.0) * 0.08 * w
         y_right = -max(ex.smirk, 0.0) * 0.35 * w + max(-ex.smirk, 0.0) * 0.08 * w
         top, bottom = [], []
-        n = 33
-        for i in range(n):
-            s = -1.0 + 2.0 * i / (n - 1)
+        for i in range(MOUTH_SAMPLES):
+            s = mouth_s(i)
             x = s * half_w
             bow = 1.0 - s * s
             centre = (bend * smile * w * (0.42 * bow - 0.3)
@@ -868,8 +930,28 @@ class Face:
             lower = centre + bot_h * prof
             top.append((x, upper))
             bottom.append((x, max(lower, upper)))
+        for ref, weight in self._refs():
+            m = ref.mouth
+            uR = ref.scale * R
+            k = self._ref_mouth_weight(m.closed, weight)
+            chatter = 1.0 - 0.6 * clamp(self._talk_amount / 0.7, 0.0, 1.0)
+            for i in range(MOUTH_SAMPLES):
+                rx = mouth_s(i) * m.half_w * uR * squeeze
+                rt = m.top[i] * uR
+                rb = rt + (m.bottom[i] - m.top[i]) * uR * chatter
+                t_x, t_y = top[i]
+                b_x, b_y = bottom[i]
+                top[i] = (lerp(t_x, rx, k), lerp(t_y, rt, k))
+                bottom[i] = (lerp(b_x, rx, k), max(lerp(b_y, rb, k), top[i][1]))
         gap = max(b[1] - t[1] for t, b in zip(top, bottom, strict=True))
         return top, bottom, gap
+
+    def _ref_mouth_weight(self, closed: bool, weight: float) -> float:
+        """How strongly a copied mouth shows: a copied *closed* mouth gives way while talking
+        (so the mouth can open), a copied open mouth stays."""
+        if not closed:
+            return weight
+        return weight * (1.0 - smoothstep(0.0, 0.3, self._talk_amount))
 
     def _eye_bottom(self) -> float:
         """Lowest point of the eyes (body pixels): the mouth must stay clear of it."""
@@ -885,7 +967,8 @@ class Face:
         ex = self.expr
         cx, cy, squeeze = self._place(0.0, MOUTH_Y * (0.85 + 0.15 * self.expr.body_h))
         w = MOUTH_W * R * ex.mouth_width * (1.0 + 0.15 * max(ex.smile, 0.0)) * squeeze
-        top, bottom, gap = self._mouth_curves(w)
+        top, bottom, gap = self._mouth_curves(w, squeeze)
+        refs = self._refs()
         angle = ex.tilt + ex.mouth_tilt
         ct, st = math.cos(angle), math.sin(angle)
         # (A closed line's curled corners count too, so they never touch the eyes.)
@@ -903,16 +986,27 @@ class Face:
         highest = min(under) if under else min(y for _, y in pts)
         k_open = smoothstep(0.02 * R, 0.25 * R, gap)
         top_y = max(clearance, lerp(cy + highest, clearance, k_open))
-        pts = [(x, y - highest) for x, y in pts]
-        k = self._fit(cx, top_y, pts)
-        if self.floor_y is not None:
-            # Never below the floor (sitting on the log: the paws and the log stay clear).
-            depth = max(y for _, y in pts)
-            if depth > 0.0 and top_y + depth * k > self.floor_y:
-                k = clamp((self.floor_y - top_y) / depth, 0.35, k)
+        k = self._fit(cx, top_y, [(x, y - highest) for x, y in pts])
         cy = top_y - highest * k     # mouth centre after scaling about the upper edge
+        for ref, weight in refs:
+            # Copied faces: the mouth sits exactly where the reference has it, below the eyes.
+            m = ref.mouth
+            rcx, rcy, _ = self._place((m.centre[0] - ref.origin[0]) * ref.scale,
+                                      EYE_Y + ex.eye_y + (m.centre[1] - ref.origin[1]) * ref.scale)
+            rk = self._fit(rcx, rcy, pts)
+            cx, cy, k = lerp(cx, rcx, weight), lerp(cy, rcy, weight), lerp(k, rk, weight)
+        if self.floor_y is not None:
+            # Never below the floor (sitting on the log: the paws and the log stay clear): shrink
+            # it about its upper edge.
+            depth = max(y for _, y in pts) - highest
+            top_abs = cy + highest * k
+            if depth > 0.0 and top_abs + depth * k > self.floor_y:
+                k2 = clamp((self.floor_y - top_abs) / depth, 0.35, k)
+                cy, k = top_abs - highest * k2, k2
 
         pen_w = 0.062 * R
+        for ref, weight in refs:
+            pen_w = lerp(pen_w, ref.mouth_ink * ref.scale * R, weight)
         ink_pen = QPen(INK, pen_w, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap,
                        Qt.PenJoinStyle.RoundJoin)
         painter.save()
@@ -929,6 +1023,7 @@ class Face:
             painter.setPen(ink_pen)
             painter.setBrush(Qt.BrushStyle.NoBrush)
             painter.drawPath(line)
+            self._paint_corner_strokes(painter, top, refs, ink_pen, squeeze)
             painter.restore()
             return
         mouth = QPainterPath(QPointF(*top[0]))
@@ -945,7 +1040,14 @@ class Face:
         mid = len(top) // 2
         t_mid, b_mid = top[mid][1], bottom[mid][1]
         open_h = b_mid - t_mid
+        # How much of the inside is a copied open mouth (it has its own tongue, no throat band).
+        copied = 0.0
+        for ref, weight in refs:
+            if not ref.mouth.closed:
+                copied = lerp(copied, 1.0, weight)
         # Darker throat along the upper lip gives the opening some depth.
+        painter.save()
+        painter.setOpacity(painter.opacity() * (1.0 - copied))
         painter.setBrush(THROAT)
         throat = QPainterPath(QPointF(*top[0]))
         for x, y in top[1:]:
@@ -953,9 +1055,14 @@ class Face:
         for x, y in reversed(top):
             throat.lineTo(x, y - R)
         painter.drawPath(throat)
+        painter.restore()
+        for ref, weight in refs:
+            if not ref.mouth.closed and ref.mouth.tongue:
+                self._paint_ref_tongue(painter, ref, weight, squeeze)
         # Tongue: a soft pink mound resting on the lower lip; it fades in as the mouth opens
         # and shrinks away for a small round "o".
-        tongue_alpha = smoothstep(0.1 * R, 0.24 * R, open_h) * (1.0 - 0.6 * ex.mouth_round)
+        tongue_alpha = (smoothstep(0.1 * R, 0.24 * R, open_h) * (1.0 - 0.6 * ex.mouth_round)
+                        * (1.0 - copied))
         if tongue_alpha > 0.01:
             painter.setOpacity(painter.opacity() * tongue_alpha)
             half = abs(top[-1][0])
@@ -965,9 +1072,48 @@ class Face:
         painter.setPen(ink_pen)
         painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.drawPath(mouth)
+        self._paint_corner_strokes(painter, top, refs, ink_pen, squeeze)
         if ex.tongue_out > 0.02:
             self._paint_tongue_out(painter, mouth, top, bottom, ink_pen)
         painter.restore()
+
+    def _paint_ref_tongue(self, painter: QPainter, ref: RefFace, weight: float,
+                          squeeze: float) -> None:
+        """A copied mouth's tongue (fig. 1): pink below the traced tongue line, inside the mouth
+        (the caller has clipped the painter to the mouth opening)."""
+        uR = ref.scale * self.R
+        line = [(x * uR * squeeze, y * uR) for x, y in ref.mouth.tongue]
+        path = QPainterPath(QPointF(*line[0]))
+        for x, y in line[1:]:
+            path.lineTo(x, y)
+        path.lineTo(line[-1][0], line[-1][1] + self.R)
+        path.lineTo(line[0][0], line[0][1] + self.R)
+        path.closeSubpath()
+        painter.save()
+        painter.setOpacity(painter.opacity() * weight)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(TONGUE)
+        painter.drawPath(path)
+        painter.restore()
+
+    def _paint_corner_strokes(self, painter: QPainter, lip: list[tuple[float, float]],
+                              refs: list[tuple[RefFace, float]], pen: QPen,
+                              squeeze: float) -> None:
+        """The short strokes crossing the corners of a copied closed smile (fig. 7's cheek
+        dimples). They start at the lip's ends and grow out of them as the copy blends in."""
+        for ref, weight in refs:
+            k = self._ref_mouth_weight(ref.mouth.closed, weight)
+            if k < 0.02 or not ref.mouth.corner_strokes:
+                continue
+            uR = ref.scale * self.R * k
+            painter.setPen(pen)
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            for side, pts in ref.mouth.corner_strokes:
+                ox, oy = lip[0] if side < 0 else lip[-1]
+                path = QPainterPath(QPointF(ox, oy))
+                for x, y in pts[1:]:
+                    path.lineTo(ox + x * uR * squeeze, oy + y * uR)
+                painter.drawPath(path)
 
     def _curled(self, line: list[tuple[float, float]], w: float) -> list[tuple[float, float]]:
         """A closed mouth line with both ends continued into small hooks that curl up and back
@@ -1009,7 +1155,8 @@ class Face:
         amount = clamp(self.expr.tongue_out, 0.0, 1.0)
         side = self._mirror
         n = len(bottom)
-        bx, by = bottom[int(round((0.5 + side * 0.32) * (n - 1)))]
+        # The lip sample closest to 64 % of the way from the middle to the corner.
+        bx, by = bottom[int(round(math.acos(-side * 0.64) / math.pi * (n - 1)))]
         open_h = max(b[1] - t[1] for t, b in zip(top, bottom, strict=True))
         # A soft oval whose long axis points out of the corner and down.
         length = (0.17 * R + 0.15 * open_h) * amount
