@@ -17,7 +17,7 @@
 
 ### Vị trí tài liệu
 - **Quyết định:** mọi file `.md` ngoài README đều nằm trong `docs/`.
-- **Trạng thái:** đã chuyển `CONTEXT.md`, `implementation_plan.md`, `ANIMATION_TUTORIAL.md` và file này vào `docs/`. Riêng `CLAUDE.md` vẫn ở thư mục gốc (đang chờ user quyết, xem mục "Còn bàn").
+- **Trạng thái:** đã chuyển `CONTEXT.md`, `implementation_plan.md`, `ANIMATION_TUTORIAL.md` và file này vào `docs/`. Riêng `CLAUDE.md` vẫn ở thư mục gốc (đã chốt, xem mục `CLAUDE.md` bên dưới).
 
 ### Kế hoạch giai đoạn A, B, D, F
 - **A — cho app dùng được hằng ngày:** đồng ý. Đã làm A1-A6 (đổi model, báo lỗi dễ hiểu, log ra file, không crash khi thiếu key, công cụ chịu lỗi mạng, chỉ chạy 1 bản). Còn A7: user thử trên desktop thật.
@@ -68,9 +68,25 @@
 - **Bong bóng chat — lịch sử:** cuộn lên để đọc lại tin cũ, chat bao nhiêu cũng được. Không chat trong **15 phút** thì xóa toàn bộ lịch sử (cả phần AI nhớ), không có cách nào lấy lại. Bong bóng tự đóng sau 30 giây **không** xóa lịch sử — mở lại trong vòng 15 phút vẫn thấy tin cũ. (User đề xuất, Claude đồng ý; thay mốc 10 phút cũ trong CONTEXT.md, code vẫn đang 10 phút cho tới khi làm.)
 - **Pet hiện ở đâu:** giữ quyết định cũ (2026-08-13) — pet **luôn nổi trên mọi ứng dụng/web**, không chỉ ở desktop.
 
+### Chốt thêm (2026-11-12, lượt 4)
+- **Chat:** dùng **bong bóng chat** (khung bo tròn có đuôi chỉ vào pet, dính theo pet, cỡ gọn, cuộn được, tự đóng) **thay hẳn cửa sổ chat** hiện tại.
+- **Bộ phản ứng ngẫu nhiên (chuột trái):** **không** gồm mặt cảnh báo (`alert`) và tư thế ngủ (dành cho Idle).
+- **Nội dung cửa sổ Settings:** chốt sau.
+
+## Chốt sau (user chủ động để lại)
+
+- Nội dung cửa sổ Settings.
+- Hoạt ảnh nâng cao chưa vẽ (E3: tay, củi, chảo trứng…) và tư thế ngủ của Idle (sẽ vẽ khi làm).
+- C3 tự khởi động, F đóng gói `.exe`, chat bằng giọng nói, phát triển lại hẹn giờ.
+
 ## Còn bàn
 
-- **Settings:** cửa sổ Settings cho chỉnh những cấu hình nào.
-- **Bong bóng chat hay cửa sổ chat:** user hỏi hai cái khác nhau thế nào → chờ user chọn sau khi được giải thích.
-- **Bộ phản ứng ngẫu nhiên:** có loại trừ mặt cảnh báo (`alert`, vốn báo máy có vấn đề thật) và tư thế ngủ (thuộc Idle) khỏi bộ không.
-- **Ứng dụng toàn màn hình:** có cần tự ẩn pet khi đang xem phim/chơi game toàn màn hình không (ý tưởng, chưa bàn).
+- **Ứng dụng toàn màn hình:** có tự ẩn pet khi đang xem phim/chơi game toàn màn hình không.
+- **Chuột trái khi đang cảnh báo:** vẫn chỉ tắt cảnh báo như hiện tại (không chơi phản ứng ngẫu nhiên) không.
+- **Câu nói tự động sau 15 phút rảnh:** còn giữ không, khi "nói 1 câu" đã nằm trong bộ phản ứng của chuột trái.
+- **Câu trả lời ngắn hiện trên bong bóng thoại (B4):** bỏ đi không, vì chat đã là bong bóng gắn với pet.
+- **Trong lúc chat:** pet có đứng yên trong khi bong bóng chat đang mở không.
+- **Idle gặp sự kiện:** chọn `Chat`, kéo pet, hoặc có cảnh báo khi pet đang ngủ thì pet tỉnh dậy hay ngủ tiếp; xong việc có quay lại ngủ không.
+- **E1 — danh sách cảm xúc:** gồm những cảm xúc nào (ngoài `other`).
+- **E2 — mốc thời gian:** bao lâu không đụng máy thì ngủ gật; "ban đêm" là từ mấy giờ tới mấy giờ.
+- **Ngôn ngữ trả lời trong chat:** AI trả lời theo ngôn ngữ user gõ (tiếng Việt thì đáp tiếng Việt) hay luôn tiếng Anh.
