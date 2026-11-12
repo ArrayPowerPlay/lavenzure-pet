@@ -27,19 +27,43 @@
 
 ### Giai đoạn C — khay hệ thống
 - **C1. Icon khay hệ thống vẽ đúng hình nhân vật:** đồng ý, chờ làm.
-- **C2. Thêm mục vào menu chuột phải của icon khay hệ thống:** còn bàn (user hỏi lại ý nghĩa).
+- **C2. Menu của icon khay hệ thống:** thay bằng quyết định mới bên dưới (mục "Menu khay hệ thống + cửa sổ Settings").
 - **C3. Bật tự khởi động cùng Windows:** để sau.
 
 ### Giai đoạn E — nhân vật sống động hơn
 - **E1. Biểu cảm theo nội dung chat:** đồng ý, chờ làm. AI gửi kèm một cảm xúc cho mỗi câu trả lời; có thêm lựa chọn **`other`** cho trường hợp AI không xác định được cảm xúc phù hợp — khi đó pet **không kích hoạt biểu cảm nào** (giữ nguyên nét mặt đang có, chỉ có miệng nói như bình thường).
-- **E2. Hành vi theo ngữ cảnh:** đồng ý phần "ngủ gật khi máy không được dùng lâu" và "ban đêm lửa dịu hơn", chờ làm. Phần "gọi thì pet chạy lại gần con trỏ chuột" còn bàn (chưa rõ thế nào là "gọi").
+- **E2. Hành vi theo ngữ cảnh:** đồng ý phần "ngủ gật khi máy không được dùng lâu" và "ban đêm lửa dịu hơn", chờ làm. Phần "gọi thì pet chạy lại gần con trỏ chuột": **tạm bỏ** (user chốt sau, xem bên dưới).
 - **E3. Animation nâng cao theo ảnh mẫu (tay, củi, chảo trứng…):** chưa quyết.
 
 ### Cách làm việc trong phiên này
 - Phiên 2026-11-12 (sau khi xong A, B, D) **chỉ bàn và ghi quyết định**, chưa code C1 / E1 / E2.
 
+### Menu khay hệ thống + cửa sổ Settings (thay cho C2)
+- **Quyết định:** menu chuột phải của icon khay hệ thống chỉ còn **2 mục: `Hide Pet`/`Show Pet` và `Settings`**.
+- Bấm `Settings` mở **một cửa sổ nhỏ, đơn giản** để chỉnh cấu hình. **Chỉnh những cấu hình nào: user chưa chốt.**
+- **Trạng thái:** chờ làm (sau khi chốt các câu hỏi ở mục "Còn bàn").
+
+### Tương tác chuột với pet
+- **Chuột trái vào pet:** pet chơi **một hoạt ảnh ngẫu nhiên** (chọn từ một bộ hoạt ảnh).
+- **Chuột phải vào pet:** hiện menu nhỏ có 2 lựa chọn:
+  - **`Chat`** — mở **bong bóng chat** cạnh pet để chat. Sau khoảng **30 giây không chat**, bong bóng chat **tự đóng**.
+  - **`Idle`** — pet **nằm yên** một chỗ (thôi đi lại / bay / nhảy).
+- **Trạng thái:** chờ làm. Thay cho cách cũ (chuột trái = mặt vui + câu thoại ngẫu nhiên; chuột phải = mở thẳng cửa sổ chat).
+
+### Hẹn giờ (`set_timer_reminder`)
+- **Quyết định:** chưa phát triển thêm; user sẽ cân nhắc sau.
+
+### "Gọi pet" (một phần của E2)
+- **Quyết định:** tạm bỏ.
+
+### `CLAUDE.md`
+- **Quyết định:** giữ ở thư mục gốc (ngoại lệ duy nhất của quy tắc "mọi `.md` ngoài README nằm trong `docs/`"), vì Claude Code chỉ tự đọc file này ở thư mục gốc hoặc `.claude/`.
+
 ## Còn bàn
 
-- **C2:** có thêm các mục "Đứng yên", đổi kích thước/fps, "Mở config.yaml", bật/tắt tự khởi động vào menu của icon khay hệ thống hay không.
-- **E2 — "gọi pet":** cách "gọi" là gì (phím tắt toàn cục, bấm icon khay hệ thống, nhắc tên trong chat…), hoặc bỏ hẳn tính năng này.
-- **Vị trí `CLAUDE.md`:** Claude Code chỉ tự đọc file này khi nó ở thư mục gốc hoặc trong `.claude/`; chuyển vào `docs/` thì AI agent sẽ không tự đọc nữa.
+- **Settings:** cửa sổ Settings cho chỉnh những cấu hình nào.
+- **Thoát app:** menu khay hệ thống không còn `Quit` và `Open Chat` → nút thoát app đặt ở đâu (trong cửa sổ Settings, giữ `Quit` trong menu, hay cách khác)?
+- **Hẹn giờ:** công cụ `set_timer_reminder` hiện đã có và đang chạy — giữ nguyên như hiện tại, hay tạm tắt cho tới khi user quyết?
+- **Chuột trái:** bộ hoạt ảnh ngẫu nhiên gồm những gì; pet còn nói câu thoại ngẫu nhiên kèm theo không.
+- **Idle:** thoát khỏi Idle bằng cách nào (bấm lại mục đó, hay menu đổi thành `Wander`…); "nằm yên" là chỉ đứng yên hay có tư thế nằm/nghỉ riêng.
+- **Bong bóng chat:** có thay hẳn cửa sổ chat hiện tại không; mốc 30 giây tính từ lúc nào (tin nhắn cuối / câu trả lời cuối), và có tạm dừng đếm khi đang gõ hoặc khi AI đang trả lời không; lịch sử chat hiển thị thế nào trong bong bóng.

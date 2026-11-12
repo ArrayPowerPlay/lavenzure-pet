@@ -132,7 +132,7 @@ Còn thiếu / cần làm tiếp:
 
 > Checklist Phase 0-12 phía trên được viết từ trước khi code nên nhiều ô `[ ]` đã lỗi thời (code cho Phase 0-9 đã có). **Từ giờ dùng danh sách dưới đây làm việc cần làm chính.**
 >
-> **Tiến độ (2026-11-12):** user đồng ý A, B, D → đã làm xong A1-A6, B1-B5, D1-D4 (còn A7: user thử trên desktop thật). F để sau. C1, E1, E2 (trừ "gọi pet") đã duyệt, chờ làm; C2 và "gọi pet" còn bàn; C3 để sau. Chi tiết từng quyết định: [DECISION_LOG.md](./DECISION_LOG.md).
+> **Tiến độ (2026-11-12):** user đồng ý A, B, D → đã làm xong A1-A6, B1-B5, D1-D4 (còn A7: user thử trên desktop thật). F để sau. C1, E1, E2 (bỏ "gọi pet") đã duyệt, chờ làm; C2 được thay bằng menu khay 2 mục + cửa sổ Settings; tương tác chuột đổi mới (chuột trái = hoạt ảnh ngẫu nhiên, chuột phải = menu Chat/Idle, bong bóng chat tự đóng sau 30s); C3 để sau; hẹn giờ không phát triển thêm. Chi tiết từng quyết định: [DECISION_LOG.md](./DECISION_LOG.md).
 
 ### Giai đoạn A — Cho app dùng được hằng ngày (ưu tiên cao nhất)
 - [x] **A1. Đổi model Gemini — chat đang hỏng hoàn toàn.** → *Đã đổi sang `gemini-flash-latest` (user chọn), gọi qua endpoint `v1beta`, đọc đúng câu trả lời dạng nhiều khối; đã thử cả 4 tool với key thật.* `gemini-2.0-flash` đã bị Google ngừng: gọi API trả 404 "no longer available" (kiểm tra 2026-11-12). Ứng viên: `gemini-flash-latest` (bí danh luôn trỏ bản Flash mới nhất, đã gọi thử OK) hoặc chốt một bản cố định như `gemini-3.8-flash` (ổn định hơn, nhưng sẽ lại bị ngừng sau này). Cần kiểm tra cả tool-calling qua `langchain-google-genai` (có thể phải nâng cấp thư viện). *Cần user chọn.*
