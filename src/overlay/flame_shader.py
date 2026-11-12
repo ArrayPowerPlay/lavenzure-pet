@@ -119,8 +119,8 @@ float smin(float a, float b, float k) {
 // knead slowly, each pressing in turn (a pressed paw is a little wider and shorter).
 float paw(vec2 p, float side, float rx, float seat, float grow, float phase) {
     float press = 0.5 + 0.5 * sin(phase + (side > 0.0 ? 2.1 : 0.0));
-    float halfW = (0.19 + 0.015 * press) * grow;
-    float depth = (0.29 - 0.025 * press) * grow;
+    float halfW = (0.2 + 0.015 * press) * grow;
+    float depth = (0.34 - 0.025 * press) * grow;
     vec2 a = vec2(side * 0.55 * rx, seat + 0.2);              // starts inside the body
     vec2 b = vec2(a.x, seat - depth + halfW);                 // round bottom over the log
     vec2 q = p - a;
@@ -157,6 +157,9 @@ void main() {
     // Base shape: body (a superellipse: round, or boxy when ``boxy`` grows; approximate signed
     // distance) + teardrop cone above it.
     float bx = rx * (1.0 + 0.02 * uBreath), by = ry * (1.0 - 0.02 * uBreath);
+    // Sitting on the log, the body's weight spreads its lower half a little (fig. 4: a wide
+    // bottom resting on the log, not a narrow point).
+    bx *= 1.0 + 0.12 * clamp(uPaws.x, 0.0, 1.0) * (1.0 - smoothstep(cy - ry, cy, h));
     vec2 q = vec2(x / bx, (h - cy) / by);
     float pw = 2.0 + 2.6 * boxy;
     vec2 aq = abs(q) + 1e-5;
@@ -174,22 +177,30 @@ void main() {
     float halfW = rx * pow(1.0 - k, 0.7);
     float dCone = max((abs(x) - halfW) * 0.9 + max(above - tipH, 0.0), cy - h);
     float d = smin(dBody, dCone, 0.35);
-    // Sitting on the log: the body's bottom is cut flat where it rests on the log (the log is
-    // drawn behind the fire) and two round paws hang from it over the log's front. The paws are
-    // part of the same shape, so the red rim, orange band and yellow core flow from the body
-    // into them without a seam - one solid mass, not a piece stuck on.
+    // Sitting on the log (reference fig. 4): the body settles over the log (the log is drawn
+    // behind the fire) - its bottom edge sags a little over the log's front, and two round paws
+    // hang from it lower down. Body, sag and paws are one shape joined with wide, soft fillets,
+    // and down there the fire is all yellow core right to the outline (the red / orange bands
+    // fade out toward the log, see ``drape`` below), so the paws read as the body itself
+    // flowing over the log, not as separate drips.
     float pawMask = 0.0;
-    float pawCore = 0.0;        // 1 inside the part of a paw that hangs below the body
+    float drape = 0.0;          // 1 where the body rests on / hangs over the log
+    float dCut = 0.0;           // how much the cut along the log moved the outline inward
     if (uPaws.x > 0.01) {
         vec2 p = vec2(x0, h);
         float seat = uPaws.z;
-        d = mix(d, -smin(-d, -(seat - h), 0.08), uPaws.x);
+        float dWhole = d;       // the body as if it were not cut along the log
+        float across = clamp(x0 / max(rx, 0.1), -1.0, 1.0);
+        float sag = 0.05 * (1.0 - across * across) * smoothstep(0.55, 1.0, uPaws.x);
+        d = mix(d, -smin(-d, -(seat - sag - h), 0.1), uPaws.x);
         float grow = smoothstep(0.55, 1.0, uPaws.x);
         float dPaw = min(paw(p, -1.0, rx, seat, grow, uPaws.y),
                          paw(p, 1.0, rx, seat, grow, uPaws.y));
         pawMask = smoothstep(0.4, -0.05, dPaw) * grow;
-        pawCore = smoothstep(0.1, -0.08, dPaw) * smoothstep(-0.2, 0.05, d) * grow;
-        d = smin(d, dPaw, 0.1);
+        d = smin(d, dPaw, 0.11);
+        dCut = max(d - smin(dWhole, dPaw, 0.11), 0.0);
+        // The side bands run down to the log; below its top the fire is all yellow core.
+        drape = uPaws.x * (1.0 - smoothstep(seat - 0.04, seat + 0.14, h));
     }
 
     // Heat: inside positive. Noise is gentle on the body and strong high up.
@@ -268,9 +279,6 @@ void main() {
     // cross, the outline's width estimate jumps there and a thin stray arc appeared inside the
     // outline.
     heat = mix(-smin(-heat, -floorHeat, 0.06), heat, gaps);
-    // Paws are thin compared with the body, so inside them the heat climbs faster: they get the
-    // same yellow core, orange band and red rim as the body (the outline stays where it is).
-    heat *= heat > 0.0 ? 1.0 + 2.2 * pawCore : 1.0;
     // Taper off before the edges of the drawing area, so a tall flame never ends in a cut line.
     heat -= 2.5 * (smoothstep(uRange.w - 0.4, uRange.w - 0.05, h)
                    + smoothstep(uRange.y - 0.35, uRange.y - 0.05, abs(x0)));
@@ -280,6 +288,12 @@ void main() {
     float top = smoothstep(cy + 0.35, cy + 1.6, h);
     float lvMid = uInsets.x + 0.06 * top;
     float lvInner = uInsets.y + 0.15 * top;
+    // Over the log the bands thin out to nothing: yellow right up to the outline (fig. 4). The
+    // bands are measured as if the body were not cut along the log (``dCut``), so no orange
+    // stripe runs along the cut; only the sides keep their bands down to the log.
+    lvMid = mix(lvMid, -0.02, drape);
+    lvInner = mix(lvInner, -0.01, drape);
+    float bandHeat = heat + dCut;
 
     // Pixel-space distances (divide by the gradient so the outline keeps a constant width).
     float g = max(length(vec2(dFdx(heat), dFdy(heat))), 1e-5);
@@ -287,8 +301,8 @@ void main() {
     float cov = clamp(dOuter + uOutlinePx * 0.5 + 0.5, 0.0, 1.0);       // outline outer edge
     float fill = clamp(dOuter - uOutlinePx * 0.5 + 0.5, 0.0, 1.0);      // outline inner edge
     vec3 col = uOuter;
-    col = mix(col, uMid, clamp((heat - lvMid) / g + 0.5, 0.0, 1.0));
-    col = mix(col, uInner, clamp((heat - lvInner) / g + 0.5, 0.0, 1.0));
+    col = mix(col, uMid, clamp((bandHeat - lvMid) / g + 0.5, 0.0, 1.0));
+    col = mix(col, uInner, clamp((bandHeat - lvInner) / g + 0.5, 0.0, 1.0));
     col = mix(uInk, col, fill);
     fragColor = vec4(col * cov, cov);
 }
