@@ -60,3 +60,6 @@ tray:
 autostart:
   enabled: true
   method: startup_folder # startup_folder | task_scheduler (task_scheduler used after packaging to .exe)
+
+diagnostics:
+  frame_stats_seconds: 600 # write fps + time per frame to the log this often (0 = off)
