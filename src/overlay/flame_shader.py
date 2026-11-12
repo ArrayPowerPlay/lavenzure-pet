@@ -114,34 +114,38 @@ float smin(float a, float b, float k) {
     return mix(b, a, h) - k * h * (1.0 - h);
 }
 
-// Distance to one flame "arm" (reference sheet, fig. 6): a soft, thick tube that comes out of the
-// lower side of the body, runs outward almost level, then curls up into a round fist.
-// ``side`` is -1 (left) or 1 (right).
+// Distance to one flame "arm" (reference sheet, fig. 6): a soft, thick, smoothly tapering tube
+// that grows out of the lower side of the body, runs outward almost level along one smooth curve
+// (a quadratic Bezier, so there is no kink anywhere), then swings up into a round fist that is
+// melted onto the forearm. ``side`` is -1 (left) or 1 (right).
 float sideFlare(vec2 p, float side, float cy, float rx, float amount, float phase, float flap) {
-    vec2 base = vec2(side * rx * 0.7, cy - 0.32);
-    float reach = 1.08 * amount, rise = 0.62 * amount;
-    float ang = side * flap * (0.22 * sin(phase) + 0.08 * sin(phase * 2.3 + 1.0));
+    vec2 base = vec2(side * rx * 0.6, cy - 0.36);
+    // The whole arm swings a little about its shoulder (slow, uneven "shaking fists").
+    float ang = side * flap * (0.13 * sin(phase) + 0.05 * sin(phase * 2.3 + 1.0));
     float ca = cos(ang), sa = sin(ang);
+    vec2 c1 = vec2(side * 0.95 * amount, -0.16 * amount);     // control point: out and a bit down
+    vec2 c2 = vec2(side * 1.12 * amount, 0.46 * amount);      // end: further out and up
+    c1 = vec2(c1.x * ca - c1.y * sa, c1.x * sa + c1.y * ca);
+    c2 = vec2(c2.x * ca - c2.y * sa, c2.x * sa + c2.y * ca);
+    float thick = 0.45 + 0.55 * amount;
     float best = 1e5;
     vec2 prev = base;
-    float rPrev = 0.3 * (0.45 + 0.55 * amount);
-    for (int i = 1; i <= 7; i++) {
-        float s = float(i) / 7.0;
-        // Out of the side with a little sag, then the forearm bends up at the end.
-        float bend = smoothstep(0.5, 1.0, s);
-        vec2 off = vec2(side * reach * (s - 0.18 * bend * bend),
-                        -0.13 * amount * sin(3.14159 * min(s, 0.75)) + rise * bend * bend);
-        off = vec2(off.x * ca - off.y * sa, off.x * sa + off.y * ca);
-        vec2 cur = base + off;
-        float rCur = mix(0.27, 0.16, s) * (0.45 + 0.55 * amount);
+    float rPrev = 0.27 * thick;
+    for (int i = 1; i <= 12; i++) {
+        float s = float(i) / 12.0;
+        vec2 cur = base + 2.0 * s * (1.0 - s) * c1 + s * s * c2;
+        // Thick at the shoulder, slimmer wrist, then the fist swells it again.
+        float rCur = mix(0.27, 0.17, smoothstep(0.0, 0.85, s)) * thick;
         vec2 ab = cur - prev;
         float t = clamp(dot(p - prev, ab) / max(dot(ab, ab), 1e-6), 0.0, 1.0);
         best = min(best, length(p - (prev + ab * t)) - mix(rPrev, rCur, t));
         prev = cur;
         rPrev = rCur;
     }
-    // The fist: a round blob at the end of the arm.
-    return min(best, length(p - prev - vec2(0.0, 0.03)) - 0.22 * amount);
+    // The fist: a round, slightly wide blob blended softly onto the end of the forearm.
+    vec2 f = p - prev - vec2(side * 0.02, 0.05) * amount;
+    float fist = length(vec2(f.x * 0.92, f.y)) - 0.23 * amount;
+    return smin(best, fist, 0.1);
 }
 
 void main() {
@@ -187,19 +191,25 @@ void main() {
     float dCone = max((abs(x) - halfW) * 0.9 + max(above - tipH, 0.0), cy - h);
     float d = smin(dBody, dCone, 0.35);
     float armMask = 0.0;
+    float armCore = 0.0;        // 1 inside the part of an arm that sticks out of the body
     if (uArms.x > 0.01) {
         vec2 p = vec2(x0, h);
         float dArm = min(sideFlare(p, -1.0, cy, rx, uArms.x, uArms.y, uArms.z),
                          sideFlare(p, 1.0, cy, rx, uArms.x, uArms.y + 1.7, uArms.z));
         armMask = smoothstep(0.35, -0.1, dArm) * uArms.x;
-        d = smin(d, dArm, 0.2);
+        // Around the arms the crown noise is switched off well beyond their edge: a noise blob
+        // touching a fist would otherwise leave a stray outline arc inside it.
+        armMask = max(armMask, smoothstep(0.75, 0.1, dArm) * uArms.x);
+        armCore = smoothstep(0.1, -0.05, dArm) * smoothstep(-0.1, 0.15, d)
+                * smoothstep(0.2, 0.7, uArms.x);
+        d = smin(d, dArm, 0.22);
     }
 
     // Heat: inside positive. Noise is gentle on the body and strong high up.
     float lift = smoothstep(cy - 0.1, cy + 1.0, h);
     float rim = smoothstep(0.32, 0.04, -d);         // only the outer skin of the body
-    float amp = 0.04 + (0.55 + 0.15 * uWild) * lift * (1.0 - 0.9 * armMask) * (1.0 - 0.6 * jag)
-              + 0.08 * jag * rim * (1.0 - lift);
+    float amp = 0.04 + (0.55 + 0.15 * uWild) * lift * (1.0 - armMask) * (1.0 - 0.6 * jag)
+              + 0.03 * jag * rim * (1.0 - lift);
     // Ridged noise stretched upward: tall, pointed tongues separated by gaps.
     float rx2 = (x + 0.22 * n) * 1.75;             // wiggle the tongues with the other noise
     float rn = gnoise(vec3(rx2, h * 0.7 - t * 1.25, t * 0.27 + uSeed * 1.3));
@@ -211,29 +221,51 @@ void main() {
     // tongues (both together cut the fringe off into floating bits).
     float carve = crown * edge * (1.0 - armMask) * (1.0 - 0.8 * jag);
     float wobble = amp * n * 1.5 + carve * (ridge - 0.62) * (0.85 + 0.2 * uWild) - 0.05 * lift;
-    // Bursting fire (``jag``, the scared look): a fringe of small tongues all along the sides
-    // and shoulders. They are placed by the angle around the body (0 = feet, pi = top) and
-    // travel upward over time on both sides, so the fire visibly licks up instead of the
-    // silhouette being chopped by vertical stripes. Nothing grows at the bottom.
+    // Bursting fire (``jag``: the scared look, and the fire under the pan): soft tongues of fire
+    // that are born low on the sides, lick up along the silhouette and grow into the tall
+    // tongues of the top corners. Nothing grows at the feet.
     if (jag > 0.01) {
-        float ang = acos(clamp(-q.y / max(length(q), 1e-4), -1.0, 1.0));
-        float topW = smoothstep(1.9, 2.5, ang);
-        float sideW = smoothstep(0.75, 1.6, ang) * (1.0 - topW);
-        float flick = 0.7 + 0.3 * gnoise(vec3(ang * 1.3, t * 1.7, uSeed + 9.0));
-        // Sides: small tongues sliding up along the silhouette.
-        float fr = gnoise(vec3(ang * 5.0 - t * 2.6, sign(x) * 5.3 + uSeed, 0.0));
-        float tongue = pow(max(1.0 - abs(fr) * 1.6, 0.0), 2.4);   // ridges = pointed tongues
+        float sgn = x0 < 0.0 ? -1.0 : 1.0;
+        float ang = acos(clamp(-q.y / max(length(q), 1e-4), -1.0, 1.0));   // 0 = feet, pi = top
+        // Which way the body surface faces here (-1 = down, 0 = sideways, 1 = up): the upright
+        // tongues of the top only grow where the surface faces up (beside the body they would
+        // be loose vertical slivers), the sheared side tongues where it faces sideways.
+        float nUp = normalize(vec2(gq.x * sign(q.x) / bx, gq.y * sign(q.y) / by)).y;
+        float upF = smoothstep(0.35, 0.8, nUp);
+        float topW = smoothstep(1.95, 2.55, ang) * upF;
+        float shoulder = exp(-pow((ang - 2.15) / 0.34, 2.0)) * upF;
+        float sideW = smoothstep(1.2, 1.75, ang) * (1.0 - smoothstep(0.1, 0.45, nUp));
+        // Sides. Fire rises, it never sticks out sideways: the side wall is wrapped in a row of
+        // tongues that scroll upward, and each tongue is sheared so that the further it reaches
+        // out of the body the higher it goes - its tip always points up and out, like a flame
+        // bending upward. Along every sheared line the tongue is one interval starting at the
+        // body, so no loose bits ever break off. Every tongue has its own size, which breathes,
+        // and the spacing is warped by noise, so the row never looks like a regular saw.
+        float outside = max(d, 0.0);
+        float lean = 1.6;
+        float hs = h - lean * outside;
+        float u = hs * 2.3 - t * 1.5 + sgn * 7.31
+                + 0.45 * gnoise(vec3(hs * 1.2, t * 0.5, uSeed + sgn * 3.0));
+        float cell = floor(u);
+        float c = fract(u);
+        float rnd = fract(sin(cell * 91.7 + sgn * 37.3 + uSeed * 0.37) * 43758.5453);
+        float size = (0.5 + 0.5 * rnd) * (0.72 + 0.28 * sin(t * (1.6 + 1.8 * rnd) + rnd * 6.28));
+        // One soft lobe per cell: zero (and flat) at both ends so neighbours join smoothly, a
+        // rounded - not needle-sharp - tip.
+        float lobe = pow(sin(3.14159 * pow(c, 0.8)), 1.4);
+        float sideFire = 0.26 * size * lobe - 0.015;
         // Top: a row of taller tongues pointing straight up, each rising and falling on its own.
         // They depend on x only (not height), so a tongue is one solid spike: no loops or holes.
-        float ft = gnoise(vec3(x * 2.4 + 0.25 * sin(t * 0.8), t * 1.1, uSeed + 3.7));
-        float tongueTop = pow(max(1.0 - abs(ft) * 1.5, 0.0), 2.0);
+        float ft = gnoise(vec3(x * 2.0 + 0.25 * sin(t * 0.8), t * 1.1, uSeed + 3.7));
+        float tongueTop = pow(max(1.0 - abs(ft) * 1.4, 0.0), 1.3);
+        float flick = 0.7 + 0.3 * gnoise(vec3(x * 1.3, t * 1.7, uSeed + 9.0));
         // The top corners send up the tallest tongues (fig. 3 scream, fig. 7 fire licking up
         // beside the pan).
-        float shoulder = exp(-pow((ang - 2.15) / 0.32, 2.0));
         tongueTop *= 1.0 + 1.1 * shoulder;
         topW = max(topW, shoulder);
-        wobble += jag * rim * (1.0 - armMask)
-                * (sideW * (0.2 * tongue * flick - 0.03) + topW * (0.5 * tongueTop * flick - 0.1));
+        wobble += jag * (1.0 - armMask)
+                * (sideW * sideFire * smoothstep(0.35, 0.05, -d)
+                   + topW * rim * (0.5 * tongueTop * flick - 0.1));
     }
     // No holes in the body: deep inside, the noise may thin the fire but never punch through
     // (sticker art has one clean silhouette). Up in the crown, gaps between tongues are allowed.
@@ -245,7 +277,13 @@ void main() {
     // The floor is continuous and never flat: a quarter of the depth inside, steeply negative
     // outside (so it never props up empty space around the body).
     float floorHeat = d < 0.0 ? -0.25 * d : -4.0 * d;
-    heat = mix(max(heat, floorHeat), heat, gaps);
+    // A *smooth* max: a hard max leaves a kink just outside the outline where the two fields
+    // cross, the outline's width estimate jumps there and a thin stray arc appeared inside the
+    // outline (seen on the fists).
+    heat = mix(-smin(-heat, -floorHeat, 0.06), heat, gaps);
+    // Arms are thin compared with the body, so inside them the heat climbs faster: they get the
+    // same yellow core, orange band and red rim as the body (the outline stays where it is).
+    heat *= heat > 0.0 ? 1.0 + 1.3 * armCore : 1.0;
     // Taper off before the edges of the drawing area, so a tall flame never ends in a cut line.
     heat -= 2.5 * (smoothstep(uRange.w - 0.4, uRange.w - 0.05, h)
                    + smoothstep(uRange.y - 0.35, uRange.y - 0.05, abs(x0)));
