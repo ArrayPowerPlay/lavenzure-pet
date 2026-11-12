@@ -14,7 +14,6 @@ from langgraph.prebuilt import create_react_agent
 
 import config
 from agent.errors import MissingApiKeyError
-from agent.tools.set_timer_reminder import set_timer_reminder
 from agent.tools.system_status import system_status
 from agent.tools.weather import get_weather
 from agent.tools.web_search import web_search
@@ -24,9 +23,13 @@ log = logging.getLogger(__name__)
 SYSTEM_PROMPT = (
     "You are Calcifer, a small, witty fire spirit living on the user's desktop. "
     "Keep replies short, warm, and a little playful. Use tools when the user asks "
-    "about weather, needs a web search, wants a reminder, or asks about their PC's "
-    "CPU/RAM/battery status."
+    "about weather, needs a web search, or asks about their PC's CPU/RAM/battery status. "
+    "You cannot set reminders or timers right now; if asked, say so kindly."
 )
+
+# Reminders are switched off for now (decision 2026-11-12): ``set_timer_reminder`` stays in the
+# code base but is not offered to the model. Add it back to this list to re-enable it.
+TOOLS = [get_weather, web_search, system_status]
 
 _agent = None
 _agent_lock = threading.Lock()
@@ -53,7 +56,7 @@ def _build_agent():
     log.info("Gemini agent created (model=%s)", model)
     return create_react_agent(
         llm,
-        tools=[get_weather, web_search, set_timer_reminder, system_status],
+        tools=TOOLS,
         prompt=SYSTEM_PROMPT,
     )
 

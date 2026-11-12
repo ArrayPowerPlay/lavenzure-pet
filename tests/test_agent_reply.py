@@ -40,3 +40,8 @@ def test_missing_key_raises_clear_error(monkeypatch):
     monkeypatch.setattr(config, "GEMINI_API_KEY", "")
     with pytest.raises(MissingApiKeyError):
         graph.run_agent([], "hi")
+
+
+def test_reminder_tool_is_switched_off():
+    """Reminders are disabled for now: the model is not offered set_timer_reminder."""
+    assert "set_timer_reminder" not in {t.name for t in graph.TOOLS}
