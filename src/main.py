@@ -5,6 +5,13 @@ signals. Startup order: logging -> single-instance check -> build components -> 
 """
 from __future__ import annotations
 
+import os
+
+# numpy's OpenBLAS starts one worker thread per CPU core and reserves ~30 MB for each of them
+# (~500 MB on a 16-thread CPU) as soon as numpy is imported. The pet only does tiny array maths,
+# so one thread is plenty. This must run before anything imports numpy.
+os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
+
 import json
 import logging
 import random

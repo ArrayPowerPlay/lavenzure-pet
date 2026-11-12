@@ -24,3 +24,6 @@ ignore = [
     "N806",  # ... and as a local variable
     "N815",  # Qt Property names are camelCase (exactPos)
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"src/main.py" = ["E402"]  # imports follow the OpenBLAS thread setting, which must come first
