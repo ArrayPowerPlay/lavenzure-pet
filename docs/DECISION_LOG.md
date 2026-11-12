@@ -88,7 +88,9 @@
 - **Ngôn ngữ trả lời trong chat:** AI **đáp theo ngôn ngữ user gõ** (gõ tiếng Việt thì đáp tiếng Việt). Các câu pet tự nói (click, fact/joke, cảnh báo) vẫn **tiếng Anh**.
 - **Ứng dụng toàn màn hình:** **không** tự ẩn pet. Muốn tắt thì bấm `Hide Pet` trong menu khay hệ thống.
 
+- **E2 — ngủ gật:** pet tự ngủ gật sau **10 phút** không đụng chuột/bàn phím, tự tỉnh khi user dùng máy lại. Khác Idle (Idle do user bảo, nằm tới khi bấm `Wander`).
+- **E2 — ban đêm:** từ **20h tối đến 5h sáng** (user chọn, thay đề xuất 22h–6h). Ban đêm chỉ đổi dáng vẻ (lửa dịu, màu trầm, cử động chậm), **không** tự làm pet ngủ. Hai mốc này sau có thể cho chỉnh trong Settings.
+
 ## Còn bàn
 
-- **E1 — danh sách cảm xúc:** gồm những cảm xúc nào (ngoài `other`). User sẽ gửi ảnh tham khảo để chọn thêm mặt cần vẽ.
-- **E2 — mốc thời gian:** bao lâu không đụng máy thì ngủ gật; "ban đêm" là từ mấy giờ tới mấy giờ. (Đề xuất: 10 phút; 22h–6h. User đang hỏi lại hai tính năng này dùng để làm gì.)
+- **E1 — danh sách cảm xúc:** gồm những cảm xúc nào (ngoài `other`). User gửi ảnh tham khảo (`D:\Downloads\download.jpg`), gạch chân 9 hình. Claude đề xuất (chờ user chốt): giữ `happy`, `surprised`, `thinking`; thêm mới `excited` (hớn hở), `scared` (hoảng, lửa bùng to), `pouty` (dỗi, thay cho "giận"), `unimpressed` (cạn lời), `sheepish` (ngại, liếc ngang), `strained` (nhe răng gồng), `yummy` (thè lưỡi thèm ăn). Chỉ vẽ **nét mặt + dáng lửa**; củi, chảo, tay để E3. Còn hỏi: có giữ `sad` (buồn) không, vì ảnh không có hình buồn được chọn.
