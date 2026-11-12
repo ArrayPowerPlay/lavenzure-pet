@@ -16,7 +16,16 @@ from __future__ import annotations
 
 import math
 
-from PySide6.QtCore import Property, QAbstractAnimation, QElapsedTimer, QPoint, QPointF, Qt, Signal
+from PySide6.QtCore import (
+    Property,
+    QAbstractAnimation,
+    QElapsedTimer,
+    QPoint,
+    QPointF,
+    QRect,
+    Qt,
+    Signal,
+)
 from PySide6.QtGui import QCursor, QMouseEvent, QPainter
 from PySide6.QtWidgets import QWidget
 
@@ -118,6 +127,12 @@ class OverlaySprite(QWidget):
     def feet_margin(self) -> int:
         """Pixels between the character's feet and the bottom edge of the window."""
         return int(self.height() - self.character.feet.y())
+
+    def body_rect(self) -> QRect:
+        """Global screen rectangle around the flame body (the chat bubble attaches beside it)."""
+        local = self.character.body_rect().translated(self._frac)
+        top_left = self.mapToGlobal(local.topLeft().toPoint())
+        return QRect(top_left, local.size().toSize())
 
     def bubble_anchor(self) -> QPoint:
         """Global screen point just above the flame tips, for positioning speech bubbles."""

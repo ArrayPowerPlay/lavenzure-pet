@@ -33,6 +33,7 @@ class PetState(Enum):
     DRAGGED = auto()
     REACT = auto()
     ALERT = auto()
+    CHAT = auto()
 
 
 def _state_weights() -> dict[PetState, float]:
@@ -55,6 +56,7 @@ class BehaviorController(QObject):
         self._active_anim = None
         self._locked = False  # True while DRAGGED/REACT/ALERT override the random loop
         self._alert_active = False  # survives a drag so the alert comes back afterwards
+        self._chatting = False  # the chat bubble is open: stand still
 
         # Dedicated single-shot timers (restartable, so a stale timeout can never fire twice).
         self._idle_timer = self._make_timer(self._advance)
@@ -217,8 +219,25 @@ class BehaviorController(QObject):
         if self.state == PetState.ALERT:
             self._release_lock()
 
+    def set_chatting(self, active: bool) -> None:
+        """The chat bubble opened (stand still beside it) or closed (wander again)."""
+        self._chatting = active
+        if self.state in (PetState.DRAGGED, PetState.ALERT, PetState.REACT):
+            return  # those finish first and then look at ``_chatting``
+        if active:
+            self._locked = True
+            self.state = PetState.CHAT
+            self._stop_motion()
+        else:
+            self._release_lock()
+
     def _release_lock(self) -> None:
-        """Return control to the random loop."""
+        """Return control to the random loop (or keep standing still while chatting)."""
+        if self._chatting:
+            self._locked = True
+            self.state = PetState.CHAT
+            self._stop_motion()
+            return
         self._locked = False
         self._enter_idle()
 

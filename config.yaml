@@ -9,7 +9,7 @@ llm:
   max_retries: 2 # retries before showing an error in the chat
 
 memory:
-  idle_timeout_minutes: 10 # clear in-memory chat history after this many minutes of inactivity
+  idle_timeout_minutes: 15 # wipe the chat (screen + memory) after this many minutes without chatting
 
 character:
   scale: 0.75 # size multiplier of the code-drawn flame character (1.0 = 200x236 px window, 0.75 = 150x177)
@@ -40,7 +40,7 @@ ambient:
     facts_file: data/facts_jokes.json
 
 chat:
-  reply_bubble_max_chars: 140 # short replies also appear in the bubble above the pet (0 = never)
+  auto_close_seconds: 30 # the chat bubble closes after this long without chatting
 
 click_reaction:
   lines_file: data/click_reactions.json

@@ -221,6 +221,11 @@ class FlameCharacter:
             return Mood.THINKING
         return Mood.NORMAL
 
+    def body_rect(self) -> QRectF:
+        """Widget-local rectangle around the round lower body (where the face is)."""
+        r = self.R
+        return QRectF(self.feet.x() - 1.2 * r, self.feet.y() - 2.1 * r, 2.4 * r, 2.1 * r)
+
     def head_top(self) -> QPointF:
         """Widget-local point just above the flame tips; used to anchor speech bubbles."""
         return QPointF(self.feet.x(), self.feet.y() - 3.2 * self.R)

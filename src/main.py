@@ -11,7 +11,7 @@ import random
 import sys
 from pathlib import Path
 
-from PySide6.QtCore import QObject, QThread, Signal
+from PySide6.QtCore import QObject, QThread, QTimer, Signal
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
@@ -20,7 +20,7 @@ import config
 from agent.errors import friendly_error
 from agent.graph import run_agent
 from agent.memory import SessionMemory
-from chat.chat_window import ChatWindow, markdown_to_plain
+from chat.chat_bubble import ChatBubble
 from monitor.background_monitor import BackgroundMonitor
 from overlay.behavior import BehaviorController, PetState
 from overlay.character import Mood
@@ -66,13 +66,15 @@ class CalciferApp:
         self.sprite = OverlaySprite()
         self.bubble = SpeechBubble(self.sprite.bubble_anchor)
         self.behavior = BehaviorController(self.sprite)
-        self.chat_window = ChatWindow()
+        self.chat = ChatBubble(self.sprite.body_rect)
         self.monitor = BackgroundMonitor()
         self.memory = SessionMemory(
-            ttl_seconds=config.get("memory.idle_timeout_minutes", 10) * 60
+            ttl_seconds=config.get("memory.idle_timeout_minutes", 15) * 60
         )
-        # Replies up to this many characters are also shown in the bubble (0 = never).
-        self._reply_bubble_chars = int(config.get("chat.reply_bubble_max_chars", 140))
+        # Wipe the whole conversation (screen + memory) once it has been idle past the TTL.
+        self._memory_timer = QTimer()
+        self._memory_timer.timeout.connect(self._expire_chat_history)
+        self._memory_timer.start(20_000)
 
         click_reactions_path = DATA_DIR / "click_reactions.json"
         self._click_lines = json.loads(click_reactions_path.read_text(encoding="utf-8"))["lines"]
@@ -91,7 +93,8 @@ class CalciferApp:
         self.instance.activated.connect(self._open_chat)
         self.sprite.clicked.connect(self._on_pet_clicked)
         self.sprite.right_clicked.connect(self._open_chat)
-        self.chat_window.message_sent.connect(self._on_chat_message)
+        self.chat.message_sent.connect(self._on_chat_message)
+        self.chat.closed.connect(lambda: self.behavior.set_chatting(False))
 
         self.monitor.alert_triggered.connect(self._on_alert)
         self.monitor.joke_triggered.connect(self._on_joke)
@@ -163,6 +166,7 @@ class CalciferApp:
         if self.sprite.isVisible():
             self.sprite.hide()
             self.bubble.hide()
+            self.chat.hide()
             self.toggle_action.setText("Show Pet")
         else:
             self.sprite.show()
@@ -171,15 +175,23 @@ class CalciferApp:
     # ------------------------------------------------------------------ chat
 
     def _open_chat(self) -> None:
-        """Open the chat window beside the pet (or where it was, if already open)."""
-        self.chat_window.show_near(self.sprite.frameGeometry())
+        """Open the chat bubble beside the pet; the pet stands still while it is open."""
+        if not self.sprite.isVisible():
+            self._toggle_visibility()
+        self.behavior.set_chatting(True)
+        self.chat.open()
+
+    def _expire_chat_history(self) -> None:
+        """After the idle TTL the conversation is gone for good, on screen and in memory."""
+        if self.memory.check_and_clear_if_idle():
+            self.chat.clear_history()
 
     def _on_chat_message(self, message: str) -> None:
         """Run the agent for ``message`` on a fresh worker thread (never on the UI thread)."""
         self.monitor.notify_activity()
         history = self.memory.get_history()
         self.memory.add("user", message)
-        self.chat_window.set_thinking(True)
+        self.chat.set_thinking(True)
         self.sprite.character.set_thinking(True)
 
         self._agent_thread = QThread()
@@ -193,22 +205,18 @@ class CalciferApp:
         self._agent_thread.start()
 
     def _on_agent_reply(self, reply: str) -> None:
-        """Show the reply in the chat (and in the bubble if short) and animate the mouth."""
+        """Show the reply in the chat bubble and animate the mouth."""
         self.memory.add("assistant", reply)
-        self.chat_window.append_message("Calcifer", reply)
-        self.chat_window.set_thinking(False)
+        self.chat.append_message("Calcifer", reply)
+        self.chat.set_thinking(False)
         self.sprite.character.set_thinking(False)
         # Move the mouth for roughly as long as it would take to say the reply.
         self.sprite.character.play(Mood.TALKING, min(5.0, max(1.2, len(reply) * 0.045)))
-        plain = markdown_to_plain(reply)
-        if (0 < len(plain) <= self._reply_bubble_chars and self.sprite.isVisible()
-                and not self.bubble.is_sticky()):
-            self.bubble.show_text(plain, auto_hide_ms=max(3000, len(plain) * 60))
 
     def _on_agent_error(self, message: str) -> None:
         """Show the friendly error message (details are already in the log file)."""
-        self.chat_window.append_message("Calcifer", message)
-        self.chat_window.set_thinking(False)
+        self.chat.append_message("Calcifer", message)
+        self.chat.set_thinking(False)
         self.sprite.character.set_thinking(False)
 
     def run(self) -> int:
