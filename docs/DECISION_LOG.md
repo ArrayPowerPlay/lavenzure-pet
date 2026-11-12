@@ -135,6 +135,13 @@
 - **Hình 8 — biểu cảm mới `yuck`:** hai mắt lệch nhau (một mắt nheo dưới mí chéo, mắt kia to, méo hình quả trứng, hơi nghiêng; hai con ngươi chụm vào giữa), miệng há méo lượn sóng, lưỡi thè ra ở một khóe. Mỗi lần chơi ngẫu nhiên lật trái/phải. Có trong bộ phản ứng khi click trái và nút "Yuck" trong `character_preview.py`.
 - **Claude tự quyết (user có thể đổi):** `yuck` **chưa** thêm vào danh sách cảm xúc AI chọn khi chat; **chưa vẽ vỏ trứng** trong miệng (chỉ lưỡi thè).
 
+### Lượt 11 (2026-11-12) — user góp ý 5 điểm sau lượt 10, đã sửa, chờ duyệt
+- **Vui (hình 1):** mắt thành **một hình hạt hạnh nhân** liền nét (mép trên cong thấp, đáy tròn, hai khóe nhọn), con ngươi treo dưới mép trên; miệng là hình bầu dục bo tròn, bỏ chỗ lõm giữa môi trên.
+- **Khoảng cách mắt – miệng:** miệng luôn cách mắt xa hơn trước (áp dụng cho mọi biểu cảm, gồm vui và ngáp / ngủ).
+- **Chill (hình 7):** cùng kiểu mắt hạnh nhân; miệng là **một đường cong nhẹ liền nét**, hai đầu cuộn lên thành móc nhỏ (bỏ kiểu đáy phẳng gãy góc).
+- **Ngồi trên khúc gỗ:** hai tay giờ **là một phần của ngọn lửa** (vẽ trong shader): đáy thân đặt phẳng lên khúc gỗ (khúc gỗ vẽ phía sau lửa), tay mọc ra từ thân với cùng viền đỏ, dải cam, lõi vàng → liền một khối, không còn viền chèn lên dải màu. Bộ vẽ dự phòng (`metaball` / `baked`) vẫn dùng tay vẽ riêng như cũ.
+- **Giận:** **bỏ hẳn tay** (xóa cả phần code tay trong shader).
+
 ## Còn bàn
 
-- Chờ user duyệt kết quả lượt 10. Hỏi user: có thêm `yuck` vào danh sách cảm xúc AI chọn không? Có cần vẽ vỏ trứng trong miệng không?
+- Chờ user duyệt kết quả lượt 11. Hỏi user: có thêm `yuck` vào danh sách cảm xúc AI chọn không? Có cần vẽ vỏ trứng trong miệng không?
