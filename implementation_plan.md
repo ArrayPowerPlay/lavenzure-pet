@@ -116,5 +116,10 @@ Còn thiếu / cần làm tiếp:
 - [ ] Thêm `GEMINI_API_KEY` và `TAVILY_API_KEY` thật vào file `.env` (copy từ `.env.example`)
 - [ ] Chạy thử trên màn hình Windows thật (không phải offscreen) để kiểm tra click-through/always-on-top/mask thực tế
 - [x] Nhân vật thật: thay placeholder bằng nhân vật vẽ bằng code (`src/overlay/character.py`) — không cần PNG (2026-11-11). Xem thử: `.venv-win/Scripts/python.exe src/character_preview.py`
+- [x] Vẽ lại đồ họa theo ảnh mẫu fan-art (sticker phẳng, dáng giọt nước, viền liền, lưỡi lửa chạy dọc sườn lên đỉnh + bùng lửa ngẫu nhiên) — chờ user duyệt (2026-11-12)
+- [x] Animation lửa kiểu mô phỏng lưỡi lửa + metaball (`src/overlay/fire_field.py`, cần `numpy`), kích thước 0.75, giữ glow, không thêm viền sticker (2026-11-12)
+- [x] Chuyển động mượt: vị trí cửa sổ sub-pixel (`exactPos`) + vòng frame chung đồng hồ animation Qt; mặt sống động hơn (saccade, chớp mắt, biểu cảm lò xo, miệng nói theo nhiễu) (2026-11-12)
+- [ ] Chờ user xem thử trên desktop thật và góp ý
+- [ ] Animation nâng cao theo ảnh mẫu: tay, ôm/gặm củi, nằm trên củi, chảo + trứng ốp la/thịt xông khói, trứng vỡ
 - [ ] Chạy `src/autostart/install_startup.py` để tạo shortcut Startup (Phase 10)
 - [ ] Phase 11 (PyInstaller) và Phase 12 (polish/testing hiệu năng) vẫn chưa làm
