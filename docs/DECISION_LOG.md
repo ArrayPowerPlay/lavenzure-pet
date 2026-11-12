@@ -124,6 +124,17 @@
 - **Ngủ:** các thông số mặt chuyển kiểu "tăng tốc rồi giảm tốc" (không giật ngay khung đầu); lúc thiu thiu ngủ mí mắt sụp và mặt giãn ra chậm.
 - **Bay trên củi:** hai tay là **một cục tròn** (như tay Doraemon), mọc ra từ thân, phủ lên mặt trước khúc củi; bỏ vạch ngón.
 
+### Lượt 10 (2026-11-12) — user góp ý 8 điểm + thêm hình 8, đã sửa, chờ duyệt
+- **Chill (hình 7):** mắt hình hạt chanh, mí trên cong vòm, con ngươi nép dưới mí liếc ngang; miệng cười dài, hai khóe cuộn lên thành móc nhỏ (một nét liền). **Chảo đặt lên đầu, vẽ phía trước lửa**: đáy chảo nằm ngay trên mắt, chảo hơi nghiêng, cán chúc xuống một bên, lửa lộ ra hai bên và phía sau; chảo rơi xuống rồi đứng yên (không nảy đè lên mắt).
+- **Chill không đi cùng khúc củi:** đang bay trên củi mà gặp `chill` thì hiện mặt vui thay; click ngẫu nhiên lúc đang bay không chọn `chill`.
+- **Lửa của hoảng / chill:** lưỡi lửa hai bên chỉ mọc ở nửa trên thân và luôn uốn hướng lên; bỏ các cục nhọn chĩa ngang.
+- **Trên khúc củi:** mặt nhích lên, miệng không bao giờ xuống quá một mức cố định; hai tay tròn dời ra hai bên → tay không che miệng.
+- **Giận (hình 6):** miệng há rộng và cao, bo tròn; mắt nhìn thẳng phía trước, mắt đặt cao hơn để có chỗ cho miệng. Tay lửa là một đường cong mềm thuôn dần, nắm đấm tròn, lõi vàng; hết vệt cung lạ trong nắm đấm.
+- **Vui:** không nhảy nữa (chỉ tia lửa + bùng lửa). Mặt 1 theo hình 1: mắt cong vòm, con ngươi nép dưới mí, bỏ nét ngang giống lông mày.
+- **Ngủ:** không chớp mắt khi đang ngáp / ngủ → mắt chỉ nhắm một lần rồi ngủ luôn. Mắt nhắm là **một nét duy nhất** uốn dần từ mí nhắm sang vòng cung "^", không chồng hai hình.
+- **Hình 8 — biểu cảm mới `yuck`:** hai mắt lệch nhau (một mắt nheo dưới mí chéo, mắt kia to, méo hình quả trứng, hơi nghiêng; hai con ngươi chụm vào giữa), miệng há méo lượn sóng, lưỡi thè ra ở một khóe. Mỗi lần chơi ngẫu nhiên lật trái/phải. Có trong bộ phản ứng khi click trái và nút "Yuck" trong `character_preview.py`.
+- **Claude tự quyết (user có thể đổi):** `yuck` **chưa** thêm vào danh sách cảm xúc AI chọn khi chat; **chưa vẽ vỏ trứng** trong miệng (chỉ lưỡi thè).
+
 ## Còn bàn
 
-- Không còn câu hỏi nào chặn. Chờ user duyệt kết quả lượt 9.
+- Chờ user duyệt kết quả lượt 10. Hỏi user: có thêm `yuck` vào danh sách cảm xúc AI chọn không? Có cần vẽ vỏ trứng trong miệng không?
