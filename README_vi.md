@@ -1,15 +1,61 @@
-# Calcifer Desktop Pet
+<p align="center">
+  <img src="docs/images/hero.png" alt="Ngọn lửa cười toe, mắt nhìn lên" width="260">
+</p>
 
-**Tiếng Việt** · [English](./README.md)
+<h1 align="center">Calcifer Desktop Pet</h1>
 
-Một "thú cưng" ngọn lửa sống trên màn hình Windows, lấy cảm hứng từ Calcifer (fan-art tự vẽ bằng code). Ngọn lửa đi lại, bay, nhảy quanh màn hình, phản ứng khi bạn click/kéo, và mở bong bóng chat (chuột phải → `Chat`) để trò chuyện với một AI agent biết gọi công cụ: xem thời tiết, tìm kiếm web, xem tình trạng máy.
+<p align="center">
+  <em>Một con quỷ lửa bé xíu dọn đến sống trên màn hình của bạn, và chẳng bao giờ chịu ngồi yên.</em><br>
+  <b>Tiếng Việt</b> · <a href="./README.md">English</a>
+</p>
+
+---
+
+Một linh hồn lửa nhỏ bằng bàn tay, fan-art tri ân Calcifer, sống nổi trên mọi cửa sổ. Nó đi dạo dọc đáy màn hình, nhún nhảy, gọi khúc củi rồi cưỡi củi bay vèo đi, ngủ gật khi bạn rời máy, bày trò ngẫu nhiên khi bạn click và giật mình khi bị nhấc lên. Chuột phải là mở bong bóng chat: một AI agent (Google Gemini) trả lời theo ngôn ngữ bạn gõ, xem thời tiết, tìm kiếm web hay cho bạn biết máy đang vất vả cỡ nào, và mỗi câu trả lời lại đi kèm một nét mặt hợp cảnh.
+
+**Nhân vật này không dùng một file ảnh nào.** Từng đợt lửa bập bùng, từng cái chớp mắt, từng nụ cười đều được tính bằng code, trực tiếp, 60 lần mỗi giây, và không bao giờ lặp lại cùng một khung hình.
 
 > **Chỉ dùng cá nhân.** Calcifer là nhân vật có bản quyền của Studio Ghibli. Dự án này là fan-art phi thương mại, không dùng bất kỳ hình ảnh/âm thanh gốc nào của phim, và không được phát hành công khai hay thương mại.
 
+## Hoạt ảnh
+
+<p align="center">
+  <img src="docs/images/expressions.png" alt="Các biểu cảm: bình thường, vui, ngạc nhiên, hoảng, giận, chill với chảo rán, ghê, ngủ, cưỡi khúc củi">
+  <br>
+  <sub>bình thường · vui · ngạc nhiên · hoảng · giận · chill · ghê · ngủ · cưỡi củi, tất cả là khung hình lấy thẳng từ bộ vẽ đang chạy</sub>
+</p>
+
+Mục tiêu: nét vẽ phẳng, viền mực như sticker vẽ tay, nhưng *chuyển động* như lửa thật và *diễn* như một nhân vật có tính cách. Bên dưới là:
+
+### 🔥 Ngọn lửa không bao giờ lặp lại
+
+- **Lửa được đốt bằng GPU shader.** Một fragment shader GLSL tính "độ nóng" cho từng pixel: thân tròn cộng một chóp hình giọt nước, bị gặm mòn bởi **nhiễu fractal 3D bẻ cong miền (domain warping) cuộn dần lên trên**. Lưỡi lửa sinh ra trên thân, bốc lên, kéo dài, tách đôi, đứt thành mẩu nhỏ rồi tắt. Nhiễu có cả trục thời gian nên hoa văn không bao giờ lặp vòng.
+- **Phong cách sticker, nhưng vẽ thật.** Độ nóng được cắt thành ba dải màu phẳng (viền đỏ, cam, lõi vàng) và bao quanh bằng một nét mực nâu đậm dày *đều*: shader chia cho gradient của độ nóng nên viền không phình to ở chỗ lửa mềm. Mọi mép đều được khử răng cưa.
+- **"Thời tiết" của lửa.** Ngọn lửa tự chuyển qua lại giữa các trạng thái: *cháy đều*, *bùng gió* cao và lắc lư, *lách tách* ngắn và giật, *lặng* thấp và lười, mỗi trạng thái kéo dài ngẫu nhiên, còn chóp lửa chính thì trôi qua trôi lại. Không bao giờ đều đều như máy đếm nhịp.
+- **Mặt luôn nằm yên.** Nhiễu yếu ở phần thân dưới và mạnh dần lên tới chóp, nên khuôn mặt luôn nằm trên vùng vàng mịn trong khi ngọn lửa phía trên tha hồ bùng.
+- **Ba bộ vẽ thay được cho nhau.** Ngoài shader còn có bộ **metaball** chạy CPU (các lưỡi lửa hạt hòa thành trường mật độ rồi dò thành đường viền vector) và bộ **baked** (các đoạn mô phỏng chất lỏng 2D thật, tính sẵn offline rồi biến hình qua lại). Máy không có OpenGL 3.3 thì pet tự lặng lẽ chuyển sang metaball.
+
+### 🎭 Khuôn mặt biết diễn, không chỉ đổi hình
+
+- **Thời điểm so le.** Mắt phản ứng trước, miệng theo sau nửa nhịp, đúng kiểu các họa sĩ hoạt hình làm, thay vì mọi thứ bật đổi cùng một khung hình.
+- **Lò xo và lấy đà.** Mỗi thông số trên mặt là một lò xo hơi vượt quá đích (mắt *bật* to khi ngạc nhiên), và mỗi lần đổi cảm xúc đều bắt đầu bằng một cú co nhẹ theo hướng ngược lại.
+- **Mí mắt thật.** Mí trên sụp hoặc xếch cho vẻ buồn ngủ, cáu hay lo lắng; má đẩy mí dưới lên khi cười; chớp mắt nhắm nhanh, mở chậm.
+- **Biết quay đầu.** Các nét mặt nằm trên một quả cầu tưởng tượng: khi liếc sang bên, cả khuôn mặt trượt theo và nửa xa hẹp lại. Mắt nhìn theo con trỏ chuột và đảo nhẹ liên tục (saccade).
+- **Biểu cảm vụn khi rảnh.** Để yên một lúc, nó tự lướt qua những nét mặt nhỏ vào những lúc bất chợt: nhếch mép tự mãn, nheo mắt khoan khoái, chữ "o" nho nhỏ, ngáp, nhăn mặt lo lắng.
+- **Miệng biến hình liền mạch.** Từ cười sang chữ "o" rồi sang hét là một hình dạng biến đổi liên tục, không phải chồng mờ giữa các bản vẽ. Mặt vui và mặt chill được dò từng điểm theo bản phác thảo tham khảo rồi trộn vào.
+- **Biểu cảm đổi cả ngọn lửa.** *Hoảng* thì lửa dựng tua tủa thành khối vuông, *giận* thì bùng ra hai bên, *chill* thì bẹt xuống dưới chiếc chảo đang rán trứng với thịt xông khói xèo xèo, *ngủ* thì lùn và bè ra, thở chậm, bay chữ "z". Hình dáng cũng là lò xo, nên lửa rung rinh như thạch khi chuyển dáng.
+
+### 🪵 Dáng người theo chuyển động thật
+
+- **Không có keyframe nào.** Nghiêng, kéo dài, bẹp và nhún đều *suy ra từ cách cửa sổ thật sự di chuyển*: lửa ngả ngược hướng đi, dãn dài khi vọt lên hay rơi xuống, bẹp và rung khi tiếp đất, nảy nhẹ khi bước. Gió do chuyển động thổi lửa bạt ra sau.
+- **Tàn lửa sống trong không gian màn hình.** Tàn lửa cứ bay lên từ chỗ nó sinh ra, nên khi pet di chuyển chúng kéo thành vệt phía sau.
+- **Đạo cụ có màn xuất hiện.** Khúc củi hiện ra trong một chùm tia lửa khi cất cánh, đôi tay lửa nhỏ bám lấy nó khi bay, rồi củi tan thành tàn lửa khi đáp xuống.
+- **Chuyển động mượt như bơ.** Vị trí cửa sổ được tính chính xác dưới mức pixel (phần lẻ thành độ lệch khi vẽ), và vòng lặp khung hình chạy chung đồng hồ animation Qt với chuyển động, nên khi đi chậm nó lướt êm chứ không giật 1 px, 2 px, 1 px.
+- **Có ngày, có đêm.** Từ 20h đến 5h sáng lửa cháy thấp, chậm và đỏ trầm hơn; sau 10 phút không đụng chuột/bàn phím nó ngáp, mắt từ từ nhắm rồi ngủ gật, và bật tỉnh khi bạn quay lại.
+
 ## Tính năng
 
-- **Nhân vật vẽ hoàn toàn bằng code** (không cần ảnh): thân lửa 3 lớp đỏ/cam/vàng viền nâu đậm, có quầng sáng và tàn lửa bay. Mặc định vẽ thân lửa bằng GPU shader; tự chuyển sang cách vẽ dự phòng nếu máy không hỗ trợ OpenGL 3.3.
-- **Khuôn mặt và dáng người có cảm xúc**: chớp mắt, đảo mắt nhìn theo chuột, mí mắt, lông mày, miệng nói; vui (hai kiểu mặt), ngạc nhiên, hoảng hốt, tức giận, chill (rán trứng bằng chảo trên đầu), ghê (`yuck`), suy nghĩ, cảnh báo. Mỗi biểu cảm còn đổi cả hình dáng ngọn lửa.
+- **Nhân vật vẽ hoàn toàn bằng code**, lửa chạy bằng GPU shader và khuôn mặt giàu cảm xúc (xem [Hoạt ảnh](#hoạt-ảnh)): vui (hai kiểu mặt), ngạc nhiên, hoảng, giận, chill, ghê (`yuck`), suy nghĩ, cảnh báo, ngủ.
 - **Tự di chuyển**: đứng yên, đi dọc đáy màn hình, cưỡi khúc củi bay lượn, nhảy — chọn ngẫu nhiên.
 - **Ngủ**: chọn `Idle` thì pet nằm ngủ (thở chậm, bay chữ "z"); sau 10 phút không đụng chuột/bàn phím pet tự ngủ gật, dùng máy lại thì tỉnh.
 - **Ban đêm**: từ 20h đến 5h sáng lửa dịu và trầm màu hơn, pet cử động chậm hơn.

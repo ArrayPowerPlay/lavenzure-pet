@@ -1,15 +1,61 @@
-# Calcifer Desktop Pet
+<p align="center">
+  <img src="docs/images/hero.png" alt="The flame pet, grinning and looking up" width="260">
+</p>
 
-[Tiếng Việt](./README_vi.md) · **English**
+<h1 align="center">Calcifer Desktop Pet</h1>
 
-A little flame "pet" that lives on your Windows desktop, inspired by Calcifer (fan-art, drawn entirely in code). The flame wanders, floats and hops around the screen, reacts when you click or drag it, and opens a chat bubble (right-click → `Chat`) where you can talk to an AI agent that can use tools: weather, web search and PC status.
+<p align="center">
+  <em>A little fire demon that moves onto your desktop, and never sits still.</em><br>
+  <a href="./README_vi.md">Tiếng Việt</a> · <b>English</b>
+</p>
+
+---
+
+A pocket-sized flame spirit, a fan-art tribute to Calcifer, that lives on top of all your windows. It wanders along the bottom of the screen, hops, summons a log and flies off on it, dozes off when you leave, pulls a random trick when you click it and looks startled when you pick it up. Right-click and it opens a chat bubble, where an AI agent (Google Gemini) answers in your language and checks the weather, searches the web or tells you how hard your PC is working, pulling a face that matches every reply.
+
+**There is not a single image file in this character.** Every flicker of fire, every blink and every grin is computed in code, live, 60 times a second, and it never plays the same frame twice.
 
 > **Personal use only.** Calcifer is a copyrighted Studio Ghibli character. This project is non-commercial fan-art, uses no original film assets, and must not be distributed publicly or commercially.
 
+## The animation
+
+<p align="center">
+  <img src="docs/images/expressions.png" alt="Expressions: normal, happy, surprised, scared, angry, chill with a frying pan, yuck, asleep, riding the log">
+  <br>
+  <sub>normal · happy · surprised · scared · angry · chill · yuck · asleep · riding the log, all frames straight from the live renderer</sub>
+</p>
+
+The goal was a flat, hand-inked "sticker" look that *moves* like real fire and *acts* like a character with a personality. Under the hood:
+
+### 🔥 Fire that never repeats
+
+- **A GPU shader burns the flame.** A GLSL fragment shader computes a "heat" field for every pixel: a round body plus a teardrop cone, eaten away by **domain-warped 3D fractal noise that scrolls upward**. Tongues of fire are born on the body, rise, stretch, split, pinch off into little scraps and die out. Because the noise has a time axis, the pattern never loops.
+- **Sticker style, rendered for real.** The heat is cut into three flat bands (red rim, orange, yellow core) and wrapped in a dark maroon ink line of *constant* width: the shader divides by the heat gradient, so the outline doesn't swell where the fire is soft. Every edge is anti-aliased.
+- **Fire "weather".** The flame drifts between moods of its own, a steady *calm*, a tall swaying *gust*, a short jittery *crackle* and a low lazy *lull*, each lasting a random time, while the dominant tip wanders from side to side. You never get a metronome.
+- **The face stays calm.** The noise is weak on the lower body and strong near the tips, so the face always sits on smooth yellow while the crown goes wild.
+- **Three interchangeable renderers.** Besides the shader there is a CPU **metaball** renderer (particle tongues melted into a density field and traced into vector outlines) and a **baked** one (clips of a real 2D stable-fluids simulation, computed offline and morphed into each other). If OpenGL 3.3 is missing, the pet quietly falls back to metaballs.
+
+### 🎭 A face with acting, not just switching
+
+- **Overlapping timing.** The eyes react first and the mouth follows a beat later, the way animators stagger a "take", instead of everything snapping in the same frame.
+- **Springs and anticipation.** Every face parameter is a spring with a touch of overshoot (eyes *pop* when surprised), and each change of mood starts with a tiny squeeze the other way.
+- **Real eyelids.** Upper lids droop or slant for sleepy, cross or worried looks; cheeks push the lower lids up when it smiles; blinks close fast and open slowly.
+- **The head turns.** The features sit on an imaginary sphere: when it glances sideways, the whole face slides over and the far side narrows. The eyes follow your mouse cursor and dart around with small saccades.
+- **Idle micro-expressions.** Left alone, it drifts through little moods at irregular times: a smug smirk, a content squint, a small "o", a yawn, a worried wiggle.
+- **Mouths that morph.** Going from a smile to an "o" to a shout is one continuous shape, not a cross-fade between drawings. The happy and chill faces are traced point by point from reference sketches and blended in.
+- **Expressions reshape the whole fire.** *Scared* bristles into a boxy blaze, *angry* flares out at the sides, *chill* flattens under a frying pan with sizzling egg and bacon, *asleep* sinks low and wide, breathing slowly, with drifting "z"s. Shape values are springs too, so the fire wobbles like jelly between poses.
+
+### 🪵 Body language from real movement
+
+- **Nothing is keyframed.** Lean, stretch, squash and hops are *derived from how the window actually moves*: the flame trails against its direction of travel, stretches when it shoots up or drops, squashes and wobbles when it lands, and bounces as it walks. Wind from moving blows the fire backwards.
+- **Sparks live in screen space.** Embers keep rising from where they were spawned, so they stream out behind the pet as it travels.
+- **Props with entrances.** A log appears in a burst of sparks at take-off, little flame paws grip it while it flies, and it dissolves into embers on landing.
+- **Butter-smooth motion.** The window position is tracked with sub-pixel precision (the leftover fraction becomes a drawing offset), and the frame loop runs on the same Qt animation clock as the movement, so a slow walk glides instead of stepping 1 px, 2 px, 1 px.
+- **It has a day and a night.** From 20:00 to 05:00 the fire burns lower, slower and deeper red; after 10 minutes without mouse or keyboard it yawns, its eyes slowly close and it nods off, then pops awake when you come back.
+
 ## Features
 
-- **Character drawn entirely in code** (no image files): a three-layer red/orange/yellow flame with a dark maroon outline, a soft glow and drifting embers. The flame body is rendered with a GPU shader by default and automatically falls back to a CPU renderer if OpenGL 3.3 is unavailable.
-- **Expressive face and body**: blinking, eyes that follow the mouse, eyelids, brows, a talking mouth; happy (two faces), surprised, scared, angry, chill (frying breakfast in a pan on its head), yuck, thinking and alert. Each expression also reshapes the whole flame.
+- **Character drawn entirely in code** with a GPU-shader flame and an expressive face (see [The animation](#the-animation)): happy (two faces), surprised, scared, angry, chill, yuck, thinking, alert, sleeping.
 - **Moves on its own**: idles, walks along the bottom of the screen, flies around on a log, jumps — picked at random.
 - **Sleeps**: lies down and sleeps (slow breathing, floating "z"s) when you choose `Idle`, and dozes off by itself after 10 minutes without mouse/keyboard input, waking up when you come back.
 - **Night look**: from 20:00 to 05:00 the fire is calmer and dimmer and the pet moves slower.
