@@ -31,7 +31,7 @@ from dataclasses import dataclass, fields, replace
 from enum import Enum, auto
 
 from PySide6.QtCore import QPointF, Qt
-from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen, QPolygonF
+from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen
 
 from overlay.flame_common import (
     FACE_CY,
