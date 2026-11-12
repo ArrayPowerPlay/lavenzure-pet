@@ -130,6 +130,7 @@ src/
 ├── monitor/                # system alerts, reminders, ambient lines
 └── autostart/              # Windows Startup shortcut
 tests/                      # automated tests (pytest)
+docs/                       # design docs (Vietnamese)
 data/                       # click reactions + fact/joke pool
 assets/flame/               # pre-computed fire data for the `baked` renderer
 ```
@@ -138,10 +139,11 @@ assets/flame/               # pre-computed fire data for the `baked` renderer
 
 The design documents are written in Vietnamese:
 
-- [`CONTEXT.md`](./CONTEXT.md) — goals, architecture, locked technical decisions, change log.
-- [`implementation_plan.md`](./implementation_plan.md) — progress and the **next-steps roadmap**.
+- [`docs/CONTEXT.md`](./docs/CONTEXT.md) — goals, architecture, locked technical decisions, change log.
+- [`docs/implementation_plan.md`](./docs/implementation_plan.md) — progress and the **next-steps roadmap**.
+- [`docs/DECISION_LOG.md`](./docs/DECISION_LOG.md) — log of the decisions agreed so far (and the ones still open).
 - [`CLAUDE.md`](./CLAUDE.md) — guidance for AI coding agents working in this repo (English).
-- [`ANIMATION_TUTORIAL.md`](./ANIMATION_TUTORIAL.md) — the abandoned PNG-cutout approach, kept for reference only.
+- [`docs/ANIMATION_TUTORIAL.md`](./docs/ANIMATION_TUTORIAL.md) — the abandoned PNG-cutout approach, kept for reference only.
 
 ## Status (2026-11-12)
 

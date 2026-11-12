@@ -96,9 +96,11 @@ Hiện không còn câu hỏi mở. Các câu hỏi cũ (Gemini trực tiếp, c
 pet/
 ├── README.md / README_vi.md  # giới thiệu + cài đặt (tiếng Anh / tiếng Việt)
 ├── CLAUDE.md                 # hướng dẫn cho AI coding agent
-├── CONTEXT.md
-├── implementation_plan.md
-├── ANIMATION_TUTORIAL.md        # hướng PNG cutout cũ (đã bỏ, chỉ để tham khảo)
+├── docs/                     # mọi tài liệu .md ngoài README
+│   ├── CONTEXT.md
+│   ├── implementation_plan.md
+│   ├── DECISION_LOG.md          # nhật ký quyết định đã chốt + việc còn bàn
+│   └── ANIMATION_TUTORIAL.md    # hướng PNG cutout cũ (đã bỏ, chỉ để tham khảo)
 ├── requirements.txt
 ├── requirements-dev.txt         # pytest, ruff
 ├── pyproject.toml               # cấu hình pytest + ruff

@@ -7,9 +7,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Calcifer-style desktop pet for **Windows only, single monitor, personal use** (fan-art of a copyrighted character — never distribute or use original film assets). A flame character lives in an always-on-top transparent window, wanders around the screen, reacts to clicks/drags, and opens a chat window (right-click) backed by a tool-calling LangGraph agent on Gemini.
 
 Design docs (Vietnamese) are the source of truth for decisions — read them before changing behavior, and update them when a design decision changes:
-- `CONTEXT.md` — goals, architecture diagram, locked technical decisions table, change log (§7).
-- `implementation_plan.md` — phase checklist and current implementation status.
-- `ANIMATION_TUTORIAL.md` — superseded PNG-cutout plan (kept for reference only).
+- `docs/CONTEXT.md` — goals, architecture diagram, locked technical decisions table, change log (§7).
+- `docs/implementation_plan.md` — phase checklist, current status and the A-F roadmap.
+- `docs/DECISION_LOG.md` — dated log of decisions agreed with the user, plus open questions. Append to it whenever a decision is made.
+- `docs/ANIMATION_TUTORIAL.md` — superseded PNG-cutout plan (kept for reference only).
 
 The user writes in Vietnamese; all **on-screen pet lines** (click reactions, facts/jokes, alerts) must be **English**.
 

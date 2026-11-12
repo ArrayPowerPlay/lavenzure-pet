@@ -130,16 +130,18 @@ src/
 ├── monitor/                # theo dõi máy, hẹn giờ nhắc, câu nói ngẫu nhiên
 └── autostart/              # tạo shortcut khởi động cùng Windows
 tests/                      # test tự động (pytest)
+docs/                       # tài liệu thiết kế (tiếng Việt)
 data/                       # câu thoại click + kho fact/joke
 assets/flame/               # dữ liệu lửa đã tính sẵn cho renderer `baked`
 ```
 
 ## Tài liệu thiết kế
 
-- [`CONTEXT.md`](./CONTEXT.md) — mục tiêu, kiến trúc, các quyết định kỹ thuật đã chốt, lịch sử thay đổi.
-- [`implementation_plan.md`](./implementation_plan.md) — tiến độ và **kế hoạch các bước tiếp theo**.
+- [`docs/CONTEXT.md`](./docs/CONTEXT.md) — mục tiêu, kiến trúc, các quyết định kỹ thuật đã chốt, lịch sử thay đổi.
+- [`docs/implementation_plan.md`](./docs/implementation_plan.md) — tiến độ và **kế hoạch các bước tiếp theo**.
+- [`docs/DECISION_LOG.md`](./docs/DECISION_LOG.md) — nhật ký các quyết định đã chốt (và những việc còn bàn).
 - [`CLAUDE.md`](./CLAUDE.md) — hướng dẫn cho AI coding agent làm việc trong repo.
-- [`ANIMATION_TUTORIAL.md`](./ANIMATION_TUTORIAL.md) — hướng làm bằng ảnh PNG cũ, đã bỏ, chỉ giữ để tham khảo.
+- [`docs/ANIMATION_TUTORIAL.md`](./docs/ANIMATION_TUTORIAL.md) — hướng làm bằng ảnh PNG cũ, đã bỏ, chỉ giữ để tham khảo.
 
 ## Trạng thái hiện tại (2026-11-12)
 
