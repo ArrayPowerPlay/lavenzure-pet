@@ -5,7 +5,7 @@ frame, then ``paint(painter, ...)``. Props never move the window; the character 
 show and where they are drawn. All lengths are in units of R (the character's base radius) and
 painting happens in the character's body coordinates (pixels, origin at the feet, y down).
 
-- ``LogProp`` - the log Calcifer rides through the air (reference figures 4 and 5). It pops into
+- ``LogProp`` - the log Lavenzure rides through the air (reference figures 4 and 5). It pops into
   existence with a springy overshoot when summoned, wobbles gently while flying, and crumbles
   into embers when dismissed (the character spawns the embers from ``ember_points()``). Two small
   round flame "paws" drape over its top edge, out toward the sides (clear of the mouth).

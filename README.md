@@ -2,7 +2,7 @@
   <img src="docs/images/hero.png" alt="The flame pet, grinning and looking up" width="260">
 </p>
 
-<h1 align="center">Calcifer Desktop Pet</h1>
+<h1 align="center">Lavenzure Desktop Pet</h1>
 
 <p align="center">
   <em>A little fire demon that moves onto your desktop, and never sits still.</em><br>
@@ -11,11 +11,11 @@
 
 ---
 
-A pocket-sized flame spirit, a fan-art tribute to Calcifer, that lives on top of all your windows. It wanders along the bottom of the screen, hops, summons a log and flies off on it, dozes off when you leave, pulls a random trick when you click it and looks startled when you pick it up. Right-click and it opens a chat bubble, where an AI agent (Google Gemini) answers in your language and checks the weather, searches the web or tells you how hard your PC is working, pulling a face that matches every reply.
+A pocket-sized flame spirit, inspired by the character Calcifer from Studio Ghibli, that lives on top of all your windows. It wanders along the bottom of the screen, hops, summons a log and flies off on it, dozes off when you leave, pulls a random trick when you click it and looks startled when you pick it up. Right-click and it opens a chat bubble, where an AI agent (Google Gemini) answers in your language and checks the weather, searches the web or tells you how hard your PC is working, pulling a face that matches every reply.
 
 **There is not a single image file in this character.** Every flicker of fire, every blink and every grin is computed in code, live, 60 times a second, and it never plays the same frame twice.
 
-> **Personal use only.** Calcifer is a copyrighted Studio Ghibli character. This project is non-commercial fan-art, uses no original film assets, and must not be distributed publicly or commercially.
+> **Personal use only.** Lavenzure's concept is inspired by Calcifer, a copyrighted Studio Ghibli character. This project is a non-commercial fan work, uses no original film assets, and must not be distributed publicly or commercially.
 
 ## The animation
 
@@ -106,9 +106,9 @@ Start automatically with Windows (creates a shortcut in the Startup folder that 
 .venv-win\Scripts\python.exe src\autostart\install_startup.py
 ```
 
-To turn autostart off, delete `Calcifer.lnk` from `shell:startup` (type `shell:startup` in the Run dialog).
+To turn autostart off, delete `Lavenzure.lnk` from `shell:startup` (type `shell:startup` in the Run dialog).
 
-If something goes wrong, check the log file: `%LOCALAPPDATA%\Calcifer\logs\calcifer.log`.
+If something goes wrong, check the log file: `%LOCALAPPDATA%\Lavenzure\logs\lavenzure.log`.
 
 ## Usage
 

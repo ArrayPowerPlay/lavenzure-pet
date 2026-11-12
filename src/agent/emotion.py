@@ -1,4 +1,4 @@
-"""Emotion tags: the model starts each reply with one tag saying how Calcifer feels about it.
+"""Emotion tags: the model starts each reply with one tag saying how Lavenzure feels about it.
 
 The system prompt asks for a leading ``[happy]``, ``[scared]``, ``[angry]``, ``[chill]``,
 ``[surprised]``, ``[thinking]``, ``[yuck]`` or ``[other]``. ``split_emotion`` takes the tag off so

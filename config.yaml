@@ -1,4 +1,4 @@
-# Calcifer Desktop Pet — configuration (non-secret settings; API keys live in .env)
+# Lavenzure Desktop Pet — configuration (non-secret settings; API keys live in .env)
 
 llm:
   provider: gemini

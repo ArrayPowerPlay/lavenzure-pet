@@ -1,4 +1,4 @@
-"""Create a Windows Startup-folder shortcut so Calcifer launches automatically at logon.
+"""Create a Windows Startup-folder shortcut so Lavenzure launches automatically at logon.
 
 Dev-mode autostart: the shortcut runs ``pythonw.exe src/main.py`` from the project's venv.
 """
@@ -15,12 +15,12 @@ MAIN_SCRIPT = PROJECT_ROOT / "src" / "main.py"
 
 
 def install() -> Path:
-    """Create (or overwrite) ``Calcifer.lnk`` in the user's Startup folder; returns its path."""
+    """Create (or overwrite) ``Lavenzure.lnk`` in the user's Startup folder; returns its path."""
     startup_dir = (
         Path(os.environ["APPDATA"])
         / "Microsoft" / "Windows" / "Start Menu" / "Programs" / "Startup"
     )
-    shortcut_path = startup_dir / "Calcifer.lnk"
+    shortcut_path = startup_dir / "Lavenzure.lnk"
     pythonw = Path(sys.executable).with_name("pythonw.exe")
 
     shell = win32com.client.Dispatch("WScript.Shell")

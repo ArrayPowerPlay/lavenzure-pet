@@ -2,7 +2,7 @@
   <img src="docs/images/hero.png" alt="Ngọn lửa cười toe, mắt nhìn lên" width="260">
 </p>
 
-<h1 align="center">Calcifer Desktop Pet</h1>
+<h1 align="center">Lavenzure Desktop Pet</h1>
 
 <p align="center">
   <em>Một con quỷ lửa bé xíu dọn đến sống trên màn hình của bạn, và chẳng bao giờ chịu ngồi yên.</em><br>
@@ -11,11 +11,11 @@
 
 ---
 
-Một linh hồn lửa nhỏ bằng bàn tay, fan-art tri ân Calcifer, sống nổi trên mọi cửa sổ. Nó đi dạo dọc đáy màn hình, nhún nhảy, gọi khúc củi rồi cưỡi củi bay vèo đi, ngủ gật khi bạn rời máy, bày trò ngẫu nhiên khi bạn click và giật mình khi bị nhấc lên. Chuột phải là mở bong bóng chat: một AI agent (Google Gemini) trả lời theo ngôn ngữ bạn gõ, xem thời tiết, tìm kiếm web hay cho bạn biết máy đang vất vả cỡ nào, và mỗi câu trả lời lại đi kèm một nét mặt hợp cảnh.
+Một linh hồn lửa nhỏ bằng bàn tay, lấy ý tưởng từ nhân vật Calcifer của Studio Ghibli, sống nổi trên mọi cửa sổ. Nó đi dạo dọc đáy màn hình, nhún nhảy, gọi khúc củi rồi cưỡi củi bay vèo đi, ngủ gật khi bạn rời máy, bày trò ngẫu nhiên khi bạn click và giật mình khi bị nhấc lên. Chuột phải là mở bong bóng chat: một AI agent (Google Gemini) trả lời theo ngôn ngữ bạn gõ, xem thời tiết, tìm kiếm web hay cho bạn biết máy đang vất vả cỡ nào, và mỗi câu trả lời lại đi kèm một nét mặt hợp cảnh.
 
 **Nhân vật này không dùng một file ảnh nào.** Từng đợt lửa bập bùng, từng cái chớp mắt, từng nụ cười đều được tính bằng code, trực tiếp, 60 lần mỗi giây, và không bao giờ lặp lại cùng một khung hình.
 
-> **Chỉ dùng cá nhân.** Calcifer là nhân vật có bản quyền của Studio Ghibli. Dự án này là fan-art phi thương mại, không dùng bất kỳ hình ảnh/âm thanh gốc nào của phim, và không được phát hành công khai hay thương mại.
+> **Chỉ dùng cá nhân.** Ý tưởng của Lavenzure được lấy cảm hứng từ Calcifer, nhân vật có bản quyền của Studio Ghibli. Dự án này là sản phẩm hâm mộ phi thương mại, không dùng bất kỳ hình ảnh/âm thanh gốc nào của phim, và không được phát hành công khai hay thương mại.
 
 ## Hoạt ảnh
 
@@ -106,9 +106,9 @@ Tự khởi động cùng Windows (tạo shortcut trong thư mục Startup, ch�
 .venv-win\Scripts\python.exe src\autostart\install_startup.py
 ```
 
-Muốn bỏ tự khởi động: xóa `Calcifer.lnk` trong `shell:startup` (gõ `shell:startup` vào hộp thoại Run).
+Muốn bỏ tự khởi động: xóa `Lavenzure.lnk` trong `shell:startup` (gõ `shell:startup` vào hộp thoại Run).
 
-Có lỗi gì thì xem file log: `%LOCALAPPDATA%\Calcifer\logs\calcifer.log`.
+Có lỗi gì thì xem file log: `%LOCALAPPDATA%\Lavenzure\logs\lavenzure.log`.
 
 ## Cách dùng
 

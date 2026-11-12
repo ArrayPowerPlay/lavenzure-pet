@@ -28,7 +28,7 @@ class SettingsWindow(QWidget):
         """Build the title, the "coming soon" note and a Close button."""
         super().__init__(None, Qt.WindowType.Window | Qt.WindowType.WindowStaysOnTopHint)
         self.setObjectName("settings")
-        self.setWindowTitle("Calcifer - Settings")
+        self.setWindowTitle("Lavenzure - Settings")
         self.setFixedSize(340, 200)
         self.setStyleSheet(STYLE)
         layout = QVBoxLayout(self)

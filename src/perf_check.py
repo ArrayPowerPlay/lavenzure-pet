@@ -278,7 +278,7 @@ def main() -> int:
     if not samples:
         print("No samples taken.")
         return 1
-    print(summarize(samples, read_frame_stats(app_logging.log_dir() / "calcifer.log", since)))
+    print(summarize(samples, read_frame_stats(app_logging.log_dir() / "lavenzure.log", since)))
     return 0
 
 

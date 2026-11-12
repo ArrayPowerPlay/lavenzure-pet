@@ -5,11 +5,11 @@ What it looks like / how it behaves:
 - A rounded cream bubble with the pet's dark maroon outline and a tail that points at the pet's
   face. It opens beside the pet (right side, or left when there is no room) and follows the pet
   every frame, so it stays attached when the pet is dragged.
-- Inside: a scrollable history (scroll up to re-read older messages; Calcifer's replies are
-  rendered from Markdown, user text is shown exactly as typed), a "Calcifer is thinking..." line
+- Inside: a scrollable history (scroll up to re-read older messages; Lavenzure's replies are
+  rendered from Markdown, user text is shown exactly as typed), a "Lavenzure is thinking..." line
   and an input row.
 - It closes itself after ``AUTO_CLOSE_MS`` without chat activity. The countdown restarts on every
-  keystroke, scroll or click inside the bubble and after each reply, is paused while Calcifer is
+  keystroke, scroll or click inside the bubble and after each reply, is paused while Lavenzure is
   answering, and is postponed while the mouse pointer rests on the bubble (someone is reading).
   Esc or the x button closes it at once. Closing never clears the history; ``clear_history()``
   does (the app calls it when the chat memory expires).
@@ -65,7 +65,7 @@ GAP_PX = 2                 # space between the tail tip and the pet's body
 FILL = QColor(255, 248, 234)
 INK = QColor(108, 14, 22)            # same dark maroon as the pet's outline
 SHADOW = QColor(40, 10, 0, 45)
-USER_COLOR = "#8a4a14"   # the user's lines; Calcifer's use the browser's text colour
+USER_COLOR = "#8a4a14"   # the user's lines; Lavenzure's use the browser's text colour
 
 STYLE = """
 * { font-family: "Segoe UI", "Arial"; }
@@ -129,7 +129,7 @@ class ChatBubble(QWidget):
             | Qt.WindowType.NoDropShadowWindowHint,
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.setWindowTitle("Calcifer")
+        self.setWindowTitle("Lavenzure")
         self.setStyleSheet(STYLE)
         self.resize(BUBBLE_W, BUBBLE_H)
         self._anchor_fn = anchor_fn
@@ -138,7 +138,7 @@ class ChatBubble(QWidget):
         self._thinking_now = False
         self._closing = False
 
-        title = QLabel("Calcifer", self)
+        title = QLabel("Lavenzure", self)
         title.setObjectName("title")
         close_button = QPushButton("×", self)
         close_button.setObjectName("close")
@@ -159,7 +159,7 @@ class ChatBubble(QWidget):
         self._dots_timer.timeout.connect(self._animate_thinking)
 
         self._input = QLineEdit(self)
-        self._input.setPlaceholderText("Say something to Calcifer...")
+        self._input.setPlaceholderText("Say something to Lavenzure...")
         self._input.returnPressed.connect(self._on_send)
         self._input.textEdited.connect(self._kick)
 
@@ -240,9 +240,9 @@ class ChatBubble(QWidget):
         return self.isVisible() and not self._closing
 
     def append_message(self, sender: str, text: str) -> None:
-        """Add one message and scroll to it. ``sender`` is "You" or "Calcifer": the user's lines
-        are right-aligned plain text, Calcifer's are left-aligned Markdown."""
-        mine = sender != "Calcifer"
+        """Add one message and scroll to it. ``sender`` is "You" or "Lavenzure": the user's lines
+        are right-aligned plain text, Lavenzure's are left-aligned Markdown."""
+        mine = sender != "Lavenzure"
         cursor = self._history.textCursor()
         cursor.movePosition(QTextCursor.MoveOperation.End)
         block = QTextBlockFormat()
@@ -279,7 +279,7 @@ class ChatBubble(QWidget):
         self._history.clear()
 
     def set_thinking(self, thinking: bool) -> None:
-        """While Calcifer answers: disable the input, animate the status line and pause the
+        """While Lavenzure answers: disable the input, animate the status line and pause the
         auto-close countdown (it restarts when the answer arrives)."""
         self._thinking_now = thinking
         self._input.setEnabled(not thinking)
@@ -299,7 +299,7 @@ class ChatBubble(QWidget):
     # ------------------------------------------------------------------ countdown
 
     def _kick(self) -> None:
-        """Restart the auto-close countdown (never while Calcifer is answering)."""
+        """Restart the auto-close countdown (never while Lavenzure is answering)."""
         if self._thinking_now or not self.is_open():
             return
         self._auto_close.start()
@@ -446,5 +446,5 @@ class ChatBubble(QWidget):
     def _animate_thinking(self) -> None:
         """Cycle "thinking." / ".." / "..." on the status line."""
         self._dots = self._dots % 3 + 1
-        self._thinking.setText("Calcifer is thinking" + "." * self._dots)
+        self._thinking.setText("Lavenzure is thinking" + "." * self._dots)
 

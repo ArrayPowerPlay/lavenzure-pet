@@ -132,7 +132,7 @@ class CalciferApp:
         """Create the system-tray icon (a portrait drawn by the character itself) and its menu:
         Hide/Show Pet, Settings, Quit App."""
         self.tray = QSystemTrayIcon(make_tray_icon(), self.app)
-        self.tray.setToolTip("Calcifer")
+        self.tray.setToolTip("Lavenzure")
 
         self._tray_menu = themed_menu()
         self.toggle_action = self._tray_menu.addAction("Hide Pet")
@@ -157,7 +157,7 @@ class CalciferApp:
         if self.sprite.isVisible():
             self.bubble.show_text(text, auto_hide_ms)
         else:
-            self.tray.showMessage("Calcifer", text, QSystemTrayIcon.MessageIcon.NoIcon,
+            self.tray.showMessage("Lavenzure", text, QSystemTrayIcon.MessageIcon.NoIcon,
                                   auto_hide_ms or 10_000)
 
     def _on_pet_clicked(self) -> None:
@@ -250,7 +250,7 @@ class CalciferApp:
         pet's face for a few seconds and move its mouth."""
         emotion, text = split_emotion(reply)
         self.memory.add("assistant", reply)   # keep the tag: the model sees its own format
-        self.chat.append_message("Calcifer", text)
+        self.chat.append_message("Lavenzure", text)
         self.chat.set_thinking(False)
         character = self.sprite.character
         character.set_thinking(False)
@@ -262,7 +262,7 @@ class CalciferApp:
 
     def _on_agent_error(self, message: str) -> None:
         """Show the friendly error message (details are already in the log file)."""
-        self.chat.append_message("Calcifer", message)
+        self.chat.append_message("Lavenzure", message)
         self.chat.set_thinking(False)
         self.sprite.character.set_thinking(False)
 
@@ -274,14 +274,14 @@ class CalciferApp:
 def main() -> int:
     """Start logging, make sure only one pet runs, then run the app."""
     log_file = app_logging.setup_logging()
-    log.info("Calcifer starting (log file: %s)", log_file)
+    log.info("Lavenzure starting (log file: %s)", log_file)
     app = QApplication(sys.argv)
     app.setQuitOnLastWindowClosed(False)
     instance = SingleInstance()
     if not instance.acquire():
         return 0  # the running pet was asked to open its chat window instead
     code = CalciferApp(app, instance).run()
-    log.info("Calcifer exiting (code %s)", code)
+    log.info("Lavenzure exiting (code %s)", code)
     return code
 
 

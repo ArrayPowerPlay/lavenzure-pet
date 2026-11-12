@@ -1,4 +1,4 @@
-"""Make sure only one Calcifer runs at a time (e.g. autostart + a manual start).
+"""Make sure only one Lavenzure runs at a time (e.g. autostart + a manual start).
 
 - A ``QLockFile`` in the temp folder decides who is first. Qt detects stale locks left by a crashed
   run (by process id), so a crash never blocks the next start.
@@ -49,7 +49,7 @@ class SingleInstance(QObject):
     def acquire(self) -> bool:
         """Become the primary instance, or notify the existing one and return False."""
         if not self._lock.tryLock(200):
-            log.info("Another Calcifer is already running; asking it to open the chat.")
+            log.info("Another Lavenzure is already running; asking it to open the chat.")
             self._ping_primary()
             return False
         QLocalServer.removeServer(self._name)  # clean a stale server left by a crash

@@ -21,10 +21,10 @@ def test_user_text_is_not_interpreted_as_html(qapp):
     assert "is 3 < 5 && <b>x</b>?" in bubble._history.toPlainText()
 
 
-def test_calcifer_reply_renders_markdown(qapp):
-    """Calcifer's Markdown is rendered, so no raw ``**`` shows up."""
+def test_lavenzure_reply_renders_markdown(qapp):
+    """Lavenzure's Markdown is rendered, so no raw ``**`` shows up."""
     bubble = make_bubble()
-    bubble.append_message("Calcifer", "**Yes!**\n\n- one\n- two")
+    bubble.append_message("Lavenzure", "**Yes!**\n\n- one\n- two")
     text = bubble._history.toPlainText()
     assert "**" not in text and "one" in text and "two" in text
 

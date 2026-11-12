@@ -2,7 +2,7 @@
 
 When the pet is started by autostart it runs under ``pythonw.exe``, which has no console, so
 without a log file every error would vanish. Logs go to
-``%LOCALAPPDATA%\\Calcifer\\logs\\calcifer.log`` (``logs/`` in the project folder off Windows).
+``%LOCALAPPDATA%\\Lavenzure\\logs\\lavenzure.log`` (``logs/`` in the project folder off Windows).
 """
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ def log_dir() -> Path:
     """Folder that holds the log files (created if missing)."""
     base = os.environ.get("LOCALAPPDATA")
     if base:
-        folder = Path(base) / "Calcifer" / "logs"
+        folder = Path(base) / "Lavenzure" / "logs"
     else:
         folder = Path(__file__).resolve().parent.parent / "logs"
     folder.mkdir(parents=True, exist_ok=True)
@@ -33,7 +33,7 @@ def setup_logging(level: int = logging.INFO) -> Path:
     Also routes uncaught exceptions (main thread and worker threads) into the log.
     Returns the log file path.
     """
-    log_file = log_dir() / "calcifer.log"
+    log_file = log_dir() / "lavenzure.log"
     root = logging.getLogger()
     root.setLevel(level)
     formatter = logging.Formatter(LOG_FORMAT)
