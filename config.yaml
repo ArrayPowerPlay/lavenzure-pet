@@ -11,7 +11,7 @@ memory:
 character:
   scale: 0.75 # size multiplier of the code-drawn flame character (1.0 = 200x236 px window, 0.75 = 150x177)
   fps: 60 # redraw rate; lower it (e.g. 30) to save CPU
-  flame_renderer: metaball # flame body: metaball | shader (GPU) | baked (pre-simulated clips); falls back to metaball
+  flame_renderer: shader   # flame body: shader (GPU, chosen) | metaball | baked (pre-simulated clips); falls back to metaball
 
 overlay:
   always_on_top: true

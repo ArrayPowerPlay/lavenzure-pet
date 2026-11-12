@@ -69,7 +69,7 @@ class OverlaySprite(QWidget):
 
         self.character = FlameCharacter(
             scale=float(config.get("character.scale", 1.0)),
-            renderer=str(config.get("character.flame_renderer", "metaball")),
+            renderer=str(config.get("character.flame_renderer", "shader")),
         )
         self.resize(self.character.width, self.character.height)
 
