@@ -135,6 +135,8 @@ Còn thiếu / cần làm tiếp:
 > **Tiến độ (2026-11-12):** user đồng ý A, B, D → đã làm xong A1-A6, B1-B5, D1-D4 (còn A7: user thử trên desktop thật). F để sau. C1, C2 (mới), E1, E2 (bỏ "gọi pet") và toàn bộ giai đoạn G đã duyệt, chờ làm; C3 để sau; hẹn giờ tạm tắt. Chi tiết từng quyết định: [DECISION_LOG.md](./DECISION_LOG.md).
 
 > **Thứ tự làm (chốt 2026-11-12, lượt 7):** G4 → G3 → G1 + G2 → E1 → E2 → C1 + menu khay → `chill` + chảo. Cửa sổ Settings tạm để trống.
+>
+> **Tiến độ (2026-11-12, cuối phiên):** đã làm xong G4, G3, G1, G2, E1, E2, C1, C2 (menu khay) và `chill` + chảo; chờ user duyệt. Còn lại: E3 (tay thật…), nội dung Settings, C3, F.
 
 ### Giai đoạn A — Cho app dùng được hằng ngày (ưu tiên cao nhất)
 - [x] **A1. Đổi model Gemini — chat đang hỏng hoàn toàn.** → *Đã đổi sang `gemini-flash-latest` (user chọn), gọi qua endpoint `v1beta`, đọc đúng câu trả lời dạng nhiều khối; đã thử cả 4 tool với key thật.* `gemini-2.0-flash` đã bị Google ngừng: gọi API trả 404 "no longer available" (kiểm tra 2026-11-12). Ứng viên: `gemini-flash-latest` (bí danh luôn trỏ bản Flash mới nhất, đã gọi thử OK) hoặc chốt một bản cố định như `gemini-3.8-flash` (ổn định hơn, nhưng sẽ lại bị ngừng sau này). Cần kiểm tra cả tool-calling qua `langchain-google-genai` (có thể phải nâng cấp thư viện). *Cần user chọn.*
@@ -153,26 +155,26 @@ Còn thiếu / cần làm tiếp:
 - [x] **B5. Hẹn giờ nhắc việc chắc chắn hơn:** tool `set_timer_reminder` đang gọi thẳng vào monitor từ thread của agent → chuyển qua Qt signal cho an toàn; khi nhắc thì pet đổi biểu cảm/nhảy lên cho dễ thấy; kiểm tra số phút âm/quá lớn. (Vẫn chỉ lưu trong RAM theo thiết kế.)
 
 ### Giai đoạn C — Khay hệ thống và tiện ích (Phase 12 cũ)
-- [ ] **C1. Icon khay hệ thống đúng hình nhân vật** — hiện chụp cửa sổ pet trước khi nó hiện lên nên có thể ra icon trống; nên vẽ icon riêng từ `FlameCharacter`.
-- [ ] **C2. Menu khay hệ thống 3 mục:** `Hide/Show Pet`, `Settings` (mở cửa sổ chỉnh cấu hình nhỏ — nội dung chốt sau), `Quit App`. Bỏ `Open Chat`.
+- [x] **C1. Icon khay hệ thống đúng hình nhân vật** — hiện chụp cửa sổ pet trước khi nó hiện lên nên có thể ra icon trống; nên vẽ icon riêng từ `FlameCharacter`.
+- [x] **C2. Menu khay hệ thống 3 mục:** `Hide/Show Pet`, `Settings` (mở cửa sổ chỉnh cấu hình nhỏ — nội dung chốt sau), `Quit App`. Bỏ `Open Chat`.
 - [ ] **C3. Chạy `install_startup.py`** để tạo autostart (Phase 10) — *để sau*.
 
 ### Giai đoạn D — Chất lượng code
-- [x] **D1. Test tự động (pytest)** (46 test, chạy: `.venv-win/Scripts/python.exe -m pytest`) cho phần không cần màn hình: `config.get`, bộ nhớ TTL, logic monitor (ngưỡng cảnh báo, hẹn giờ, câu idle), các tool (giả lập HTTP), `Expression`/lò xo của `face.py`.
+- [x] **D1. Test tự động (pytest)** (85 test, chạy: `.venv-win/Scripts/python.exe -m pytest`) cho phần không cần màn hình: `config.get`, bộ nhớ TTL, logic monitor (ngưỡng cảnh báo, hẹn giờ, câu idle), các tool (giả lập HTTP), `Expression`/lò xo của `face.py`.
 - [x] **D2. Linter/formatter** (`ruff`) với cấu hình giữ CRLF.
 - [x] **D3. Bổ sung docstring còn thiếu** (`main.py`, `chat_window.py`, `background_monitor.py`, `memory.py`, … nhiều class/hàm chưa có — trái quy ước của repo).
 - [x] **D4. Dọn tài liệu cũ:** sơ đồ kiến trúc trong `CONTEXT.md` vẫn ghi OpenRouter và "PNG cutout"; §4 (câu hỏi mở đã giải quyết), §5 (`.env.example` ghi `OPENROUTER_API_KEY`) lỗi thời; xóa `assets/calcifer/PLACEHOLDER.txt`; cập nhật `CLAUDE.md` (repo giờ ở `D:\workspace\pet`).
 
 ### Giai đoạn E — Nhân vật sống động hơn
-- [ ] **E1. Biểu cảm theo nội dung chat:** agent trả kèm "mood" để pet đổi mặt khi trả lời: `happy`, `scared`, `angry`, `chill`, `surprised`, `thinking`, `other` (= không đổi biểu cảm). Thêm tư thế bay trên khúc củi. Ảnh mẫu: `docs/references/calcipher_picked.jpg`; chi tiết: DECISION_LOG lượt 6.
-- [ ] **E2. Hành vi theo ngữ cảnh:** ngủ gật sau 10 phút không dùng máy, ban đêm (20h–5h) lửa dịu lại. ("Gọi pet chạy lại gần chuột": tạm bỏ.)
+- [x] **E1. Biểu cảm theo nội dung chat:** agent trả kèm "mood" để pet đổi mặt khi trả lời: `happy`, `scared`, `angry`, `chill`, `surprised`, `thinking`, `other` (= không đổi biểu cảm). Thêm tư thế bay trên khúc củi. Ảnh mẫu: `docs/references/calcipher_picked.jpg`; chi tiết: DECISION_LOG lượt 6.
+- [x] **E2. Hành vi theo ngữ cảnh:** ngủ gật sau 10 phút không dùng máy, ban đêm (20h–5h) lửa dịu lại. ("Gọi pet chạy lại gần chuột": tạm bỏ.)
 - [ ] **E3. Animation nâng cao theo ảnh mẫu:** tay (bắt buộc làm sau cho mặt `angry`), ôm/gặm củi, nằm trên củi, chảo + trứng ốp la/thịt xông khói, trứng vỡ — *chưa quyết*.
 
 ### Giai đoạn G — Tương tác mới (chốt 2026-11-12, xem DECISION_LOG)
-- [ ] **G1. Chuột trái = 1 phản ứng ngẫu nhiên** từ bộ gồm mọi hoạt ảnh của pet + "nói 1 câu ngẫu nhiên" (trừ mặt cảnh báo và tư thế ngủ). Hoạt ảnh mới tự đăng ký vào bộ.
-- [ ] **G2. Chuột phải = menu `Chat` / `Idle`**; đang Idle thì `Idle` đổi thành `Wander`. Idle có tư thế nằm nghỉ/ngủ riêng (vẽ mới).
-- [ ] **G3. Bong bóng chat thay cửa sổ chat:** gắn với pet, cuộn đọc lại tin cũ; tự đóng sau 30 giây không chat (không đếm khi đang gõ hoặc AI đang trả lời); lịch sử xóa sau 15 phút không chat (đổi `memory.idle_timeout_minutes` 10 → 15).
-- [ ] **G4. Tạm tắt công cụ hẹn giờ** (gỡ `set_timer_reminder` khỏi danh sách tool, giữ code).
+- [x] **G1. Chuột trái = 1 phản ứng ngẫu nhiên** từ bộ gồm mọi hoạt ảnh của pet + "nói 1 câu ngẫu nhiên" (trừ mặt cảnh báo và tư thế ngủ). Hoạt ảnh mới tự đăng ký vào bộ.
+- [x] **G2. Chuột phải = menu `Chat` / `Idle`**; đang Idle thì `Idle` đổi thành `Wander`. Idle có tư thế nằm nghỉ/ngủ riêng (vẽ mới).
+- [x] **G3. Bong bóng chat thay cửa sổ chat:** gắn với pet, cuộn đọc lại tin cũ; tự đóng sau 30 giây không chat (không đếm khi đang gõ hoặc AI đang trả lời); lịch sử xóa sau 15 phút không chat (đổi `memory.idle_timeout_minutes` 10 → 15).
+- [x] **G4. Tạm tắt công cụ hẹn giờ** (gỡ `set_timer_reminder` khỏi danh sách tool, giữ code).
 
 ### Giai đoạn F — Đóng gói (Phase 11) — *để sau (user chốt 2026-11-12)*
 - [ ] **F1. PyInstaller** ra `.exe` (chú ý: `data/`, `assets/flame/`, shader GLSL, OpenGL trong bản đóng gói).

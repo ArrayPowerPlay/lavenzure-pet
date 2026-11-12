@@ -2,30 +2,32 @@
 
 **Tiếng Việt** · [English](./README.md)
 
-Một "thú cưng" ngọn lửa sống trên màn hình Windows, lấy cảm hứng từ Calcifer (fan-art tự vẽ bằng code). Ngọn lửa đi lại, bay, nhảy quanh màn hình, phản ứng khi bạn click/kéo, và mở cửa sổ chat (chuột phải) để trò chuyện với một AI agent biết gọi công cụ: xem thời tiết, tìm kiếm web, đặt hẹn giờ nhắc việc, xem tình trạng máy.
+Một "thú cưng" ngọn lửa sống trên màn hình Windows, lấy cảm hứng từ Calcifer (fan-art tự vẽ bằng code). Ngọn lửa đi lại, bay, nhảy quanh màn hình, phản ứng khi bạn click/kéo, và mở bong bóng chat (chuột phải → `Chat`) để trò chuyện với một AI agent biết gọi công cụ: xem thời tiết, tìm kiếm web, xem tình trạng máy.
 
 > **Chỉ dùng cá nhân.** Calcifer là nhân vật có bản quyền của Studio Ghibli. Dự án này là fan-art phi thương mại, không dùng bất kỳ hình ảnh/âm thanh gốc nào của phim, và không được phát hành công khai hay thương mại.
 
 ## Tính năng
 
 - **Nhân vật vẽ hoàn toàn bằng code** (không cần ảnh): thân lửa 3 lớp đỏ/cam/vàng viền nâu đậm, có quầng sáng và tàn lửa bay. Mặc định vẽ thân lửa bằng GPU shader; tự chuyển sang cách vẽ dự phòng nếu máy không hỗ trợ OpenGL 3.3.
-- **Khuôn mặt có cảm xúc**: chớp mắt, đảo mắt nhìn theo chuột, mí mắt, miệng nói; các trạng thái vui, ngạc nhiên, suy nghĩ, cảnh báo…
-- **Tự di chuyển**: đứng yên, đi dọc đáy màn hình, bay lơ lửng, nhảy — chọn ngẫu nhiên.
+- **Khuôn mặt và dáng người có cảm xúc**: chớp mắt, đảo mắt nhìn theo chuột, mí mắt, lông mày, miệng nói; vui (hai kiểu mặt), ngạc nhiên, hoảng hốt, tức giận (bùng tay lửa), chill (rán trứng bằng chảo trên đầu), suy nghĩ, cảnh báo. Mỗi biểu cảm còn đổi cả hình dáng ngọn lửa.
+- **Tự di chuyển**: đứng yên, đi dọc đáy màn hình, cưỡi khúc củi bay lượn, nhảy — chọn ngẫu nhiên.
+- **Ngủ**: chọn `Idle` thì pet nằm ngủ (thở chậm, bay chữ "z"); sau 10 phút không đụng chuột/bàn phím pet tự ngủ gật, dùng máy lại thì tỉnh.
+- **Ban đêm**: từ 20h đến 5h sáng lửa dịu và trầm màu hơn, pet cử động chậm hơn.
 - **Luôn nổi trên cùng, trong suốt, click xuyên qua**: chỉ phần có hình nhân vật mới nhận chuột, vùng xung quanh vẫn bấm được vào app bên dưới.
-- **Tương tác chuột**: click trái → phản ứng + một câu thoại ngẫu nhiên; giữ và kéo → mang nhân vật đi; chuột phải → mở chat.
+- **Tương tác chuột**: click trái → một hoạt ảnh ngẫu nhiên (không lặp lại hai lần liền); giữ và kéo → mang nhân vật đi; chuột phải → menu nhỏ `Chat` và `Idle` / `Wander`.
 - **Bong bóng thoại đi theo pet** khi nó di chuyển.
-- **Chat với AI agent** (LangGraph + Google Gemini `gemini-flash-latest`), có 4 công cụ:
+- **Chat với AI agent** (LangGraph + Google Gemini `gemini-flash-latest`), trả lời theo ngôn ngữ bạn gõ, tự chọn cảm xúc cho mỗi câu trả lời (pet làm mặt đó vài giây), có 3 công cụ:
   - `weather` — thời tiết theo địa danh (Open-Meteo, không cần key)
   - `web_search` — tìm kiếm web (Tavily)
-  - `set_timer_reminder` — "nhắc tôi uống nước sau 10 phút" (tối đa 24 giờ)
   - `system_status` — CPU / RAM / pin hiện tại
-- **Cửa sổ chat** tông màu lửa, mở cạnh pet, hiển thị Markdown, Esc để đóng; câu trả lời ngắn hiện luôn trong bong bóng trên đầu pet.
+  - (hẹn giờ nhắc việc tạm tắt)
+- **Bong bóng chat** tông màu lửa, gắn cạnh pet (pet đứng yên khi bong bóng mở), hiển thị Markdown, Esc để đóng, tự đóng sau 30 giây không chat (không tính lúc đang gõ hoặc AI đang trả lời).
 - **Báo lỗi dễ hiểu**: thiếu/sai key, hết quota, mất mạng… đều được pet giải thích trong chat thay vì im lặng hay crash.
 - **Theo dõi máy nền**: tự cảnh báo khi pin < 30%, CPU > 90% hoặc RAM > 90%; cảnh báo giữ nguyên đến khi bạn click vào pet.
 - **Câu nói ngẫu nhiên**: sau 15 phút không tương tác, pet tự nói một fact/câu đùa (tiếng Anh).
-- **Lịch sử chat chỉ nằm trong RAM**, tự xóa sau 10 phút không hoạt động — không lưu gì xuống ổ đĩa.
-- **Icon ở khay hệ thống**: ẩn/hiện pet, mở chat, thoát. Khi pet đang ẩn, lời nhắc hiện thành thông báo ở khay.
-- **Chỉ chạy 1 bản**: mở app lần nữa sẽ chỉ mở cửa sổ chat của con pet đang chạy.
+- **Lịch sử chat chỉ nằm trong RAM**, tự xóa sau 15 phút không chat — không lưu gì xuống ổ đĩa.
+- **Icon ở khay hệ thống** (vẽ chính hình pet): `Hide Pet` / `Show Pet`, `Settings` (tạm để trống), `Quit App`.
+- **Chỉ chạy 1 bản**: mở app lần nữa sẽ chỉ mở bong bóng chat của con pet đang chạy.
 
 ## Yêu cầu
 
@@ -66,11 +68,11 @@ Có lỗi gì thì xem file log: `%LOCALAPPDATA%\Calcifer\logs\calcifer.log`.
 
 | Thao tác | Kết quả |
 |---|---|
-| Click trái vào pet | Pet phản ứng + nói một câu; nếu đang cảnh báo thì tắt cảnh báo |
+| Click trái vào pet | Một hoạt ảnh ngẫu nhiên; nếu đang cảnh báo thì chỉ tắt cảnh báo |
 | Giữ chuột trái và kéo | Mang pet đi chỗ khác |
-| Chuột phải vào pet | Mở cửa sổ chat |
-| Esc trong cửa sổ chat | Đóng chat (lịch sử vẫn giữ trong 10 phút) |
-| Icon ở khay hệ thống | Ẩn/hiện pet, mở chat, thoát app |
+| Chuột phải vào pet | Menu: `Chat` (mở bong bóng chat), `Idle` (đi ngủ) / `Wander` (đi lại tiếp) |
+| Esc trong bong bóng chat | Đóng chat (lịch sử vẫn giữ trong 15 phút) |
+| Icon ở khay hệ thống | Ẩn/hiện pet, Settings, thoát app |
 
 ## Cấu hình
 
@@ -125,9 +127,10 @@ src/
 ├── character_preview.py    # cửa sổ xem thử nhân vật
 ├── bake_flame.py           # mô phỏng lửa offline cho renderer `baked`
 ├── overlay/                # cửa sổ pet, nhân vật, khuôn mặt, 3 cách vẽ lửa, hành vi, bong bóng thoại
-├── chat/                   # cửa sổ chat
+├── chat/                   # bong bóng chat
 ├── agent/                  # LangGraph agent, công cụ, bộ nhớ phiên, xử lý lỗi
-├── monitor/                # theo dõi máy, hẹn giờ nhắc, câu nói ngẫu nhiên
+├── monitor/                # theo dõi máy, hẹn giờ nhắc, câu nói ngẫu nhiên, thời gian rảnh / ban đêm
+├── ui/                     # menu theo phong cách pet, icon khay, cửa sổ Settings
 └── autostart/              # tạo shortcut khởi động cùng Windows
 tests/                      # test tự động (pytest)
 docs/                       # tài liệu thiết kế (tiếng Việt)
@@ -146,5 +149,6 @@ assets/flame/               # dữ liệu lửa đã tính sẵn cho renderer `b
 ## Trạng thái hiện tại (2026-11-12)
 
 - Nhân vật, chuyển động, click/kéo, khay hệ thống, theo dõi máy, chat với 4 công cụ: đã chạy (chat đã chuyển sang `gemini-flash-latest` sau khi Google ngừng `gemini-2.0-flash`).
-- Có 46 test tự động và kiểm tra code bằng ruff.
-- Còn lại: dùng thử lâu dài trên desktop thật; tiện ích khay hệ thống và animation nâng cao (đang chờ quyết định); đóng gói `.exe` (để sau).
+- Mới: bong bóng chat, bộ hoạt ảnh khi click, menu chuột phải, biểu cảm mới do AI chọn cảm xúc, bay trên khúc củi, ngủ / ngủ gật, dáng vẻ ban đêm, icon khay vẽ từ nhân vật.
+- Có 85 test tự động và kiểm tra code bằng ruff.
+- Còn lại: dùng thử lâu dài trên desktop thật; nội dung Settings và tay thật (E3) (đang chờ quyết định); đóng gói `.exe` (để sau).

@@ -2,30 +2,32 @@
 
 [Tiếng Việt](./README_vi.md) · **English**
 
-A little flame "pet" that lives on your Windows desktop, inspired by Calcifer (fan-art, drawn entirely in code). The flame wanders, floats and hops around the screen, reacts when you click or drag it, and opens a chat window (right-click) where you can talk to an AI agent that can use tools: weather, web search, timed reminders and PC status.
+A little flame "pet" that lives on your Windows desktop, inspired by Calcifer (fan-art, drawn entirely in code). The flame wanders, floats and hops around the screen, reacts when you click or drag it, and opens a chat bubble (right-click → `Chat`) where you can talk to an AI agent that can use tools: weather, web search and PC status.
 
 > **Personal use only.** Calcifer is a copyrighted Studio Ghibli character. This project is non-commercial fan-art, uses no original film assets, and must not be distributed publicly or commercially.
 
 ## Features
 
 - **Character drawn entirely in code** (no image files): a three-layer red/orange/yellow flame with a dark maroon outline, a soft glow and drifting embers. The flame body is rendered with a GPU shader by default and automatically falls back to a CPU renderer if OpenGL 3.3 is unavailable.
-- **Expressive face**: blinking, eyes that follow the mouse, eyelids, a talking mouth; happy, surprised, thinking and alert moods…
-- **Moves on its own**: idles, walks along the bottom of the screen, floats, jumps — picked at random.
+- **Expressive face and body**: blinking, eyes that follow the mouse, eyelids, brows, a talking mouth; happy (two faces), surprised, scared, angry (flame arms), chill (frying breakfast in a pan on its head), thinking and alert. Each expression also reshapes the whole flame.
+- **Moves on its own**: idles, walks along the bottom of the screen, flies around on a log, jumps — picked at random.
+- **Sleeps**: lies down and sleeps (slow breathing, floating "z"s) when you choose `Idle`, and dozes off by itself after 10 minutes without mouse/keyboard input, waking up when you come back.
+- **Night look**: from 20:00 to 05:00 the fire is calmer and dimmer and the pet moves slower.
 - **Always on top, transparent, click-through**: only the visible flame catches the mouse; the empty area around it passes clicks to the app underneath.
-- **Mouse interaction**: left-click → a reaction plus a random line; press and drag → carry the pet; right-click → open the chat.
+- **Mouse interaction**: left-click → a random animation (never the same twice in a row); press and drag → carry the pet; right-click → a small menu with `Chat` and `Idle` / `Wander`.
 - **Speech bubbles follow the pet** as it moves.
-- **Chat with an AI agent** (LangGraph + Google Gemini `gemini-flash-latest`) with 4 tools:
+- **Chat with an AI agent** (LangGraph + Google Gemini `gemini-flash-latest`) that answers in your language, picks an emotion for each reply (the pet shows that face for a few seconds) and has 3 tools:
   - `weather` — current weather for a place name (Open-Meteo, no key needed)
   - `web_search` — web search (Tavily)
-  - `set_timer_reminder` — "remind me to drink water in 10 minutes" (up to 24 hours)
   - `system_status` — current CPU / RAM / battery
-- **Chat window** in warm flame colours, opens next to the pet, renders Markdown, closes with Esc; short replies also pop up in the bubble above the pet.
+  - (reminders are switched off for now)
+- **Chat bubble** in warm flame colours, attached to the pet (it stands still while the bubble is open), renders Markdown, closes with Esc or by itself after 30 seconds without chatting (not while you type or the AI answers).
 - **Clear error messages**: a missing/invalid key, exhausted quota, no internet… the pet explains it in the chat instead of failing silently or crashing.
 - **Background monitoring**: alerts when battery < 30%, CPU > 90% or RAM > 90%; the alert stays until you click the pet.
 - **Ambient lines**: after 15 minutes without interaction the pet says a random fact or joke.
-- **Chat history lives in RAM only** and is wiped after 10 minutes of inactivity — nothing is written to disk.
-- **System tray icon**: show/hide the pet, open the chat, quit. While the pet is hidden, reminders appear as tray notifications.
-- **Single instance**: starting the app again just opens the running pet's chat window.
+- **Chat history lives in RAM only** and is wiped after 15 minutes without chatting — nothing is written to disk.
+- **System tray icon** (a portrait of the pet): `Hide Pet` / `Show Pet`, `Settings` (empty for now), `Quit App`.
+- **Single instance**: starting the app again just opens the running pet's chat bubble.
 
 ## Requirements
 
@@ -66,11 +68,11 @@ If something goes wrong, check the log file: `%LOCALAPPDATA%\Calcifer\logs\calci
 
 | Action | Result |
 |---|---|
-| Left-click the pet | It reacts and says a line; clears an active alert |
+| Left-click the pet | A random animation; during an alert it only clears the alert |
 | Press and drag | Carry the pet somewhere else |
-| Right-click the pet | Open the chat window |
-| Esc in the chat window | Close the chat (history is kept for 10 minutes) |
-| System tray icon | Show/hide the pet, open the chat, quit |
+| Right-click the pet | Menu: `Chat` (open the chat bubble), `Idle` (sleep) / `Wander` (roam again) |
+| Esc in the chat bubble | Close the chat (history is kept for 15 minutes) |
+| System tray icon | Hide/show the pet, Settings, quit |
 
 ## Configuration
 
@@ -125,9 +127,10 @@ src/
 ├── character_preview.py    # preview window for the character
 ├── bake_flame.py           # offline fire simulation for the `baked` renderer
 ├── overlay/                # pet window, character, face, 3 flame renderers, behavior, speech bubble
-├── chat/                   # chat window
+├── chat/                   # chat bubble
 ├── agent/                  # LangGraph agent, tools, session memory, error handling
-├── monitor/                # system alerts, reminders, ambient lines
+├── monitor/                # system alerts, reminders, ambient lines, user idle time / night
+├── ui/                     # themed menus, tray icon, Settings window
 └── autostart/              # Windows Startup shortcut
 tests/                      # automated tests (pytest)
 docs/                       # design docs (Vietnamese)
@@ -148,5 +151,6 @@ The design documents are written in Vietnamese:
 ## Status (2026-11-12)
 
 - Character, movement, click/drag, tray icon, system monitoring and chat with all 4 tools work (chat moved to `gemini-flash-latest` after Google shut down `gemini-2.0-flash`).
-- 46 automated tests and ruff linting.
-- Still to do: long-term testing on the real desktop; tray extras and advanced animations (awaiting a decision); `.exe` packaging (later).
+- New: chat bubble, click animation pool, right-click menu, new expressions with emotion chosen by the AI, flying on a log, sleeping / dozing, night look, tray icon drawn from the character.
+- 85 automated tests and ruff linting.
+- Still to do: long-term testing on the real desktop; Settings content and real arms (E3) (awaiting a decision); `.exe` packaging (later).

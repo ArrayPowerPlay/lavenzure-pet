@@ -26,13 +26,13 @@
 - **F — đóng gói `.exe`:** để sau.
 
 ### Giai đoạn C — khay hệ thống
-- **C1. Icon khay hệ thống vẽ đúng hình nhân vật:** đồng ý, chờ làm.
+- **C1. Icon khay hệ thống vẽ đúng hình nhân vật:** đồng ý, **đã làm** (chờ user duyệt).
 - **C2. Menu của icon khay hệ thống:** thay bằng quyết định mới bên dưới (mục "Menu khay hệ thống + cửa sổ Settings").
 - **C3. Bật tự khởi động cùng Windows:** để sau.
 
 ### Giai đoạn E — nhân vật sống động hơn
-- **E1. Biểu cảm theo nội dung chat:** đồng ý, chờ làm. AI gửi kèm một cảm xúc cho mỗi câu trả lời; có thêm lựa chọn **`other`** cho trường hợp AI không xác định được cảm xúc phù hợp — khi đó pet **không kích hoạt biểu cảm nào** (giữ nguyên nét mặt đang có, chỉ có miệng nói như bình thường).
-- **E2. Hành vi theo ngữ cảnh:** đồng ý phần "ngủ gật khi máy không được dùng lâu" và "ban đêm lửa dịu hơn", chờ làm. Phần "gọi thì pet chạy lại gần con trỏ chuột": **tạm bỏ** (user chốt sau, xem bên dưới).
+- **E1. Biểu cảm theo nội dung chat:** đồng ý, **đã làm** (chờ user duyệt). AI gửi kèm một cảm xúc cho mỗi câu trả lời; có thêm lựa chọn **`other`** cho trường hợp AI không xác định được cảm xúc phù hợp — khi đó pet **không kích hoạt biểu cảm nào** (giữ nguyên nét mặt đang có, chỉ có miệng nói như bình thường).
+- **E2. Hành vi theo ngữ cảnh:** đồng ý phần "ngủ gật khi máy không được dùng lâu" và "ban đêm lửa dịu hơn", **đã làm** (chờ user duyệt). Phần "gọi thì pet chạy lại gần con trỏ chuột": **tạm bỏ** (user chốt sau, xem bên dưới).
 - **E3. Animation nâng cao theo ảnh mẫu (tay, củi, chảo trứng…):** chưa quyết.
 
 ### Cách làm việc trong phiên này
@@ -41,14 +41,14 @@
 ### Menu khay hệ thống + cửa sổ Settings (thay cho C2)
 - **Quyết định:** menu chuột phải của icon khay hệ thống chỉ còn **2 mục: `Hide Pet`/`Show Pet` và `Settings`**.
 - Bấm `Settings` mở **một cửa sổ nhỏ, đơn giản** để chỉnh cấu hình. **Chỉnh những cấu hình nào: user chưa chốt.**
-- **Trạng thái:** chờ làm (sau khi chốt các câu hỏi ở mục "Còn bàn").
+- **Trạng thái:** **đã làm** theo bản 3 mục ở lượt 5 (`Hide/Show Pet`, `Settings` trống, `Quit App`); chờ user duyệt.
 
 ### Tương tác chuột với pet
 - **Chuột trái vào pet:** pet chơi **một hoạt ảnh ngẫu nhiên** (chọn từ một bộ hoạt ảnh).
 - **Chuột phải vào pet:** hiện menu nhỏ có 2 lựa chọn:
   - **`Chat`** — mở **bong bóng chat** cạnh pet để chat. Sau khoảng **30 giây không chat**, bong bóng chat **tự đóng**.
   - **`Idle`** — pet **nằm yên** một chỗ (thôi đi lại / bay / nhảy).
-- **Trạng thái:** chờ làm. Thay cho cách cũ (chuột trái = mặt vui + câu thoại ngẫu nhiên; chuột phải = mở thẳng cửa sổ chat).
+- **Trạng thái:** **đã làm** (chờ user duyệt). Thay cho cách cũ (chuột trái = mặt vui + câu thoại ngẫu nhiên; chuột phải = mở thẳng cửa sổ chat).
 
 ### Hẹn giờ (`set_timer_reminder`)
 - **Quyết định:** chưa phát triển thêm; user sẽ cân nhắc sau.
@@ -110,6 +110,11 @@
 - **Cửa sổ Settings:** **tạm để trống** (mục `Settings` trong menu khay vẫn có, nội dung chốt sau).
 - **Ảnh tham khảo `docs/references/`:** **không đưa lên git** (repo public, ảnh là tranh của họa sĩ khác @nyatche); thư mục nằm trong `.gitignore`, chỉ giữ ở máy.
 
+### Kết quả lượt 8 (2026-11-12) — đã code xong lượt 7, chờ user duyệt
+- Đã làm: G4, G3, G1 + G2, E1, E2, C1 + menu khay, `chill` + chảo (từng phần một commit).
+- **Biểu cảm bám theo ảnh user chọn** (`calcipher_picked.jpg`, user nhắc lại trong phiên): vui hình 1 (mắt lim dim liếc ngang, cười há) và hình 2 (mắt đảo lên một bên, cười há chữ D); hoảng hình 3 (lửa bè gần vuông, viền tua tủa, mắt to tròn tách xa, miệng há rất to); giận hình 6 (hai tay lửa mềm chìa ngang rồi cong lên thành nắm đấm) + lông mày chau, mắt nheo; bay hình 4 (bám khúc củi bằng hai tay nhỏ); cất cánh hình 5 (mắt tròn, miệng há); `chill` hình 7 (lửa bẹt, chảo rộng bằng thân đè trên đầu, mắt lim dim liếc ngang, miệng lượn sóng).
+- **Claude tự quyết (user có thể đổi):** đang ngủ mà click trái thì pet tỉnh, chơi một phản ứng rồi ngủ lại; phản ứng không bao giờ lặp lại hai lần liền; khi pet đang bay (trên không) thì phản ứng vẫn chơi trên khúc củi; chọn `Idle` lúc đang bay thì pet lượn xuống đất (tối đa ~3 giây) rồi mới ngủ.
+
 ## Còn bàn
 
-- Không còn câu hỏi nào chặn việc code. Phiên sau bắt đầu code theo thứ tự ở lượt 7.
+- Không còn câu hỏi nào chặn. Chờ user duyệt kết quả lượt 8.
