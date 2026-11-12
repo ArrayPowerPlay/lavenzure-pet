@@ -45,3 +45,9 @@ def test_missing_key_raises_clear_error(monkeypatch):
 def test_reminder_tool_is_switched_off():
     """Reminders are disabled for now: the model is not offered set_timer_reminder."""
     assert "set_timer_reminder" not in {t.name for t in graph.TOOLS}
+
+
+def test_prompt_asks_for_user_language_and_emotion_tag():
+    """The model answers in the user's language and starts with an emotion tag."""
+    assert "same language" in graph.SYSTEM_PROMPT
+    assert "[happy]" in graph.SYSTEM_PROMPT and "[other]" in graph.SYSTEM_PROMPT

@@ -13,6 +13,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.prebuilt import create_react_agent
 
 import config
+from agent.emotion import EMOTION_INSTRUCTIONS
 from agent.errors import MissingApiKeyError
 from agent.tools.system_status import system_status
 from agent.tools.weather import get_weather
@@ -24,7 +25,9 @@ SYSTEM_PROMPT = (
     "You are Calcifer, a small, witty fire spirit living on the user's desktop. "
     "Keep replies short, warm, and a little playful. Use tools when the user asks "
     "about weather, needs a web search, or asks about their PC's CPU/RAM/battery status. "
-    "You cannot set reminders or timers right now; if asked, say so kindly."
+    "You cannot set reminders or timers right now; if asked, say so kindly. "
+    "Always reply in the same language the user writes in. "
+    + EMOTION_INSTRUCTIONS
 )
 
 # Reminders are switched off for now (decision 2026-11-12): ``set_timer_reminder`` stays in the
@@ -75,6 +78,8 @@ def _get_agent():
 
 def run_agent(history: list[dict], user_message: str) -> str:
     """Invoke the agent with prior turn history plus the new user message; returns the reply text.
+
+    The text still starts with the emotion tag (see ``agent.emotion``); the caller splits it off.
 
     Exceptions (missing key, quota, network, ...) propagate to the caller, which turns them into a
     friendly message with ``agent.errors.friendly_error``.
