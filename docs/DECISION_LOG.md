@@ -73,12 +73,6 @@
 - **Bộ phản ứng ngẫu nhiên (chuột trái):** **không** gồm mặt cảnh báo (`alert`) và tư thế ngủ (dành cho Idle).
 - **Nội dung cửa sổ Settings:** chốt sau.
 
-## Chốt sau (user chủ động để lại)
-
-- Nội dung cửa sổ Settings.
-- Hoạt ảnh nâng cao chưa vẽ (E3: tay, củi, chảo trứng…) và tư thế ngủ của Idle (sẽ vẽ khi làm).
-- C3 tự khởi động, F đóng gói `.exe`, chat bằng giọng nói, phát triển lại hẹn giờ.
-
 ### Chốt thêm (2026-11-12, lượt 5)
 - **Chuột trái khi đang cảnh báo:** chỉ tắt cảnh báo như hiện tại, **không** chơi phản ứng ngẫu nhiên.
 - **Câu nói tự động sau 15 phút rảnh (fact/joke):** **giữ**, nhưng **không nói khi pet đang ngủ** (Idle hoặc ngủ gật).
@@ -91,13 +85,29 @@
 - **E2 — ngủ gật:** pet tự ngủ gật sau **10 phút** không đụng chuột/bàn phím, tự tỉnh khi user dùng máy lại. Khác Idle (Idle do user bảo, nằm tới khi bấm `Wander`).
 - **E2 — ban đêm:** từ **20h tối đến 5h sáng** (user chọn, thay đề xuất 22h–6h). Ban đêm chỉ đổi dáng vẻ (lửa dịu, màu trầm, cử động chậm), **không** tự làm pet ngủ. Hai mốc này sau có thể cho chỉnh trong Settings.
 
+### Chốt thêm (2026-11-12, lượt 6) — E1 biểu cảm
+Ảnh tham khảo đã chuyển vào `docs/references/`: `calcipher.jpg` (ảnh gốc) và `calcipher_picked.jpg` (user đánh số 7 hình, gạch xanh). Danh sách này thay đề xuất 8 cảm xúc trước của Claude.
+- **Vui (`happy`):** thay mặt vui hiện tại bằng **hình 1 và 2**, mỗi lần chọn ngẫu nhiên một mặt. 1 = mắt lim dim liếc ngang, cười mở; 2 = mắt nhìn lên, cười mở.
+- **Hoảng hốt (`scared`):** **hình 3** — lửa bùng to, mắt tròn, miệng há rộng.
+- **Tức giận (`angry`):** **hình 6**, thêm **lông mày chau xuống**, mắt hơi nheo để không lẫn với hình 3. Tạm thời lửa bùng ra hai bên thay cho tay; **sau này phải làm tay** (ghi ở E3).
+- **Chill (`chill`):** **hình 7**, **vẽ cả cái chảo**. Ưu tiên thấp: làm sau các biểu cảm khác.
+- **Tư thế bay (FLOAT):** **hình 4** khi bay bình thường, **hình 5** lúc vừa cất cánh ("triệu hồi" khúc củi để bay). Khúc củi được làm sớm, riêng cho lúc bay.
+- **Giữ** `surprised`, `thinking` có sẵn. **Bỏ** `sad` và các cảm xúc Claude đề xuất trước đó.
+- **Danh sách AI chọn:** `happy`, `scared`, `angry`, `chill`, `surprised`, `thinking`, `other`.
+- **Dáng người không cố định:** Calcifer là ngọn lửa biến dạng tùy ý, nên mỗi biểu cảm được tự do đổi hình dáng cơ thể (phình to, bè thành gần hình chữ nhật, kéo dài theo chiều dọc…) sao cho hợp nhất với cảm xúc, không bó buộc vào một khuôn dáng chung.
+
+## Chốt sau (user chủ động để lại)
+
+- Nội dung cửa sổ Settings.
+- Hoạt ảnh nâng cao (E3): tay (cần cho mặt `angry`), ôm/gặm củi, trứng… Tư thế ngủ của Idle (sẽ vẽ khi làm).
+- C3 tự khởi động, F đóng gói `.exe`, chat bằng giọng nói, phát triển lại hẹn giờ.
+
 ## Còn bàn
 
-- **E1 — danh sách cảm xúc (lượt 6, user chọn lại):** user đánh số 7 hình trên ảnh `D:\Downloads\calcipher_picked.jpg` (gạch xanh), thay đề xuất 8 cảm xúc trước của Claude:
-  - **1, 2** → thay mặt `happy` hiện tại (cute hơn). 1 = mắt lim dim liếc ngang, miệng cười mở; 2 = mắt nhìn lên, miệng cười mở.
-  - **3** → `scared` (hoảng hốt, hoảng loạn): lửa bùng to, mắt tròn, miệng há rộng.
-  - **4, 5** → tư thế **bay** (FLOAT): ngồi trên khúc củi, như "triệu hồi gỗ để bay". 4 = miệng nhỏ; 5 = miệng há to. Khúc củi được kéo lên làm sớm, riêng cho lúc bay (các đạo cụ khác vẫn để E3).
-  - **6** → `angry` (tức giận). Hiện mới có `alert`, chưa có mặt giận.
-  - **7** → `chill` (thư giãn): mắt lim dim liếc ngang, miệng lượn sóng, lửa dẹt.
-  - Claude đề xuất, chờ user chốt: dùng **cả 1 và 2** cho `happy` (chọn ngẫu nhiên); bay thường dùng **4**, lúc cất cánh dùng **5**; hình 6 trong ảnh trông giống hoảng hơn giận nên **thêm lông mày chau xuống** để không lẫn với 3; hình 7 **chỉ vẽ mặt + lửa dẹt, không vẽ chảo**; **giữ** `surprised`, `thinking` có sẵn; **bỏ** `sad` và các cảm xúc Claude đề xuất trước đó (excited, pouty, unimpressed, sheepish, strained, yummy).
-  - Danh sách AI chọn (dự kiến): `happy`, `scared`, `angry`, `chill`, `surprised`, `thinking`, `other`.
+Claude đề xuất (lượt 7), chờ user chốt trước khi code:
+- **Thứ tự làm:** G4 → G3 (bong bóng chat) → G1 + G2 (chuột trái/phải) → E1 (vui, hoảng, giận, bay trên củi + AI chọn cảm xúc) → E2 (tư thế ngủ, ngủ gật, ban đêm) → C1 + menu khay → `chill` + chảo.
+- **Tư thế ngủ (dùng chung cho Idle và ngủ gật):** lấy mặt mắt nhắm cười trong ảnh gốc (hàng 4, giữa); lửa lùn xuống, bè ra, thở chậm, thỉnh thoảng bay chữ "z".
+- **E1 — biểu cảm giữ bao lâu:** khoảng 5 giây khi câu trả lời hiện ra, rồi về mặt bình thường.
+- **Khúc củi lúc bay:** hiện ra kèm tia lửa khi cất cánh, tan thành tàn lửa khi đáp xuống.
+- **Cửa sổ Settings (tạm):** chỉ gồm 2 mục đã có số: thời gian ngủ gật, khung giờ ban đêm.
+- **Ảnh tham khảo `docs/references/`:** repo GitHub đang **public** và ảnh là tranh của họa sĩ khác (@nyatche) → không đưa lên git, thêm thư mục vào `.gitignore`, chỉ giữ ở máy.

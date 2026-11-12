@@ -162,9 +162,9 @@ Còn thiếu / cần làm tiếp:
 - [x] **D4. Dọn tài liệu cũ:** sơ đồ kiến trúc trong `CONTEXT.md` vẫn ghi OpenRouter và "PNG cutout"; §4 (câu hỏi mở đã giải quyết), §5 (`.env.example` ghi `OPENROUTER_API_KEY`) lỗi thời; xóa `assets/calcifer/PLACEHOLDER.txt`; cập nhật `CLAUDE.md` (repo giờ ở `D:\workspace\pet`).
 
 ### Giai đoạn E — Nhân vật sống động hơn
-- [ ] **E1. Biểu cảm theo nội dung chat:** agent trả kèm "mood" (vui, buồn, ngạc nhiên…) để pet đổi mặt khi trả lời; `other` = không đổi biểu cảm.
-- [ ] **E2. Hành vi theo ngữ cảnh:** ngủ gật khi máy không dùng lâu, buổi đêm lửa dịu lại. ("Gọi pet chạy lại gần chuột": tạm bỏ.)
-- [ ] **E3. Animation nâng cao theo ảnh mẫu:** tay, ôm/gặm củi, nằm trên củi, chảo + trứng ốp la/thịt xông khói, trứng vỡ — *chưa quyết*.
+- [ ] **E1. Biểu cảm theo nội dung chat:** agent trả kèm "mood" để pet đổi mặt khi trả lời: `happy`, `scared`, `angry`, `chill`, `surprised`, `thinking`, `other` (= không đổi biểu cảm). Thêm tư thế bay trên khúc củi. Ảnh mẫu: `docs/references/calcipher_picked.jpg`; chi tiết: DECISION_LOG lượt 6.
+- [ ] **E2. Hành vi theo ngữ cảnh:** ngủ gật sau 10 phút không dùng máy, ban đêm (20h–5h) lửa dịu lại. ("Gọi pet chạy lại gần chuột": tạm bỏ.)
+- [ ] **E3. Animation nâng cao theo ảnh mẫu:** tay (bắt buộc làm sau cho mặt `angry`), ôm/gặm củi, nằm trên củi, chảo + trứng ốp la/thịt xông khói, trứng vỡ — *chưa quyết*.
 
 ### Giai đoạn G — Tương tác mới (chốt 2026-11-12, xem DECISION_LOG)
 - [ ] **G1. Chuột trái = 1 phản ứng ngẫu nhiên** từ bộ gồm mọi hoạt ảnh của pet + "nói 1 câu ngẫu nhiên" (trừ mặt cảnh báo và tư thế ngủ). Hoạt ảnh mới tự đăng ký vào bộ.
