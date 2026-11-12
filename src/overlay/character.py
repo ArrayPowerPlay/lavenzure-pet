@@ -10,19 +10,21 @@ around the whole silhouette. The face (white eyes with small dark pupils, red mo
 yellow body, plus a couple of pale highlight dabs.
 
 What makes it feel like a real fire:
-- Every layer is ONE continuous outline (body + tongues share their valley points), so the shape
-  never shows seams or broken edges however the tongues move.
-- Tongue length and sway come from smooth Perlin noise sampled along the flame's width, so tongues
-  next to each other move together while the whole flame never repeats a pattern. All three layers
-  read the same noise field, so the inner colors lick upward together with the outer edge.
-- Random "flare-ups": a spot of the flame suddenly shoots up and falls back, often tearing off a
-  small flame wisp that floats away. Their rate grows with the mood (calm < talking < happy/alert).
+- The flame shape comes from ``overlay.fire_field.FireField``: a little particle simulation of
+  flame "tongues" that are born on the body, rise, bend in the wind, merge with each other, pinch
+  off and fade. The three colored layers are contour lines of that one soft field, so they are
+  always smooth closed outlines (no seams), nest inside each other, and nothing is pinned in place.
+- Flicker speed/strength and the flare-up rate follow the mood; moving the window blows the
+  tongues backwards like wind.
 - Spring physics driven by the window's own movement: it leans/trails against the direction of
   travel, stretches when moving fast vertically, squashes and wobbles on landings, hops while
   walking.
-- Eyes that blink at random and follow the mouse cursor (or wander when it is idle), plus smooth
-  cross-faded expressions (normal, happy, surprised, alert, thinking, talking).
-- Sparks and wisps that drift upward in *screen* space, so they trail behind the pet as it moves.
+- Eyes that blink at random (fast close, slower open), dart to new spots like real eyes (saccades)
+  and follow the mouse cursor. Expressions blend with a little springy overshoot so faces "pop"
+  (normal, happy, surprised, alert, thinking, talking); talking uses an irregular, noise-driven
+  mouth with pauses between phrases.
+- Sparks that drift upward in *screen* space, so they trail behind the pet as it moves. (Torn-off
+  bits of flame come from the fire simulation itself.)
 """
 from __future__ import annotations
 
@@ -42,6 +44,8 @@ from PySide6.QtGui import (
     QPolygonF,
     QRadialGradient,
 )
+
+from overlay.fire_field import FireField
 
 
 class Mood(Enum):
@@ -65,17 +69,17 @@ class Palette:
     glow: tuple[int, int, int]
 
 
-CALM_PALETTE = Palette(outer=(234, 54, 48), mid=(248, 132, 38), inner=(255, 210, 30),
+CALM_PALETTE = Palette(outer=(236, 56, 58), mid=(247, 138, 52), inner=(252, 212, 34),
                        glow=(255, 150, 40))
-ALERT_PALETTE = Palette(outer=(186, 20, 28), mid=(234, 60, 38), inner=(255, 150, 36),
+ALERT_PALETTE = Palette(outer=(190, 22, 34), mid=(236, 70, 44), inner=(255, 160, 40),
                         glow=(255, 60, 36))
 
-INK = QColor(104, 16, 16)            # dark maroon used for the outline and every face line
-HIGHLIGHT = QColor(255, 248, 204)    # pale dabs of shine on the yellow body
+INK = QColor(108, 14, 22)            # dark maroon used for the outline and every face line
+HIGHLIGHT = QColor(255, 234, 168)    # pale dabs of shine on the right flank
 EYE_WHITE = QColor(255, 253, 244)
-PUPIL = QColor(72, 14, 12)
-MOUTH = QColor(212, 38, 44)
-TONGUE = QColor(246, 122, 106)
+PUPIL = QColor(118, 12, 24)
+MOUTH = QColor(206, 30, 42)
+TONGUE = QColor(244, 112, 112)
 
 
 @dataclass
@@ -149,6 +153,12 @@ def _noise(x: float, seed: int) -> float:
     return 2.0 * _lerp(_hash(i, seed) * f, _hash(i + 1, seed) * (f - 1.0), u)
 
 
+def _smoothstep(edge0: float, edge1: float, x: float) -> float:
+    """0 below ``edge0``, 1 above ``edge1``, smooth S-curve in between."""
+    t = _clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0)
+    return t * t * (3.0 - 2.0 * t)
+
+
 def _fbm(x: float, seed: int) -> float:
     """Two octaves of noise: a slow swell plus a faster, smaller flutter on top."""
     return (_noise(x, seed) + 0.5 * _noise(x * 2.13 + 7.7, seed + 911)) / 1.5
@@ -175,7 +185,7 @@ class _Spring:
 
 @dataclass
 class _Ember:
-    """One spark (``wisp=False``) or torn-off little flame (``wisp=True``), in widget coordinates."""
+    """One spark, in widget coordinates."""
 
     x: float
     y: float
@@ -185,33 +195,17 @@ class _Ember:
     max_life: float
     size: float
     phase: float
-    wisp: bool = False
 
 
-@dataclass(frozen=True)
-class _Layer:
-    """Shape recipe for one flame layer. Lengths are in units of ``R``, heights measured up from
-    the feet. Inner layers are smaller copies sitting slightly higher, with shorter tongues whose
-    roots line up with the outer ones (so each color nests inside the tongue around it)."""
-
-    color: str                  # Palette attribute name
-    half_width: float           # widest half-width of the round, onion-shaped body
-    bottom: float               # height of the lowest point
-    side: float                 # height where the body side turns into the first tongue
-    dome: float                 # how far the head arch rises above the sides
-    roots: tuple[float, ...]    # tongue root x positions (units of R), left to right
-    length: float               # length of the tallest tongue
-
-
-_OUTER = _Layer("outer", 1.14, 0.00, 0.98, 0.50, (-0.80, -0.42, 0.02, 0.44, 0.82), 0.92)
-_MID = _Layer("mid", 1.05, 0.065, 0.98, 0.42, (-0.72, -0.38, 0.02, 0.40, 0.74), 0.66)
-_INNER = _Layer("inner", 0.95, 0.13, 0.94, 0.30, (-0.58, -0.19, 0.21, 0.60), 0.34)
-_LAYERS = (_OUTER, _MID, _INNER)
-
-_COLUMNS = 7                 # noise samples across the flame width (shared by all layers)
-_FLARE_RISE = 0.08           # seconds for a flare-up to reach full height
-_FLARE_FALL = 0.22           # decay time constant of a flare-up
-_FLARE_RATE = 0.11           # flare-ups per second per column at wild = 1
+_FLARE_RATE = 0.45                  # spontaneous flare-ups per second at wild = 1
+# Face parameters that blend with a slightly under-damped spring (a little overshoot = "pop");
+# every other Expression field eases in smoothly.
+_SPRUNG_FIELDS = frozenset({"eye_scale", "pupil", "mouth_open", "smile"})
+_FACE_STIFFNESS = 260.0
+_FACE_DAMPING = 22.0
+# Fields that switch between two different drawings (curved/round mouth, open/"^" eyes) are
+# cross-faded quickly so the two shapes are never seen as a ghostly double for long.
+_FAST_FIELDS = frozenset({"mouth_round", "happy_eyes"})
 
 
 class FlameCharacter:
@@ -242,6 +236,7 @@ class FlameCharacter:
         self._transient: Mood | None = None
         self._transient_until: float | None = None  # None = until stop_transient()
         self._expr = Expression()
+        self._expr_vel: dict[str, float] = {name: 0.0 for name in _SPRUNG_FIELDS}
 
         # Motion physics
         self._prev_window_pos: QPointF | None = None
@@ -255,18 +250,15 @@ class FlameCharacter:
         self._sx = self._sy = 1.0  # body squash/stretch for this frame
         self._shake_px = 0.0
 
-        # Fire simulation: a noise "clock" that runs faster when the flame flickers faster (so a
-        # speed change never makes the shapes jump), per-column noise samples and flare-ups.
+        # Fire simulation. ``_clock`` runs faster when the flame flickers faster (so a speed
+        # change never makes the shapes jump). The shape itself comes from ``FireField``.
         self._clock = self._rng.uniform(0.0, 1000.0)
-        self._len_n = [0.0] * _COLUMNS
-        self._sway_n = [0.0] * _COLUMNS
-        self._root_n = [0.0] * _COLUMNS
-        self._flare_age = [10.0] * _COLUMNS
-        self._flare = [0.0] * _COLUMNS
         self._height_n = 0.0
         self._breath_n = 0.0
+        self._fire = FireField(self.R, self._rng)
         self._paths: list[QPainterPath] = []
-        self._tips: list[tuple[float, float]] = []  # outer-layer tongue tips (body coordinates)
+        self._tip_point = (0.0, -2.6 * self.R)             # outer main tip (body coordinates)
+        self._top_points: list[tuple[float, float]] = []  # outer outline near the top
 
         # Eyes
         self._next_blink = self._rng.uniform(1.5, 4.0)
@@ -277,6 +269,9 @@ class FlameCharacter:
         self._cursor_still_since = 0.0
         self._wander_target = (0.0, 0.0)
         self._next_wander = 0.0
+        self._micro = (0.0, 0.0)       # tiny fixation jitter added to the gaze
+        self._next_micro = 0.0
+        self._saccade = False          # True while the eyes are darting to a far target
 
         # Talking mouth
         self._talk_amount = 0.0
@@ -306,7 +301,8 @@ class FlameCharacter:
             self.burst(12)
         elif mood == Mood.SURPRISED:
             self._squash.velocity += 3.5
-            self._flare_column(self._COLUMNS_CENTER)
+            self._expr_vel["eye_scale"] += 9.0  # eyes pop open past their size, then settle
+            self._start_flare()
 
     def stop_transient(self) -> None:
         """End any temporary mood and fall back to the base mood."""
@@ -323,13 +319,10 @@ class FlameCharacter:
             self._hop_v = -260.0 * self.scale * strength
 
     def burst(self, count: int) -> None:
-        """Throw out a handful of sparks and a few wisps at once (used for happy reactions)."""
+        """Throw out a handful of sparks and flare up (used for happy reactions)."""
         for _ in range(count):
             self._spawn_ember(speed_boost=1.8)
-        for _ in range(max(1, count // 5)):
-            self._spawn_ember(speed_boost=1.3, wisp=True)
-        for k in (1, _COLUMNS - 2):
-            self._flare_column(k)
+        self._start_flare()
 
     @property
     def mood(self) -> Mood:
@@ -347,8 +340,6 @@ class FlameCharacter:
         return QPointF(self.feet.x(), self.feet.y() - 3.2 * self.R)
 
     # ------------------------------------------------------------------ simulation
-
-    _COLUMNS_CENTER = _COLUMNS // 2
 
     def update(self, dt: float, window_pos: QPointF | None, cursor: QPointF | None) -> None:
         """Advance the simulation by ``dt`` seconds.
@@ -395,14 +386,23 @@ class FlameCharacter:
         """Blend every expression parameter toward the current mood's target values."""
         target = _MOOD_TARGETS[self.mood]
         for f in fields(Expression):
-            current = getattr(self._expr, f.name)
-            setattr(self._expr, f.name, _approach(current, getattr(target, f.name), 9.0, dt))
+            name = f.name
+            current = getattr(self._expr, name)
+            goal = getattr(target, name)
+            if name in _SPRUNG_FIELDS:
+                vel = self._expr_vel[name]
+                vel += (_FACE_STIFFNESS * (goal - current) - _FACE_DAMPING * vel) * dt
+                self._expr_vel[name] = vel
+                setattr(self._expr, name, current + vel * dt)
+            else:
+                rate = 22.0 if name in _FAST_FIELDS else 9.0
+                setattr(self._expr, name, _approach(current, goal, rate, dt))
 
-        talking = self.mood == Mood.TALKING
-        if talking:
-            # Irregular "syllables": fast open/close modulated by a slower phrase rhythm.
-            syllable = abs(math.sin(self._t * 11.0)) * (0.55 + 0.45 * math.sin(self._t * 3.3))
-            want = 0.12 + 0.7 * max(0.0, syllable)
+        if self.mood == Mood.TALKING:
+            # Irregular "syllables" from noise, gated by a slower noise so phrases have pauses.
+            syllable = _clamp(0.5 + 1.2 * _noise(self._t * 7.0, self._seed + 501), 0.0, 1.0)
+            phrase = _smoothstep(-0.3, 0.05, _noise(self._t * 0.9, self._seed + 502))
+            want = (0.1 + 0.7 * syllable) * phrase
         else:
             want = 0.0
         self._talk_amount = _approach(self._talk_amount, want, 25.0, dt)
@@ -442,6 +442,11 @@ class FlameCharacter:
             double = self._rng.random() < 0.18
             self._next_blink = self._t + (0.3 if double else self._rng.uniform(2.2, 5.5))
 
+        if self._t >= self._next_micro:
+            # Real eyes never hold perfectly still: tiny jumps around the fixation point.
+            self._micro = (self._rng.uniform(-0.07, 0.07), self._rng.uniform(-0.05, 0.05))
+            self._next_micro = self._t + self._rng.uniform(0.35, 1.1)
+
         eye_center = QPointF(self.feet.x(), self.feet.y() - 1.0 * self.R)
         target_x, target_y = 0.0, 0.0
         if self.mood == Mood.THINKING:
@@ -459,134 +464,48 @@ class FlameCharacter:
             else:
                 if self._t >= self._next_wander:
                     angle = self._rng.uniform(0, math.tau)
-                    radius = self._rng.choice((0.0, 0.0, self._rng.uniform(0.3, 0.8)))
+                    radius = self._rng.choice((0.0, 0.0, self._rng.uniform(0.3, 0.9)))
                     self._wander_target = (math.cos(angle) * radius, math.sin(angle) * radius * 0.6)
-                    self._next_wander = self._t + self._rng.uniform(1.5, 3.5)
+                    self._next_wander = self._t + self._rng.uniform(1.2, 3.5)
+                    recently_blinked = self._t - self._blink_start < 1.0
+                    if radius > 0.5 and not recently_blinked and self._rng.random() < 0.3:
+                        self._blink_start = self._t  # people often blink with a big glance
                 target_x, target_y = self._wander_target
-        self._look_x = _approach(self._look_x, target_x, 10.0, dt)
-        self._look_y = _approach(self._look_y, target_y, 10.0, dt)
+        target_x += self._micro[0]
+        target_y += self._micro[1]
+        # Saccade: a far target is reached with one quick dart; near ones are followed smoothly.
+        gap = math.hypot(target_x - self._look_x, target_y - self._look_y)
+        if gap > 0.25:
+            self._saccade = True
+        elif gap < 0.03:
+            self._saccade = False
+        rate = 32.0 if self._saccade else 12.0
+        self._look_x = _approach(self._look_x, target_x, rate, dt)
+        self._look_y = _approach(self._look_y, target_y, rate, dt)
 
-    def _flare_column(self, k: int) -> None:
-        """Start a flare-up (the flame shoots up there and falls back) at noise column ``k``."""
-        if self._flare_age[k] > _FLARE_RISE:
-            self._flare_age[k] = 0.0
+    def _start_flare(self) -> None:
+        """Make the fire flare up: a couple of big tongues shoot up through the main tip."""
+        self._fire.flare(1.0)
 
     def _update_fire(self, dt: float) -> None:
-        """Advance the fire noise and flare-ups, then rebuild the three layer outlines."""
+        """Advance the fire noise, flare-ups and tongues, then pick up the new layer outlines."""
         ex = self._expr
         self._clock += dt * ex.flicker
         c = self._clock
         s = self._seed
-
-        wisp_columns = []
-        for k in range(_COLUMNS):
-            self._len_n[k] = _fbm(c * 1.7 + k * 3.7, s + 100 + k)
-            self._sway_n[k] = _fbm(c * 0.9 + k * 5.1, s + 200 + k)
-            self._root_n[k] = _noise(c * 0.35 + k * 7.3, s + 400 + k)
-            age = self._flare_age[k]
-            if age > 0.7 and self._rng.random() < _FLARE_RATE * ex.wild * ex.wild * dt:
-                age = 0.0
-            new_age = age + dt
-            if age < _FLARE_RISE <= new_age and self._rng.random() < 0.6:
-                wisp_columns.append(k)  # the tip tears off at the peak of the flare
-            self._flare_age[k] = new_age
-            if new_age < _FLARE_RISE:
-                self._flare[k] = new_age / _FLARE_RISE
-            else:
-                self._flare[k] = math.exp(-(new_age - _FLARE_RISE) / _FLARE_FALL)
+        if self._rng.random() < _FLARE_RATE * ex.wild * ex.wild * dt:
+            self._start_flare()
         self._height_n = _fbm(c * 0.55, s + 300)
         self._breath_n = _fbm(c * 0.4, s + 301)
-
-        self._paths = []
-        for layer in _LAYERS:
-            path, tips = self._layer_path(layer)
-            self._paths.append(path)
-            if layer is _OUTER:
-                self._tips = tips
-
-        for k in wisp_columns:
-            self._spawn_wisp_from_column(k)
-
-    def _field(self, values: list[float], x: float) -> float:
-        """Smoothly interpolate per-column samples at body x-coordinate ``x``."""
-        pos = _clamp((x / (_OUTER.half_width * self.R) + 1.0) * 0.5, 0.0, 1.0) * (_COLUMNS - 1)
-        i = min(int(pos), _COLUMNS - 2)
-        f = pos - i
-        f = f * f * (3.0 - 2.0 * f)
-        return _lerp(values[i], values[i + 1], f)
-
-    def _layer_path(self, layer: _Layer) -> tuple[QPainterPath, list[tuple[float, float]]]:
-        """Build one layer as a single closed outline: tongues left to right, then the round bottom.
-
-        Neighbouring tongues share their valley point, and the outermost tongues grow out of the
-        body sides along the tangent the bottom curve ends with, so the outline is smooth and
-        unbroken everywhere. Returns the path (body coordinates: origin at the feet, y up is
-        negative) and the tongue tip positions.
-        """
-        r = self.R
-        ex = self._expr
-        a = layer.half_width * r * (1.0 + 0.025 * self._breath_n)
-        y_bottom = -layer.bottom * r
-        y_side = -layer.side * r
-        xs = 0.88 * a                      # side point: where the body side meets the first tongue
-        bulge = (1.07 * a, y_side + 0.55 * (y_bottom - y_side))  # widest, low part of the body
-        dome = layer.dome * r
-        lean = self._lean.value
-        height = ex.flame * (1.0 + 0.09 * ex.wild * self._height_n)
-
-        def arch_y(x: float) -> float:
-            """Height of the head arch (where tongues are rooted) at ``x``."""
-            return y_side - dome * math.sqrt(max(0.0, 1.0 - (x / xs) ** 2))
-
-        n = len(layer.roots)
-        roots = [_clamp(u * r + 0.08 * r * self._field(self._root_n, u * r), -0.95 * xs, 0.95 * xs)
-                 for u in layer.roots]
-        valley_x = [-xs] + [(roots[i] + roots[i + 1]) / 2 for i in range(n - 1)] + [xs]
-        valleys = []
-        for j, x in enumerate(valley_x):
-            sink = 0.0 if j in (0, n) else 0.05 * r  # V-notches dip a little below the arch
-            valleys.append((x, arch_y(x) + sink))
-
-
-        path = QPainterPath()
-        path.setFillRule(Qt.FillRule.WindingFill)
-        path.moveTo(*valleys[0])
-        tips = []
-        for i, bx in enumerate(roots):
-            u = bx / xs
-            by = arch_y(bx)
-            length = layer.length * r * (1.0 - 0.5 * abs(u) ** 1.5) * height
-            length *= max(0.25, 1.0 + 0.32 * ex.wild * self._field(self._len_n, bx)
-                          + 0.6 * self._field(self._flare, bx))
-            sway = r * 0.17 * math.sqrt(ex.wild) * self._field(self._sway_n, bx)
-            tip_x = bx + u * 0.2 * length + sway + lean * length * 0.85
-            tip_y = by - length
-            curl = sway * 0.9 + lean * length * 0.25  # tips hook the way they sway
-            tips.append((tip_x, tip_y))
-
-            (xl, yl), (xr, yr) = valleys[i], valleys[i + 1]
-            wl, wr = bx - xl, xr - bx
-            rise = length * 0.3
-            # Outermost edges continue the bottom curve's tangent (up and inward, so the body
-            # narrows like a teardrop); inner edges fan up out of their notch.
-            q = rise / (bulge[1] - y_side)
-            c1 = QPointF(xl + (bulge[0] - xs) * q if i == 0 else xl + wl * 0.15, yl - rise)
-            c2 = QPointF(xr - (bulge[0] - xs) * q if i == n - 1 else xr - wr * 0.15, yr - rise)
-            # Side tongues are lopsided like real licks of flame: the edge facing away from the
-            # centre bulges out, the edge facing the centre is drawn in.
-            left_bulge = 0.95 - 0.45 * u
-            right_bulge = 0.95 + 0.45 * u
-            path.cubicTo(c1, QPointF(tip_x - wl * left_bulge + curl, tip_y + length * 0.6),
-                         QPointF(tip_x, tip_y))
-            path.cubicTo(QPointF(tip_x + wr * right_bulge + curl, tip_y + length * 0.6), c2,
-                         QPointF(xr, yr))
-
-        # Round, onion-like bottom: right side -> bottom centre -> left side.
-        path.cubicTo(QPointF(*bulge), QPointF(0.72 * a, y_bottom), QPointF(0.0, y_bottom))
-        path.cubicTo(QPointF(-0.72 * a, y_bottom), QPointF(-bulge[0], bulge[1]),
-                     QPointF(-xs, y_side))
-        path.closeSubpath()
-        return path, tips
+        sway = 0.22 * math.sqrt(ex.wild) * _fbm(c * 0.75, s + 303) + 0.9 * self._lean.value
+        # Apparent wind from the pet's own movement (in R per second): tongues trail behind.
+        self._fire.step(dt * ex.flicker, clock=c, seed=s, wild=ex.wild, flame=ex.flame,
+                        wind_x=-0.45 * self._vx / self.R, wind_y=-0.3 * self._vy / self.R,
+                        sway=sway, body_breath=self._breath_n)
+        self._paths = self._fire.paths
+        self._tip_point = self._fire.tip
+        top = -1.5 * self.R
+        self._top_points = [q for q in self._fire.outer_points if q[1] < top]
 
     def _to_widget(self, x: float, y: float) -> tuple[float, float]:
         """Map a body-coordinate point to widget coordinates (same transform as ``paint``)."""
@@ -595,7 +514,7 @@ class FlameCharacter:
                 self.feet.y() + self._hop_y + self._sy * y)
 
     def _update_embers(self, dt: float, moved_x: float, moved_y: float) -> None:
-        """Spawn, move and retire sparks and wisps (kept in screen space)."""
+        """Spawn, move and retire sparks (kept in screen space)."""
         mood = self.mood
         rate = {Mood.ALERT: 8.0, Mood.HAPPY: 7.0, Mood.SURPRISED: 5.0, Mood.THINKING: 1.2}.get(
             mood, 2.5
@@ -610,53 +529,45 @@ class FlameCharacter:
             e.life -= dt
             if e.life <= 0.0:
                 continue
-            wobble = 14.0 if not e.wisp else 22.0
-            e.x += (e.vx + math.sin(self._t * 3.0 + e.phase) * wobble * self.scale) * dt - moved_x
+            e.x += (e.vx + math.sin(self._t * 3.0 + e.phase) * 14.0 * self.scale) * dt - moved_x
             e.y += e.vy * dt - moved_y
-            e.vy *= 1.0 - (0.6 if not e.wisp else 0.9) * dt
+            e.vy *= 1.0 - 0.6 * dt
             if -10 < e.x < self.width + 10 and -10 < e.y < self.height + 10:
                 alive.append(e)
         self._embers = alive
 
-    def _spawn_ember(self, speed_boost: float = 1.0, wisp: bool = False) -> None:
-        """Create one spark (or wisp) at a random tongue tip of the outer layer."""
-        if len(self._embers) >= self.MAX_EMBERS or not self._tips:
+    def _spawn_ember(self, speed_boost: float = 1.0) -> None:
+        """Create one spark somewhere along the top of the outer flame."""
+        if len(self._embers) >= self.MAX_EMBERS or not self._top_points:
             return
-        rng = self._rng
-        tx, ty = rng.choice(self._tips)
-        x, y = self._to_widget(tx + rng.uniform(-0.12, 0.12) * self.R, ty + 0.15 * self.R)
-        self._add_ember(x, y, speed_boost, wisp)
+        tx, ty = self._rng.choice(self._top_points)
+        x, y = self._to_widget(tx, ty - 0.04 * self.R)  # just outside the outline
+        self._add_ember(x, y, speed_boost)
 
-    def _spawn_wisp_from_column(self, k: int) -> None:
-        """Tear a small flame off the tongue tip closest to noise column ``k``."""
-        if not self._tips:
-            return
-        cx = (k / (_COLUMNS - 1) * 2.0 - 1.0) * _OUTER.half_width * self.R
-        tx, ty = min(self._tips, key=lambda tip: abs(tip[0] - cx))
-        x, y = self._to_widget(tx, ty)
-        self._add_ember(x, y, 1.0, wisp=True)
-
-    def _add_ember(self, x: float, y: float, speed_boost: float, wisp: bool) -> None:
+    def _add_ember(self, x: float, y: float, speed_boost: float) -> None:
         """Append one particle at widget position (``x``, ``y``) with randomized motion."""
         if len(self._embers) >= self.MAX_EMBERS:
             return
         rng = self._rng
-        life = rng.uniform(0.55, 0.95) if wisp else rng.uniform(0.7, 1.5)
-        size = (rng.uniform(0.09, 0.14) * self.R) if wisp else rng.uniform(1.3, 2.6) * self.scale
+        life = rng.uniform(0.7, 1.5)
+        size = rng.uniform(1.3, 2.6) * self.scale
         self._embers.append(
             _Ember(
                 x=x, y=y,
                 vx=rng.uniform(-14, 14) * self.scale * speed_boost - self._vx * 0.12,
                 vy=-rng.uniform(55, 95) * self.scale * speed_boost,
-                life=life, max_life=life, size=size, phase=rng.uniform(0, math.tau), wisp=wisp,
+                life=life, max_life=life, size=size, phase=rng.uniform(0, math.tau),
             )
         )
 
     # ------------------------------------------------------------------ rendering
 
     def paint(self, painter: QPainter) -> None:
-        """Draw the whole character (glow, flame layers, face, sparks and wisps) with ``painter``."""
+        """Draw the whole character (glow, flame layers, face and sparks) with ``painter``."""
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+
+        # Sparks go behind the body: they appear to fly out from behind the flame tips.
+        self._paint_embers(painter)
 
         painter.save()
         painter.translate(self.feet.x() + self._shake_px, self.feet.y() + self._hop_y)
@@ -666,8 +577,6 @@ class FlameCharacter:
         self._paint_flame(painter)
         self._paint_face(painter)
         painter.restore()
-
-        self._paint_embers(painter)
 
     def _palette_color(self, layer: str, alpha: int = 255) -> QColor:
         """Current color of a flame layer, blended between the calm and alert palettes."""
@@ -714,7 +623,7 @@ class FlameCharacter:
         """Red rim with the dark outline, then the orange band and the yellow body, then shine."""
         r = self.R
         outer, mid, inner = self._paths
-        painter.setPen(QPen(INK, 0.065 * r, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap,
+        painter.setPen(QPen(INK, 0.06 * r, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap,
                             Qt.PenJoinStyle.RoundJoin))
         painter.setBrush(self._palette_color("outer"))
         painter.drawPath(outer)
@@ -724,43 +633,48 @@ class FlameCharacter:
         painter.setBrush(self._palette_color("inner"))
         painter.drawPath(inner)
 
-        # Pale shine dabs on the left of the yellow body (flat sticker style).
+        # Pale shine dabs on the right flank, between the yellow body and the red rim.
         painter.setBrush(HIGHLIGHT)
         painter.save()
-        painter.translate(-0.74 * r, -0.5 * r)
-        painter.rotate(14.0)
-        painter.drawEllipse(QPointF(0.0, 0.0), 0.045 * r, 0.1 * r)
+        painter.translate(1.0 * r, -1.1 * r)
+        painter.rotate(-18.0)
+        painter.drawEllipse(QPointF(0.0, 0.0), 0.05 * r, 0.085 * r)
         painter.restore()
-        painter.drawEllipse(QPointF(-0.72 * r, -0.74 * r), 0.032 * r, 0.032 * r)
+        painter.drawEllipse(QPointF(0.93 * r, -1.32 * r), 0.035 * r, 0.035 * r)
 
     def _paint_face(self, painter: QPainter) -> None:
         """Eyes and mouth; the face shifts slightly toward the gaze for depth."""
         r = self.R
         painter.save()
-        painter.translate(self._look_x * 0.07 * r, -1.02 * r + self._look_y * 0.05 * r)
+        painter.translate(self._look_x * 0.07 * r, -0.98 * r + self._look_y * 0.05 * r)
         for side in (-1, 1):
-            self._paint_eye(painter, QPointF(side * 0.44 * r, 0.0), side)
+            self._paint_eye(painter, QPointF(side * 0.52 * r, 0.0), side)
         self._paint_mouth(painter, QPointF(0.0, 0.42 * r))
         painter.restore()
 
     def _blink_factor(self) -> float:
         """1 when the eyes are open, dips to 0 during a blink."""
-        phase = (self._t - self._blink_start) / 0.15
-        if 0.0 <= phase <= 1.0:
-            return 1.0 - math.sin(math.pi * phase)
-        return 1.0
+        since = self._t - self._blink_start
+        if since < 0.0 or since > 0.2:
+            return 1.0
+        if since < 0.055:  # lids drop fast...
+            return 1.0 - _smoothstep(0.0, 0.055, since)
+        return _smoothstep(0.075, 0.2, since)  # ...and lift a bit slower
 
     def _paint_eye(self, painter: QPainter, center: QPointF, side: int) -> None:
         """One eye: outlined white with a small tracking pupil (cut by slanted lids when angry),
         or a happy "^" arc, or a closed line while blinking."""
         r = self.R
         ex = self._expr
-        rx = 0.23 * r * ex.eye_scale
-        ry_full = 0.22 * r * ex.eye_scale
-        openness = _clamp(ex.eye_open * self._blink_factor(), 0.0, 1.0)
+        rx = 0.24 * r * ex.eye_scale
+        ry_full = 0.23 * r * ex.eye_scale
+        # Going "^ ^": the open eye squeezes shut first, then the arc takes over (no ghosting).
+        squint = 1.0 - _smoothstep(0.0, 0.6, ex.happy_eyes)
+        openness = _clamp(ex.eye_open * self._blink_factor() * squint, 0.0, 1.0)
         line_pen = QPen(INK, 0.07 * r, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap)
 
-        normal_alpha = 1.0 - ex.happy_eyes
+        normal_alpha = 1.0 - _smoothstep(0.45, 0.75, ex.happy_eyes)
+        arc_alpha = _smoothstep(0.45, 0.75, ex.happy_eyes)
         if normal_alpha > 0.01:
             painter.save()
             painter.setOpacity(normal_alpha)
@@ -781,7 +695,7 @@ class FlameCharacter:
                                               QPointF(inner_x, cy - 3 * ry)]))
                     cut.closeSubpath()
                     eye = eye.subtracted(cut)
-                painter.setPen(QPen(INK, 0.05 * r, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap,
+                painter.setPen(QPen(INK, 0.075 * r, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap,
                                     Qt.PenJoinStyle.RoundJoin))
                 painter.setBrush(EYE_WHITE)
                 painter.drawPath(eye)
@@ -791,11 +705,9 @@ class FlameCharacter:
                 painter.setPen(Qt.PenStyle.NoPen)
                 px = cx + self._look_x * rx * 0.45
                 py = cy + self._look_y * ry * 0.4 + (ry * 0.25 * ex.angry)
-                pr = rx * 0.4 * ex.pupil
+                pr = rx * 0.5 * ex.pupil
                 painter.setBrush(PUPIL)
                 painter.drawEllipse(QPointF(px, py), pr, pr * max(0.6, openness))
-                painter.setBrush(QColor(255, 255, 255, 235))
-                painter.drawEllipse(QPointF(px - pr * 0.35, py - pr * 0.38), pr * 0.32, pr * 0.32)
                 painter.restore()
 
                 if lid is not None:
@@ -814,9 +726,9 @@ class FlameCharacter:
                 painter.drawPath(closed)
             painter.restore()
 
-        if ex.happy_eyes > 0.01:
+        if arc_alpha > 0.01:
             painter.save()
-            painter.setOpacity(ex.happy_eyes)
+            painter.setOpacity(arc_alpha)
             arc = QPainterPath(QPointF(center.x() - rx, center.y() + ry_full * 0.3))
             arc.quadTo(QPointF(center.x(), center.y() - ry_full * 0.9),
                        QPointF(center.x() + rx, center.y() + ry_full * 0.3))
@@ -831,7 +743,7 @@ class FlameCharacter:
         ex = self._expr
         open_amount = _clamp(ex.mouth_open + self._talk_amount, 0.0, 1.2)
         smile = ex.smile
-        w = 0.24 * r * (1.0 + 0.25 * max(smile, 0.0))
+        w = 0.4 * r * (1.0 + 0.2 * max(smile, 0.0))
         mx, my = center.x(), center.y()
         corner_y = my - smile * 0.3 * w
         ink_pen = QPen(INK, 0.05 * r, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap,
@@ -844,7 +756,7 @@ class FlameCharacter:
             if open_amount < 0.06:
                 line = QPainterPath(QPointF(mx - w, corner_y))
                 line.quadTo(QPointF(mx, my + smile * 0.55 * w), QPointF(mx + w, corner_y))
-                painter.setPen(QPen(INK, 0.06 * r, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+                painter.setPen(QPen(INK, 0.07 * r, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
                 painter.setBrush(Qt.BrushStyle.NoBrush)
                 painter.drawPath(line)
             else:
@@ -859,7 +771,9 @@ class FlameCharacter:
                 painter.setBrush(MOUTH)
                 painter.drawPath(mouth)
                 if open_amount > 0.25:
-                    tongue_y = bottom_ctrl - open_amount * 0.2 * w
+                    # Both bottom controls sit at bottom_ctrl, so the lip's lowest point is 3/4 down.
+                    lip_y = corner_y + 0.75 * (bottom_ctrl - corner_y)
+                    tongue_y = lip_y - 0.12 * w
                     tongue = QPainterPath()
                     tongue.addEllipse(QPointF(mx, tongue_y), w * 0.62, w * 0.42)
                     painter.save()
@@ -879,46 +793,16 @@ class FlameCharacter:
             size = 0.7 + 0.6 * open_amount
             painter.setPen(ink_pen)
             painter.setBrush(MOUTH)
-            painter.drawEllipse(QPointF(mx, my + 0.06 * r), 0.13 * r * size, 0.16 * r * size)
+            painter.drawEllipse(QPointF(mx, my + 0.08 * r), 0.16 * r * size, 0.19 * r * size)
             painter.restore()
 
     def _paint_embers(self, painter: QPainter) -> None:
-        """Sparks are glowing dots; wisps are little teardrop flames that shrink as they rise."""
+        """Sparks: glowing dots that cool from pale yellow to orange and shrink as they rise."""
         painter.setPen(Qt.PenStyle.NoPen)
-        alert = self._expr.alert
         for e in self._embers:
             k = e.life / e.max_life  # 1 = newborn, 0 = dying
-            if not e.wisp:
-                color = _mix((255, 120, 40), (255, 230, 140), k, int(230 * min(1.0, k * 2.0)))
-                painter.setBrush(color)
-                size = e.size * (0.5 + 0.5 * k)
-                painter.drawEllipse(QRectF(e.x - size, e.y - size, size * 2, size * 2))
-                continue
-
-            s = e.size * (0.35 + 0.65 * k)
-            painter.save()
-            painter.translate(e.x, e.y)
-            painter.rotate(math.degrees(math.atan2(e.vx, -e.vy)) * 0.6
-                           + 12.0 * math.sin(self._t * 9.0 + e.phase))
-            painter.setOpacity(min(1.0, k * 2.5))
-            drop = self._teardrop(s)
-            painter.setPen(QPen(INK, max(0.8, 0.05 * self.R * k), Qt.PenStyle.SolidLine,
-                                Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
-            painter.setBrush(self._palette_color("outer"))
-            painter.drawPath(drop)
-            painter.setPen(Qt.PenStyle.NoPen)
-            painter.setBrush(_mix(CALM_PALETTE.mid, ALERT_PALETTE.mid, alert))
-            painter.translate(0.0, s * 0.3)
-            painter.drawPath(self._teardrop(s * 0.55))
-            painter.restore()
-        painter.setOpacity(1.0)
-
-    @staticmethod
-    def _teardrop(s: float) -> QPainterPath:
-        """Upward-pointing teardrop: round bottom of radius ``s`` centred on the origin."""
-        path = QPainterPath(QPointF(0.0, -2.3 * s))
-        path.cubicTo(QPointF(0.25 * s, -1.4 * s), QPointF(s, -0.8 * s), QPointF(s, 0.0))
-        path.arcTo(QRectF(-s, -s, 2 * s, 2 * s), 0.0, -180.0)
-        path.cubicTo(QPointF(-s, -0.8 * s), QPointF(-0.25 * s, -1.4 * s), QPointF(0.0, -2.3 * s))
-        path.closeSubpath()
-        return path
+            twinkle = 0.75 + 0.25 * math.sin(self._t * 17.0 + e.phase * 3.0)
+            color = _mix((255, 120, 40), (255, 230, 140), k, int(230 * min(1.0, k * 2.0) * twinkle))
+            painter.setBrush(color)
+            size = e.size * (0.5 + 0.5 * k)
+            painter.drawEllipse(QRectF(e.x - size, e.y - size, size * 2, size * 2))

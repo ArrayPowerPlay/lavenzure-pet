@@ -9,7 +9,7 @@ memory:
   idle_timeout_minutes: 10 # clear in-memory chat history after this many minutes of inactivity
 
 character:
-  scale: 1.0 # size multiplier of the code-drawn flame character (1.0 = 200x236 px window)
+  scale: 0.75 # size multiplier of the code-drawn flame character (1.0 = 200x236 px window, 0.75 = 150x177)
   fps: 60 # redraw rate; lower it (e.g. 30) to save CPU
 
 overlay:
