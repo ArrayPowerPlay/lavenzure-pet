@@ -15,14 +15,25 @@ How it works:
   back into a ``QImage`` that the normal QPainter code draws. The overlay window therefore stays an
   ordinary per-pixel-alpha window, so transparency and click-through behave exactly as before.
 
+- Reading the picture back is the expensive part: waiting for the GPU and converting the pixels
+  took ~6 ms of the ~10 ms frame. On Windows the read therefore goes through two pixel-pack
+  buffers (``_AsyncReadback``): each frame asks the GPU to copy the new picture into one buffer
+  without waiting, and takes the *previous* frame's picture out of the other one, already in
+  ``QImage``'s byte order. The flame is shown one frame (~16 ms) late, which is invisible, and
+  the frame costs ~1 ms instead. Elsewhere (or if setting it up fails) the simple synchronous
+  ``toImage()`` read is used.
+
 If OpenGL 3.3 is not available (old driver, some remote-desktop sessions) the constructor raises
 and ``make_flame_renderer`` falls back to the metaball renderer.
 """
 from __future__ import annotations
 
+import ctypes
+import logging
 import math
 import random
 import struct
+import sys
 
 import numpy as np
 from PySide6.QtGui import QOffscreenSurface, QOpenGLContext, QSurfaceFormat
@@ -48,6 +59,10 @@ from overlay.flame_common import (
 _GL_FLOAT = 0x1406
 _GL_TRIANGLE_STRIP = 0x0005
 _GL_COLOR_BUFFER_BIT = 0x4000
+_GL_BGRA = 0x80E1           # byte order B, G, R, A = QImage ARGB32 on little-endian machines
+_GL_UNSIGNED_BYTE = 0x1401
+
+log = logging.getLogger(__name__)
 
 _VERTEX_SHADER = """
 #version 330 core
@@ -309,6 +324,60 @@ void main() {
 """
 
 
+class _AsyncReadback:
+    """Copies framebuffer pictures to the CPU through two pixel-pack buffers, without stalling.
+
+    ``read_into(image)`` starts copying the framebuffer that is bound right now into one buffer
+    (returns at once) and fills ``image`` from the other buffer, which holds the picture started
+    on the previous call. The very first call waits for its own picture so nothing is blank.
+    Must be called with the GL context current. Windows only: PySide's ``glReadPixels`` does not
+    accept a buffer offset, so the plain GL 1.1 entry point is called from ``opengl32.dll``.
+    """
+
+    def __init__(self, width: int, height: int) -> None:
+        """Create both buffers (the GL context must be current); raises if anything is missing."""
+        self.width, self.height = width, height
+        self.size = width * height * 4
+        read_pixels = ctypes.windll.opengl32.glReadPixels
+        read_pixels.argtypes = [ctypes.c_int] * 4 + [ctypes.c_uint] * 2 + [ctypes.c_void_p]
+        read_pixels.restype = None
+        self._read_pixels = read_pixels
+        self._buffers = []
+        for _ in range(2):
+            buffer = QOpenGLBuffer(QOpenGLBuffer.Type.PixelPackBuffer)
+            if not buffer.create():
+                raise RuntimeError("cannot create a pixel-pack buffer")
+            buffer.setUsagePattern(QOpenGLBuffer.UsagePattern.StreamRead)
+            buffer.bind()
+            buffer.allocate(self.size)
+            buffer.release()
+            self._buffers.append(buffer)
+        self._frame = 0
+
+    def read_into(self, image) -> None:
+        """Queue the current framebuffer and copy the previous one into ``image`` (same size,
+        ``Format_ARGB32_Premultiplied``), flipped so row 0 is the top."""
+        current = self._buffers[self._frame % 2]
+        current.bind()
+        self._read_pixels(0, 0, self.width, self.height, _GL_BGRA, _GL_UNSIGNED_BYTE, None)
+        current.release()
+        ready = current if self._frame == 0 else self._buffers[(self._frame + 1) % 2]
+        self._frame += 1
+        ready.bind()
+        try:
+            pointer = ready.mapRange(0, self.size, QOpenGLBuffer.RangeAccessFlag.RangeRead)
+            if pointer is None or int(pointer) == 0:
+                raise RuntimeError("cannot map the pixel-pack buffer")
+            raw = (ctypes.c_uint8 * self.size).from_address(int(pointer))
+            src = np.frombuffer(raw, dtype=np.uint8).reshape(self.height, self.width * 4)
+            stride = image.bytesPerLine()
+            dst = np.frombuffer(image.bits(), dtype=np.uint8).reshape(self.height, stride)
+            dst[:, : self.width * 4] = src[::-1]   # GL rows run bottom-up
+        finally:
+            ready.unmap()
+            ready.release()
+
+
 class ShaderFlame(ImageFlame):
     """Flame body drawn by the GLSL shader above into an offscreen framebuffer."""
 
@@ -356,12 +425,24 @@ class ShaderFlame(ImageFlame):
             prog.enableAttributeArray(0)
             prog.setAttributeBuffer(0, _GL_FLOAT, 0, 2)
             self._vao.release()
+            self._readback = self._make_readback()
         finally:
             self._ctx.doneCurrent()
         self._seed_offset = rng.uniform(0.0, 500.0)
         self._flare = 0.0
         self._colors: FlameColors | None = None
         self._last_rgb: tuple | None = None
+
+    def _make_readback(self) -> _AsyncReadback | None:
+        """The fast, non-blocking read on Windows; ``None`` (= plain ``toImage()``) elsewhere or
+        if the driver refuses."""
+        if sys.platform != "win32":
+            return None
+        try:
+            return _AsyncReadback(self.img_w, self.img_h)
+        except Exception as exc:  # noqa: BLE001 - any driver problem: use the simple read
+            log.warning("Async flame read-back unavailable (%s); using the slower one", exc)
+            return None
 
     def flare(self, strength: float = 1.0) -> None:
         """Push the cone taller for a moment; the noise turns it into a burst of tongues."""
@@ -421,7 +502,7 @@ class ShaderFlame(ImageFlame):
             self._vao.bind()
             gl.glDrawArrays(_GL_TRIANGLE_STRIP, 0, 4)
             self._vao.release()
-            self.image = self._fbo.toImage(True)
+            self._read_back()
             self._fbo.release()
         finally:
             self._ctx.doneCurrent()
@@ -429,3 +510,14 @@ class ShaderFlame(ImageFlame):
         stride = self.image.bytesPerLine()
         alpha = bits.reshape(self.img_h, stride)[:, 3:self.img_w * 4:4]
         self._update_top_points(alpha)
+
+    def _read_back(self) -> None:
+        """Copy the framebuffer (bound, context current) into ``self.image``."""
+        if self._readback is not None:
+            try:
+                self._readback.read_into(self.image)
+                return
+            except Exception as exc:  # noqa: BLE001 - fall back for good on any driver problem
+                log.warning("Async flame read-back failed (%s); using the slower one", exc)
+                self._readback = None
+        self.image = self._fbo.toImage(True)
