@@ -79,14 +79,16 @@
 - Hoạt ảnh nâng cao chưa vẽ (E3: tay, củi, chảo trứng…) và tư thế ngủ của Idle (sẽ vẽ khi làm).
 - C3 tự khởi động, F đóng gói `.exe`, chat bằng giọng nói, phát triển lại hẹn giờ.
 
+### Chốt thêm (2026-11-12, lượt 5)
+- **Chuột trái khi đang cảnh báo:** chỉ tắt cảnh báo như hiện tại, **không** chơi phản ứng ngẫu nhiên.
+- **Câu nói tự động sau 15 phút rảnh (fact/joke):** **giữ**, nhưng **không nói khi pet đang ngủ** (Idle hoặc ngủ gật).
+- **Câu trả lời ngắn hiện trên bong bóng thoại (B4):** **bỏ**, vì chat đã là bong bóng gắn với pet.
+- **Trong lúc chat:** pet **đứng yên** khi bong bóng chat đang mở; đóng chat thì đi lại tiếp.
+- **Idle gặp sự kiện:** chọn `Chat`, kéo pet, hoặc có cảnh báo khi pet đang ngủ thì pet **tỉnh dậy**; xong việc thì **quay lại ngủ**.
+- **Ngôn ngữ trả lời trong chat:** AI **đáp theo ngôn ngữ user gõ** (gõ tiếng Việt thì đáp tiếng Việt). Các câu pet tự nói (click, fact/joke, cảnh báo) vẫn **tiếng Anh**.
+- **Ứng dụng toàn màn hình:** **không** tự ẩn pet. Muốn tắt thì bấm `Hide Pet` trong menu khay hệ thống.
+
 ## Còn bàn
 
-- **Ứng dụng toàn màn hình:** có tự ẩn pet khi đang xem phim/chơi game toàn màn hình không.
-- **Chuột trái khi đang cảnh báo:** vẫn chỉ tắt cảnh báo như hiện tại (không chơi phản ứng ngẫu nhiên) không.
-- **Câu nói tự động sau 15 phút rảnh:** còn giữ không, khi "nói 1 câu" đã nằm trong bộ phản ứng của chuột trái.
-- **Câu trả lời ngắn hiện trên bong bóng thoại (B4):** bỏ đi không, vì chat đã là bong bóng gắn với pet.
-- **Trong lúc chat:** pet có đứng yên trong khi bong bóng chat đang mở không.
-- **Idle gặp sự kiện:** chọn `Chat`, kéo pet, hoặc có cảnh báo khi pet đang ngủ thì pet tỉnh dậy hay ngủ tiếp; xong việc có quay lại ngủ không.
-- **E1 — danh sách cảm xúc:** gồm những cảm xúc nào (ngoài `other`).
-- **E2 — mốc thời gian:** bao lâu không đụng máy thì ngủ gật; "ban đêm" là từ mấy giờ tới mấy giờ.
-- **Ngôn ngữ trả lời trong chat:** AI trả lời theo ngôn ngữ user gõ (tiếng Việt thì đáp tiếng Việt) hay luôn tiếng Anh.
+- **E1 — danh sách cảm xúc:** gồm những cảm xúc nào (ngoài `other`). User sẽ gửi ảnh tham khảo để chọn thêm mặt cần vẽ.
+- **E2 — mốc thời gian:** bao lâu không đụng máy thì ngủ gật; "ban đêm" là từ mấy giờ tới mấy giờ. (Đề xuất: 10 phút; 22h–6h. User đang hỏi lại hai tính năng này dùng để làm gì.)
