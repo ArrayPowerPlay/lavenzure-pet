@@ -10,10 +10,10 @@ import random
 import time
 from pathlib import Path
 
-import config
 import psutil
 from PySide6.QtCore import QObject, Qt, QTimer, Signal
 
+import config
 from agent.tools import set_timer_reminder as reminder_tool
 
 DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"

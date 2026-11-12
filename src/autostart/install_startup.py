@@ -1,4 +1,7 @@
-"""Create a Windows Startup-folder shortcut so Calcifer launches automatically at logon (dev mode)."""
+"""Create a Windows Startup-folder shortcut so Calcifer launches automatically at logon.
+
+Dev-mode autostart: the shortcut runs ``pythonw.exe src/main.py`` from the project's venv.
+"""
 from __future__ import annotations
 
 import os
@@ -12,8 +15,10 @@ MAIN_SCRIPT = PROJECT_ROOT / "src" / "main.py"
 
 
 def install() -> Path:
+    """Create (or overwrite) ``Calcifer.lnk`` in the user's Startup folder; returns its path."""
     startup_dir = (
-        Path(os.environ["APPDATA"]) / "Microsoft" / "Windows" / "Start Menu" / "Programs" / "Startup"
+        Path(os.environ["APPDATA"])
+        / "Microsoft" / "Windows" / "Start Menu" / "Programs" / "Startup"
     )
     shortcut_path = startup_dir / "Calcifer.lnk"
     pythonw = Path(sys.executable).with_name("pythonw.exe")

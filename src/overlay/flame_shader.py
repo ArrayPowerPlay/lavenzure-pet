@@ -26,11 +26,24 @@ import struct
 
 import numpy as np
 from PySide6.QtGui import QOffscreenSurface, QOpenGLContext, QSurfaceFormat
-from PySide6.QtOpenGL import (QOpenGLBuffer, QOpenGLFramebufferObject, QOpenGLShader,
-                              QOpenGLShaderProgram, QOpenGLVertexArrayObject)
+from PySide6.QtOpenGL import (
+    QOpenGLBuffer,
+    QOpenGLFramebufferObject,
+    QOpenGLShader,
+    QOpenGLShaderProgram,
+    QOpenGLVertexArrayObject,
+)
 
-from overlay.flame_common import (BODY_CY, BODY_RX, BODY_RY, INNER_INSET, MID_INSET, FlameColors,
-                                  FlameDrive, ImageFlame)
+from overlay.flame_common import (
+    BODY_CY,
+    BODY_RX,
+    BODY_RY,
+    INNER_INSET,
+    MID_INSET,
+    FlameColors,
+    FlameDrive,
+    ImageFlame,
+)
 
 _GL_FLOAT = 0x1406
 _GL_TRIANGLE_STRIP = 0x0005
@@ -140,7 +153,8 @@ void main() {
     ridge = pow(max(ridge, 0.0), 1.0 + 0.8 * k);   // tongues get thinner higher up -> pointed tips
     float edge = smoothstep(0.75, 0.2, -d);        // carve near the silhouette, not deep inside
     float crown = smoothstep(cy + 0.15, cy + 0.9, h);
-    float heat = -d + amp * n * 1.5 + crown * edge * (ridge - 0.62) * (0.85 + 0.2 * uWild) - 0.05 * lift;
+    float heat = -d + amp * n * 1.5
+               + crown * edge * (ridge - 0.62) * (0.85 + 0.2 * uWild) - 0.05 * lift;
 
     // Bands: on the body they match the shared insets; higher up the inner bands need more heat,
     // so tongues get red tips, an orange middle and a yellow base.

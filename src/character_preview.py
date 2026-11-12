@@ -16,8 +16,14 @@ import sys
 
 from PySide6.QtCore import QElapsedTimer, QPointF, Qt, QTimer
 from PySide6.QtGui import QColor, QCursor, QPainter
-from PySide6.QtWidgets import (QApplication, QGridLayout, QHBoxLayout, QPushButton, QVBoxLayout,
-                               QWidget)
+from PySide6.QtWidgets import (
+    QApplication,
+    QGridLayout,
+    QHBoxLayout,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
 
 from overlay.character import FlameCharacter, Mood
 

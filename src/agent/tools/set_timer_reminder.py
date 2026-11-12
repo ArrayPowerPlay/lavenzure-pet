@@ -6,13 +6,13 @@ so no shared state is touched across threads.
 """
 from __future__ import annotations
 
-from typing import Callable, Optional
+from collections.abc import Callable
 
 from langchain_core.tools import tool
 
 MAX_MINUTES = 24 * 60  # reminders live in RAM only, so keep them within a day
 
-_scheduler: Optional[Callable[[float, str], None]] = None
+_scheduler: Callable[[float, str], None] | None = None
 
 
 def register_reminder_scheduler(fn: Callable[[float, str], None]) -> None:

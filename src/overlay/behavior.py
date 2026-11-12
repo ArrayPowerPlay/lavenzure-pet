@@ -10,10 +10,10 @@ from __future__ import annotations
 import random
 from enum import Enum, auto
 
-import config
 from PySide6.QtCore import QObject, QPoint, QTimer
 from PySide6.QtGui import QGuiApplication
 
+import config
 from overlay.animation import jump_animation, move_to_animation, travel_duration_ms
 from overlay.character import Mood
 from overlay.overlay_window import OverlaySprite
@@ -46,6 +46,7 @@ class BehaviorController(QObject):
     """Owns the current PetState and the window-movement animation currently playing."""
 
     def __init__(self, sprite: OverlaySprite) -> None:
+        """Attach to ``sprite``, create the state timers and start the random idle loop."""
         super().__init__()
         self.sprite = sprite
         self.character = sprite.character
@@ -138,7 +139,9 @@ class BehaviorController(QObject):
         self._active_anim.start()
 
     def _enter_walk(self) -> None:
-        """Hop along the bottom edge to a spot a few hundred pixels away (drifts down diagonally if airborne)."""
+        """Hop along the bottom edge to a spot a few hundred pixels away.
+
+        Drifts down diagonally if the pet is airborne."""
         self.state = PetState.WALK
         direction = random.choice((-1, 1))
         x = self._clamp_x(self.sprite.x() + direction * random.randint(150, 500))

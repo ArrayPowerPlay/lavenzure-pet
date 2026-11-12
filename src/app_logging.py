@@ -19,7 +19,10 @@ LOG_FORMAT = "%(asctime)s %(levelname)-7s %(name)s: %(message)s"
 def log_dir() -> Path:
     """Folder that holds the log files (created if missing)."""
     base = os.environ.get("LOCALAPPDATA")
-    folder = Path(base) / "Calcifer" / "logs" if base else Path(__file__).resolve().parent.parent / "logs"
+    if base:
+        folder = Path(base) / "Calcifer" / "logs"
+    else:
+        folder = Path(__file__).resolve().parent.parent / "logs"
     folder.mkdir(parents=True, exist_ok=True)
     return folder
 
@@ -35,7 +38,9 @@ def setup_logging(level: int = logging.INFO) -> Path:
     root.setLevel(level)
     formatter = logging.Formatter(LOG_FORMAT)
 
-    file_handler = RotatingFileHandler(log_file, maxBytes=1_000_000, backupCount=3, encoding="utf-8")
+    file_handler = RotatingFileHandler(
+        log_file, maxBytes=1_000_000, backupCount=3, encoding="utf-8"
+    )
     file_handler.setFormatter(formatter)
     root.addHandler(file_handler)
 

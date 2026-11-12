@@ -176,7 +176,10 @@ class FireSim:
 
 
 def bake(seconds: float, seed: int) -> np.ndarray:
-    """Simulate ``seconds`` of recorded fire (after a warm-up); returns uint8 frames (row 0 = top)."""
+    """Simulate ``seconds`` of recorded fire (after a warm-up).
+
+    Returns uint8 frames (row 0 = top).
+    """
     sim = FireSim(seed)
     for _ in range(int(2.5 / SIM_DT)):
         sim.step(SIM_DT)

@@ -33,8 +33,16 @@ from enum import Enum, auto
 from PySide6.QtCore import QPointF, Qt
 from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen, QPolygonF
 
-from overlay.flame_common import (FACE_CY, FACE_RX, FACE_RY, approach, clamp, lerp, noise1,
-                                  smoothstep)
+from overlay.flame_common import (
+    FACE_CY,
+    FACE_RX,
+    FACE_RY,
+    approach,
+    clamp,
+    lerp,
+    noise1,
+    smoothstep,
+)
 
 INK = QColor(108, 14, 22)            # dark maroon used for every face line
 EYE_WHITE = QColor(255, 253, 244)
@@ -366,7 +374,8 @@ class Face:
         cx, cy, squeeze = self._place(side * EYE_X, EYE_Y)
         rx = EYE_RX * R * ex.eye_scale * squeeze
         ry = EYE_RY * R * ex.eye_scale
-        ring = [(rx * math.cos(a), ry * math.sin(a)) for a in (i * math.tau / 12 for i in range(12))]
+        angles = (i * math.tau / 12 for i in range(12))
+        ring = [(rx * math.cos(a), ry * math.sin(a)) for a in angles]
         k = self._fit(cx, cy, ring)
         rx, ry = rx * k, ry * k
 
@@ -423,8 +432,9 @@ class Face:
         lid_cut = lid_open < 0.97 or abs(slant) > 0.03
         if lid_cut:
             cut = QPainterPath()
+            top = cy - 3 * ry
             cut.addPolygon(QPolygonF([QPointF(inner_x, inner_y), QPointF(outer_x, outer_y),
-                                      QPointF(outer_x, cy - 3 * ry), QPointF(inner_x, cy - 3 * ry)]))
+                                      QPointF(outer_x, top), QPointF(inner_x, top)]))
             cut.closeSubpath()
             eye = eye.subtracted(cut)
         # Lower lid: cheeks push up a soft curve from below.
@@ -486,7 +496,8 @@ class Face:
             round_bow = math.sqrt(max(bow, 0.0))
             wave = ex.mouth_wave * 0.09 * w * math.sin(3.0 * math.pi * s)
             closed_y = base + bow * smile * 0.42 * w + wave
-            open_top = base + bow * 0.14 * w * pos - neg * open_amount * depth * 0.75 * round_bow + wave
+            open_top = (base + bow * 0.14 * w * pos
+                        - neg * open_amount * depth * 0.75 * round_bow + wave)
             gap = open_amount * depth * round_bow * (0.78 + 0.22 * pos) * (1.0 - 0.55 * neg)
             if neg > 0.0:
                 gap += neg * open_amount * depth * 0.75 * round_bow * 0.6

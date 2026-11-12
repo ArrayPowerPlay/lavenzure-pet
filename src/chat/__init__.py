@@ -1,0 +1,1 @@
+"""The chat window UI."""

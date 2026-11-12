@@ -16,12 +16,11 @@ from __future__ import annotations
 
 import math
 
-import config
-from PySide6.QtCore import (QAbstractAnimation, QElapsedTimer, QPoint, QPointF, Property, Qt,
-                            Signal)
+from PySide6.QtCore import Property, QAbstractAnimation, QElapsedTimer, QPoint, QPointF, Qt, Signal
 from PySide6.QtGui import QCursor, QMouseEvent, QPainter
 from PySide6.QtWidgets import QWidget
 
+import config
 from overlay.character import FlameCharacter
 
 
@@ -58,6 +57,7 @@ class OverlaySprite(QWidget):
     DRAG_THRESHOLD_PX = 6
 
     def __init__(self) -> None:
+        """Create the frameless translucent window and its character (size/fps from config)."""
         super().__init__(
             None,
             Qt.WindowType.FramelessWindowHint

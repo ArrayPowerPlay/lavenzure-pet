@@ -27,8 +27,16 @@ from pathlib import Path
 import numpy as np
 from PySide6.QtGui import QImage
 
-from overlay.flame_common import (BODY_CY, BODY_RX, BODY_RY, INNER_INSET, MID_INSET, FlameColors,
-                                  FlameDrive, ImageFlame)
+from overlay.flame_common import (
+    BODY_CY,
+    BODY_RX,
+    BODY_RY,
+    INNER_INSET,
+    MID_INSET,
+    FlameColors,
+    FlameDrive,
+    ImageFlame,
+)
 
 CLIP_PATH = Path(__file__).resolve().parents[2] / "assets" / "flame" / "baked_flame.npz"
 

@@ -31,8 +31,18 @@ from PySide6.QtCore import QPointF, QRectF, Qt
 from PySide6.QtGui import QBrush, QColor, QImage, QPainter, QRadialGradient
 
 from overlay.face import Face, Mood
-from overlay.flame_common import (BODY_CY, BODY_RX, FireWeather, FlameColors, FlameDrive, clamp,
-                                  fbm1, lerp, make_flame_renderer, noise1)
+from overlay.flame_common import (
+    BODY_CY,
+    BODY_RX,
+    FireWeather,
+    FlameColors,
+    FlameDrive,
+    clamp,
+    fbm1,
+    lerp,
+    make_flame_renderer,
+    noise1,
+)
 
 __all__ = ["FlameCharacter", "Mood"]
 
@@ -58,7 +68,7 @@ HIGHLIGHT = QColor(255, 234, 168)    # pale dabs of shine on the right flank
 
 def _mix(c1: tuple[int, int, int], c2: tuple[int, int, int], t: float, alpha: int = 255) -> QColor:
     """Blend two RGB tuples into a QColor."""
-    return QColor(*(int(lerp(a, b, t)) for a, b in zip(c1, c2)), alpha)
+    return QColor(*(int(lerp(a, b, t)) for a, b in zip(c1, c2, strict=True)), alpha)
 
 
 class _Spring:

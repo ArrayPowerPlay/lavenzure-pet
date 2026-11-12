@@ -11,12 +11,12 @@ import random
 import sys
 from pathlib import Path
 
-import config
 from PySide6.QtCore import QObject, QThread, Signal
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
 import app_logging
+import config
 from agent.errors import friendly_error
 from agent.graph import run_agent
 from agent.memory import SessionMemory

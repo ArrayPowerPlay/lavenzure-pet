@@ -1,4 +1,6 @@
-"""Metaball fire renderer (``character.flame_renderer: metaball``): rising tongues melted into one shape.
+"""Metaball fire renderer (``character.flame_renderer: metaball``).
+
+Rising tongues melted into one shape.
 
 How it works (all lengths in units of R in body coordinates: x right, y *up is negative*, origin
 at the feet):
@@ -26,8 +28,9 @@ import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPainter, QPainterPath, QPen
 
-from overlay.flame_common import (BODY_CY, BODY_RX, BODY_RY, FlameColors, FlameDrive,
-                                  FlameRenderer, noise1 as _noise1, smoothstep as _smoothstep)
+from overlay.flame_common import BODY_CY, BODY_RX, BODY_RY, FlameColors, FlameDrive, FlameRenderer
+from overlay.flame_common import noise1 as _noise1
+from overlay.flame_common import smoothstep as _smoothstep
 
 # Base iso-levels of the three colour layers (outer red rim, orange band, yellow body).
 _LEVELS = (0.16, 0.27, 0.38)
@@ -111,7 +114,7 @@ class MetaballFlame(FlameRenderer):
         top = np.clip((-self._Y - BODY_CY - 0.4) / 1.2, 0.0, 1.0)
         self._levels = [
             (lvl - (lvl - _LEVELS[0]) * 0.55 * bottom ** 2 + gain * top).astype(np.float32)
-            for lvl, gain in zip(_LEVELS, _TOP_GAIN)
+            for lvl, gain in zip(_LEVELS, _TOP_GAIN, strict=True)
         ]
 
         self.paths: list[QPainterPath] = [QPainterPath() for _ in _LEVELS]

@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 ROOT_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT_DIR / ".env")
 
-with open(ROOT_DIR / "config.yaml", "r", encoding="utf-8") as _f:
+with open(ROOT_DIR / "config.yaml", encoding="utf-8") as _f:
     _config: dict[str, Any] = yaml.safe_load(_f)
 
 

@@ -80,7 +80,10 @@ def smoothstep(edge0: float, edge1: float, x: float) -> float:
 
 
 def _hash(i: int, seed: int) -> float:
-    """Deterministic pseudo-random value in ``[-1, 1]`` for lattice point ``i`` of noise ``seed``."""
+    """Deterministic pseudo-random value in ``[-1, 1]``.
+
+    One value per lattice point ``i`` of noise ``seed``.
+    """
     h = (i * 0x27D4EB2D ^ seed * 0x165667B1) & 0xFFFFFFFF
     h = ((h ^ (h >> 15)) * 0x85EBCA6B) & 0xFFFFFFFF
     h = ((h ^ (h >> 13)) * 0xC2B2AE35) & 0xFFFFFFFF
@@ -264,7 +267,7 @@ class ImageFlame(FlameRenderer):
         scale = 1.0 / (self.R * self.SUPERSAMPLE)
         xs = (self.X_RANGE[0] + (cols + 0.5) * scale) * self.R
         ys = (self.Y_RANGE[0] + (rows + 0.5) * scale) * self.R
-        pts = [(float(x), float(y)) for x, y in zip(xs, ys)]
+        pts = [(float(x), float(y)) for x, y in zip(xs, ys, strict=True)]
         self.tip = min(pts, key=lambda p: p[1])
         cut = -(BODY_CY + 0.4) * self.R
         self.top_points = [p for p in pts if p[1] < cut]

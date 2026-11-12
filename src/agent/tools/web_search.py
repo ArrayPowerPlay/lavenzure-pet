@@ -7,9 +7,10 @@ from __future__ import annotations
 
 import logging
 
-import config
 from langchain_core.tools import tool
 from tavily import TavilyClient
+
+import config
 
 log = logging.getLogger(__name__)
 

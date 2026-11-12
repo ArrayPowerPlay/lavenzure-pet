@@ -5,7 +5,7 @@ every frame, so it travels along when the pet walks, floats, jumps or is dragged
 """
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 
 from PySide6.QtCore import QPoint, Qt, QTimer
 from PySide6.QtWidgets import QLabel

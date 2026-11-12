@@ -9,10 +9,10 @@ from __future__ import annotations
 import logging
 import threading
 
-import config
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.prebuilt import create_react_agent
 
+import config
 from agent.errors import MissingApiKeyError
 from agent.tools.set_timer_reminder import set_timer_reminder
 from agent.tools.system_status import system_status
@@ -59,7 +59,10 @@ def _build_agent():
 
 
 def _get_agent():
-    """Return the shared agent, building it on first use (thread-safe: called from worker threads)."""
+    """Return the shared agent, building it on first use.
+
+    Thread-safe: it is called from chat worker threads.
+    """
     global _agent
     with _agent_lock:
         if _agent is None:
