@@ -176,9 +176,14 @@ void main() {
     vec2 gq = pow(aq, vec2(pw - 1.0)) / pow(max(lq, 1e-4), pw - 1.0);
     float gradLen = length(vec2(gq.x / bx, gq.y / by));
     float dBody = (lq - 1.0) / max(gradLen, 1e-4);
+    // Deep inside, a boxy superellipse's distance estimate breaks down at the very centre (one
+    // pixel in the middle of the face got a stray outline speck); there a plain ellipse
+    // estimate is used instead - only the rim needs the exact shape.
+    float dEll = (length(q) - 1.0) * min(bx, by);
+    dBody = mix(dEll, dBody, smoothstep(0.25, 0.55, lq));
     float tipH = (2.1 + 0.5 * uFlare) * uFlame;   // cone height above the body centre
     float k = clamp(above / tipH, 0.0, 1.0);
-    float halfW = rx * (1.02 + 0.08 * boxy) * pow(1.0 - k, 0.7 - 0.4 * boxy);
+    float halfW = rx * pow(1.0 - k, 0.7);
     float dCone = max((abs(x) - halfW) * 0.9 + max(above - tipH, 0.0), cy - h);
     float d = smin(dBody, dCone, 0.35);
     float armMask = 0.0;
@@ -193,8 +198,8 @@ void main() {
     // Heat: inside positive. Noise is gentle on the body and strong high up.
     float lift = smoothstep(cy - 0.1, cy + 1.0, h);
     float rim = smoothstep(0.32, 0.04, -d);         // only the outer skin of the body
-    float amp = 0.04 + (0.55 + 0.15 * uWild + 0.15 * jag) * lift * (1.0 - 0.9 * armMask)
-              + 0.3 * jag * rim * (1.0 - lift);
+    float amp = 0.04 + (0.55 + 0.15 * uWild) * lift * (1.0 - 0.9 * armMask) * (1.0 - 0.6 * jag)
+              + 0.08 * jag * rim * (1.0 - lift);
     // Ridged noise stretched upward: tall, pointed tongues separated by gaps.
     float rx2 = (x + 0.22 * n) * 1.75;             // wiggle the tongues with the other noise
     float rn = gnoise(vec3(rx2, h * 0.7 - t * 1.25, t * 0.27 + uSeed * 1.3));
@@ -202,13 +207,38 @@ void main() {
     ridge = pow(max(ridge, 0.0), 1.0 + 0.8 * k);   // tongues get thinner higher up -> pointed tips
     float edge = smoothstep(0.75, 0.2, -d);        // carve near the silhouette, not deep inside
     float crown = smoothstep(cy + 0.15, cy + 0.9, h);
-    // Ragged (bursting) fire: tongues all around the sides too, not only on top.
-    float carve = max(crown * edge, jag * smoothstep(0.15, 0.6, h) * 0.85 * rim)
-                * (1.0 - armMask);   // arms stay smooth (no flame tongues on them)
+    // Arms stay smooth (no flame tongues); the bursting fringe below replaces these carved
+    // tongues (both together cut the fringe off into floating bits).
+    float carve = crown * edge * (1.0 - armMask) * (1.0 - 0.8 * jag);
     float wobble = amp * n * 1.5 + carve * (ridge - 0.62) * (0.85 + 0.2 * uWild) - 0.05 * lift;
+    // Bursting fire (``jag``, the scared look): a fringe of small tongues all along the sides
+    // and shoulders. They are placed by the angle around the body (0 = feet, pi = top) and
+    // travel upward over time on both sides, so the fire visibly licks up instead of the
+    // silhouette being chopped by vertical stripes. Nothing grows at the bottom.
+    if (jag > 0.01) {
+        float ang = acos(clamp(-q.y / max(length(q), 1e-4), -1.0, 1.0));
+        float topW = smoothstep(1.9, 2.5, ang);
+        float sideW = smoothstep(0.75, 1.6, ang) * (1.0 - topW);
+        float flick = 0.7 + 0.3 * gnoise(vec3(ang * 1.3, t * 1.7, uSeed + 9.0));
+        // Sides: small tongues sliding up along the silhouette.
+        float fr = gnoise(vec3(ang * 5.0 - t * 2.6, sign(x) * 5.3 + uSeed, 0.0));
+        float tongue = pow(max(1.0 - abs(fr) * 1.6, 0.0), 2.4);   // ridges = pointed tongues
+        // Top: a row of taller tongues pointing straight up, each rising and falling on its own.
+        // They depend on x only (not height), so a tongue is one solid spike: no loops or holes.
+        float ft = gnoise(vec3(x * 2.4 + 0.25 * sin(t * 0.8), t * 1.1, uSeed + 3.7));
+        float tongueTop = pow(max(1.0 - abs(ft) * 1.5, 0.0), 2.0);
+        // The top corners send up the tallest tongues (fig. 3 scream, fig. 7 fire licking up
+        // beside the pan).
+        float shoulder = exp(-pow((ang - 2.15) / 0.32, 2.0));
+        tongueTop *= 1.0 + 1.1 * shoulder;
+        topW = max(topW, shoulder);
+        wobble += jag * rim * (1.0 - armMask)
+                * (sideW * (0.2 * tongue * flick - 0.03) + topW * (0.5 * tongueTop * flick - 0.1));
+    }
     // No holes in the body: deep inside, the noise may thin the fire but never punch through
     // (sticker art has one clean silhouette). Up in the crown, gaps between tongues are allowed.
-    float gaps = max(smoothstep(cy + 0.9, cy + 1.8, h), jag) * (1.0 - armMask);
+    // (The bursting look keeps one solid mass: no loose islands.)
+    float gaps = smoothstep(cy + 0.9, cy + 1.8, h) * (1.0 - armMask) * (1.0 - jag);
     // A blend (not a clamp that fades out), so the heat never flattens onto zero, which would
     // draw stray outline threads.
     float heat = -d + wobble;
