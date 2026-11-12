@@ -3,12 +3,17 @@
 The Gemini client and the agent graph are built lazily on the first chat message (not at import
 time), so the pet still starts when ``GEMINI_API_KEY`` is missing; the chat then explains that a
 key is needed instead of the whole app crashing.
+
+``run_agent`` can stream: given an ``on_text`` callback it reports the reply text as it grows
+(token chunks from the model), so the chat can show the answer while it is still being written.
 """
 from __future__ import annotations
 
 import logging
 import threading
+from collections.abc import Callable
 
+from langchain_core.messages import AIMessageChunk
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.prebuilt import create_react_agent
 
@@ -45,7 +50,7 @@ def _build_agent():
     """
     if not config.GEMINI_API_KEY:
         raise MissingApiKeyError("GEMINI_API_KEY is not set in .env")
-    model = config.get("llm.model", "gemini-flash-latest")
+    model = config.get("llm.model", "gemini-flash-lite-latest")
     llm = ChatGoogleGenerativeAI(
         model=model,
         google_api_key=config.GEMINI_API_KEY,
@@ -76,8 +81,25 @@ def _get_agent():
         return _agent
 
 
-def run_agent(history: list[dict], user_message: str) -> str:
+def _text_of(message) -> str:
+    """Plain text of a (chunk of a) model message.
+
+    Newer Gemini models return a list of content blocks (text + thought signatures); ``.text``
+    joins just the text parts.
+    """
+    text = getattr(message, "text", None)
+    if not isinstance(text, str):
+        text = str(getattr(message, "content", message))
+    return text
+
+
+def run_agent(history: list[dict], user_message: str,
+              on_text: Callable[[str], None] | None = None) -> str:
     """Invoke the agent with prior turn history plus the new user message; returns the reply text.
+
+    With ``on_text``, the reply is streamed: ``on_text(text_so_far)`` is called (from this same
+    thread) every time a new piece of the model's text arrives. If the model first writes a bit
+    of text and then calls a tool, the next model message starts over from an empty text.
 
     The text still starts with the emotion tag (see ``agent.emotion``); the caller splits it off.
 
@@ -86,11 +108,32 @@ def run_agent(history: list[dict], user_message: str) -> str:
     """
     messages = [{"role": m["role"], "content": m["content"]} for m in history]
     messages.append({"role": "user", "content": user_message})
-    result = _get_agent().invoke({"messages": messages})
-    last = result["messages"][-1]
-    # Newer Gemini models return a list of content blocks (text + thought signatures);
-    # ``.text`` joins just the text parts.
-    text = getattr(last, "text", None)
-    if not isinstance(text, str):
-        text = str(getattr(last, "content", last))
-    return text.strip() or "*crackle* ...I lost my words. Try asking again?"
+    agent = _get_agent()
+    if on_text is None:
+        last = agent.invoke({"messages": messages})["messages"][-1]
+    else:
+        last = _stream(agent, messages, on_text)
+    return _text_of(last).strip() or "*crackle* ...I lost my words. Try asking again?"
+
+
+def _stream(agent, messages: list[dict], on_text: Callable[[str], None]):
+    """Run the agent with token streaming; returns the final message of the conversation."""
+    final_state = None
+    current_id, current_text = None, ""
+    for mode, data in agent.stream({"messages": messages}, stream_mode=["messages", "values"]):
+        if mode == "values":
+            final_state = data      # the full state after each step; the last one wins
+            continue
+        chunk, _metadata = data
+        if not isinstance(chunk, AIMessageChunk):
+            continue                # tool results are not shown
+        piece = _text_of(chunk)
+        if not piece:
+            continue
+        if chunk.id != current_id:  # a new model message (e.g. after a tool call)
+            current_id, current_text = chunk.id, ""
+        current_text += piece
+        on_text(current_text)
+    if final_state is None:
+        raise RuntimeError("the agent stream ended without a result")
+    return final_state["messages"][-1]

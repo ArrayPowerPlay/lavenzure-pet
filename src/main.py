@@ -18,13 +18,13 @@ import random
 import sys
 from pathlib import Path
 
-from PySide6.QtCore import QObject, QThread, QTimer, Signal
+from PySide6.QtCore import QObject, Qt, QThread, QTimer, Signal, Slot
 from PySide6.QtGui import QCursor
 from PySide6.QtWidgets import QApplication, QSystemTrayIcon
 
 import app_logging
 import config
-from agent.emotion import split_emotion
+from agent.emotion import split_emotion, split_emotion_partial
 from agent.errors import friendly_error
 from agent.graph import run_agent
 from agent.memory import SessionMemory
@@ -54,6 +54,7 @@ EMOTION_SECONDS = 5.0
 class AgentWorker(QObject):
     """Runs the (potentially slow) LangGraph agent call off the Qt UI thread."""
 
+    partial = Signal(str)   # the reply so far while it streams in (with its emotion tag)
     finished = Signal(str)  # the reply text (still starting with its emotion tag)
     failed = Signal(str)    # a friendly, in-character explanation of what went wrong
 
@@ -66,18 +67,25 @@ class AgentWorker(QObject):
     def run(self) -> None:
         """Call the agent (in the worker thread) and emit ``finished`` or ``failed``."""
         try:
-            reply = run_agent(self._history, self._message)
+            reply = run_agent(self._history, self._message, on_text=self.partial.emit)
             self.finished.emit(reply)
         except Exception as exc:  # noqa: BLE001 - surface any failure to the chat UI
             log.exception("Agent call failed")
             self.failed.emit(friendly_error(exc))
 
 
-class LavenzureApp:
-    """Builds every component, connects them with signals and runs the Qt event loop."""
+class LavenzureApp(QObject):
+    """Builds every component, connects them with signals and runs the Qt event loop.
+
+    It is a ``QObject`` living in the UI thread on purpose, and the handlers of the agent's
+    worker signals are real ``@Slot`` methods: only then does Qt queue those signals and run the
+    handlers in the UI thread. (Connected to a plain Python callable, PySide calls it directly in
+    the worker thread, where touching widgets is not allowed.)
+    """
 
     def __init__(self, app: QApplication, instance: SingleInstance) -> None:
         """Create the pet, bubble, chat, monitor and tray; show the pet."""
+        super().__init__()
         self.app = app
         self.instance = instance
 
@@ -101,6 +109,7 @@ class LavenzureApp:
         self._click_lines = json.loads(click_reactions_path.read_text(encoding="utf-8"))["lines"]
 
         self._alert_message = ""
+        self._reply_emotion_shown = False   # the streaming reply already played its face
         self._agent_thread: QThread | None = None
         self._agent_worker: AgentWorker | None = None
 
@@ -235,33 +244,61 @@ class LavenzureApp:
         self.chat.set_thinking(True)
         self.sprite.character.set_thinking(True)
 
+        self._reply_emotion_shown = False
         self._agent_thread = QThread()
         self._agent_worker = AgentWorker(history, message)
         self._agent_worker.moveToThread(self._agent_thread)
         self._agent_thread.started.connect(self._agent_worker.run)
-        self._agent_worker.finished.connect(self._on_agent_reply)
-        self._agent_worker.failed.connect(self._on_agent_error)
+        # Explicitly queued: the handlers touch widgets, so they must run in the UI thread.
+        queued = Qt.ConnectionType.QueuedConnection
+        self._agent_worker.partial.connect(self._on_agent_partial, queued)
+        self._agent_worker.finished.connect(self._on_agent_reply, queued)
+        self._agent_worker.failed.connect(self._on_agent_error, queued)
         self._agent_worker.finished.connect(self._agent_thread.quit)
         self._agent_worker.failed.connect(self._agent_thread.quit)
         self._agent_thread.start()
 
-    def _on_agent_reply(self, reply: str) -> None:
-        """Show the reply (without its emotion tag) in the chat bubble, show the emotion on the
-        pet's face for a few seconds and move its mouth."""
-        emotion, text = split_emotion(reply)
-        self.memory.add("assistant", reply)   # keep the tag: the model sees its own format
-        self.chat.append_message("Lavenzure", text)
-        self.chat.set_thinking(False)
+    def _show_reply_emotion(self, emotion: str | None) -> None:
+        """Play the reply's emotion on the pet's face for a few seconds (once per reply)."""
+        if self._reply_emotion_shown:
+            return
+        self._reply_emotion_shown = True
         character = self.sprite.character
         character.set_thinking(False)
         mood = EMOTION_MOODS.get(emotion or "")
         if mood is not None:
             character.play(mood, EMOTION_SECONDS)
-        # Move the mouth for roughly as long as it would take to say the reply.
-        character.talk(min(5.0, max(1.2, len(text) * 0.045)))
 
+    @Slot(str)
+    def _on_agent_partial(self, partial: str) -> None:
+        """A piece of the reply arrived: show the text so far, the face as soon as the emotion tag
+        is known, and keep the mouth moving while words come in."""
+        emotion, text, settled = split_emotion_partial(partial)
+        if not settled:
+            return
+        self._show_reply_emotion(emotion)
+        if text:
+            self.chat.stream_message(text)
+            self.sprite.character.talk(0.6)
+
+    @Slot(str)
+    def _on_agent_reply(self, reply: str) -> None:
+        """Show the final reply (without its emotion tag) in the chat bubble, show the emotion on
+        the pet's face if streaming hasn't already, and move its mouth."""
+        emotion, text = split_emotion(reply)
+        self.memory.add("assistant", reply)   # keep the tag: the model sees its own format
+        streamed = self._reply_emotion_shown
+        self.chat.finish_stream(text)
+        self.chat.set_thinking(False)
+        self._show_reply_emotion(emotion)
+        # Move the mouth a little longer; without streaming, for about as long as saying it takes.
+        self.sprite.character.talk(1.0 if streamed else min(5.0, max(1.2, len(text) * 0.045)))
+
+    @Slot(str)
     def _on_agent_error(self, message: str) -> None:
-        """Show the friendly error message (details are already in the log file)."""
+        """Show the friendly error message (details are already in the log file); text that
+        already streamed in stays above it."""
+        self.chat.finish_stream(None)
         self.chat.append_message("Lavenzure", message)
         self.chat.set_thinking(False)
         self.sprite.character.set_thinking(False)

@@ -1,6 +1,6 @@
 """Tests for agent.graph.run_agent with the LLM faked out (no network)."""
 import pytest
-from langchain_core.messages import AIMessage
+from langchain_core.messages import AIMessage, AIMessageChunk, ToolMessage
 
 import config
 from agent import graph
@@ -51,3 +51,29 @@ def test_prompt_asks_for_user_language_and_emotion_tag():
     """The model answers in the user's language and starts with an emotion tag."""
     assert "same language" in graph.SYSTEM_PROMPT
     assert "[happy]" in graph.SYSTEM_PROMPT and "[other]" in graph.SYSTEM_PROMPT
+
+
+class FakeStreamingAgent:
+    """Mimics ``stream(..., stream_mode=["messages", "values"])``: a first model message that
+    calls a tool, the tool result, then the answer arriving in pieces."""
+
+    def stream(self, state, stream_mode):
+        """Yield (mode, data) pairs like LangGraph does."""
+        assert stream_mode == ["messages", "values"]
+        yield "messages", (AIMessageChunk(content="Let me look", id="m1"), {})
+        yield "messages", (ToolMessage(content="18 C", tool_call_id="t1"), {})
+        yield "messages", (AIMessageChunk(content="[happy", id="m2"), {})
+        yield "messages", (AIMessageChunk(content="] It is ", id="m2"), {})
+        yield "messages", (AIMessageChunk(content="", id="m2"), {})
+        yield "messages", (AIMessageChunk(content="18 C!", id="m2"), {})
+        yield "values", {"messages": [*state["messages"], AIMessage(content="[happy] It is 18 C!")]}
+
+
+def test_streaming_reports_growing_text(monkeypatch):
+    """With on_text the reply arrives piece by piece; a new model message starts over and tool
+    results are never shown. The return value is the final message."""
+    monkeypatch.setattr(graph, "_agent", FakeStreamingAgent())
+    seen = []
+    reply = graph.run_agent([], "weather?", on_text=seen.append)
+    assert seen == ["Let me look", "[happy", "[happy] It is ", "[happy] It is 18 C!"]
+    assert reply == "[happy] It is 18 C!"

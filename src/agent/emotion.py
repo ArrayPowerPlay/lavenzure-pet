@@ -4,6 +4,9 @@ The system prompt asks for a leading ``[happy]``, ``[scared]``, ``[angry]``, ``[
 ``[surprised]``, ``[thinking]``, ``[yuck]`` or ``[other]``. ``split_emotion`` takes the tag off so
 the chat only shows the clean text, and the pet plays the matching face for a few seconds
 (``other`` or a missing / unknown tag = keep the current face).
+
+While a reply is still streaming in, ``split_emotion_partial`` tells whether the start of the text
+can still turn into a tag (e.g. ``"[hap"``), so a half-received tag never flashes in the chat.
 """
 from __future__ import annotations
 
@@ -15,6 +18,8 @@ EMOTIONS = ("happy", "scared", "angry", "chill", "surprised", "thinking", "yuck"
 # A tag at the very start, optionally wrapped in markdown emphasis, e.g. "[happy] Hi!" or
 # "**[Happy]**\nHi!". Case and spaces inside the brackets are ignored.
 _TAG = re.compile(r"^\s*[*_]{0,2}\[\s*([A-Za-z]+)\s*\][*_]{0,2}[ \t]*\n?\s*")
+# What the start of a reply looks like while a tag is still arriving: "", "*", "[", "**[hap", ...
+_TAG_PREFIX = re.compile(r"^\s*[*_]{0,2}(\[\s*[A-Za-z]*\s*)?$")
 
 EMOTION_INSTRUCTIONS = (
     "Begin every reply with exactly one emotion tag showing how you feel about it: "
@@ -35,3 +40,16 @@ def split_emotion(reply: str) -> tuple[str | None, str]:
         return None, reply.strip()
     text = reply[match.end():].strip()
     return (None if name == "other" else name), text
+
+
+def split_emotion_partial(partial: str) -> tuple[str | None, str, bool]:
+    """Like ``split_emotion`` for a reply that is still arriving.
+
+    Returns ``(emotion, text, settled)``. ``settled`` is False while the text so far could still
+    be the beginning of a tag; then nothing should be shown yet. Once settled, ``emotion`` and
+    ``text`` are what ``split_emotion`` would give for the text so far.
+    """
+    if _TAG_PREFIX.match(partial):
+        return None, "", False
+    emotion, text = split_emotion(partial)
+    return emotion, text, True

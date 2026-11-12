@@ -13,6 +13,8 @@ What it looks like / how it behaves:
   answering, and is postponed while the mouse pointer rests on the bubble (someone is reading).
   Esc or the x button closes it at once. Closing never clears the history; ``clear_history()``
   does (the app calls it when the chat memory expires).
+- Replies can stream in: ``stream_message(text)`` shows Lavenzure's answer so far and redraws it as
+  it grows; ``finish_stream(text)`` puts the final text in place.
 """
 from __future__ import annotations
 
@@ -137,6 +139,7 @@ class ChatBubble(QWidget):
         self._tail_y = BUBBLE_H * 0.7
         self._thinking_now = False
         self._closing = False
+        self._stream_start: int | None = None   # where the reply that is still arriving begins
 
         title = QLabel("Lavenzure", self)
         title.setObjectName("title")
@@ -242,9 +245,42 @@ class ChatBubble(QWidget):
     def append_message(self, sender: str, text: str) -> None:
         """Add one message and scroll to it. ``sender`` is "You" or "Lavenzure": the user's lines
         are right-aligned plain text, Lavenzure's are left-aligned Markdown."""
+        self._insert_message(sender, text)
+
+    def stream_message(self, text: str) -> None:
+        """Show Lavenzure's reply as far as it has arrived, replacing the previous partial text.
+        The "thinking" line goes away as soon as the first words appear."""
+        if self._stream_start is None:
+            self._dots_timer.stop()
+            self._thinking.setText("")
+        else:
+            self._remove_from(self._stream_start)
+        self._stream_start = self._insert_message("Lavenzure", text)
+
+    def finish_stream(self, text: str | None) -> None:
+        """End the streamed reply: show ``text`` as its final version (``None`` keeps whatever
+        arrived). Without a stream in progress, ``text`` is simply appended."""
+        if text is not None:
+            if self._stream_start is None:
+                self._insert_message("Lavenzure", text)
+            else:
+                self.stream_message(text)
+        self._stream_start = None
+
+    def _remove_from(self, position: int) -> None:
+        """Delete everything in the history from ``position`` to the end."""
+        cursor = self._history.textCursor()
+        cursor.setPosition(position)
+        cursor.movePosition(QTextCursor.MoveOperation.End, QTextCursor.MoveMode.KeepAnchor)
+        cursor.removeSelectedText()
+
+    def _insert_message(self, sender: str, text: str) -> int:
+        """Append one message (see ``append_message``); returns the position where it starts, so
+        ``_remove_from`` can take it off again."""
         mine = sender != "Lavenzure"
         cursor = self._history.textCursor()
         cursor.movePosition(QTextCursor.MoveOperation.End)
+        message_start = cursor.position()
         block = QTextBlockFormat()
         block.setAlignment(Qt.AlignmentFlag.AlignRight if mine else Qt.AlignmentFlag.AlignLeft)
         block.setTopMargin(0 if self._history.document().isEmpty() else 8)
@@ -273,10 +309,12 @@ class ChatBubble(QWidget):
         self._history.ensureCursorVisible()
         bar = self._history.verticalScrollBar()
         bar.setValue(bar.maximum())
+        return message_start
 
     def clear_history(self) -> None:
         """Forget every message on screen (used when the chat memory expires)."""
         self._history.clear()
+        self._stream_start = None
 
     def set_thinking(self, thinking: bool) -> None:
         """While Lavenzure answers: disable the input, animate the status line and pause the

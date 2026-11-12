@@ -31,3 +31,20 @@ def test_yuck_is_offered_to_the_model():
     from agent.emotion import EMOTION_INSTRUCTIONS, EMOTIONS
 
     assert "yuck" in EMOTIONS and "[yuck]" in EMOTION_INSTRUCTIONS
+
+
+@pytest.mark.parametrize(("partial", "expected"), [
+    ("", (None, "", False)),
+    ("[", (None, "", False)),
+    ("**[hap", (None, "", False)),
+    ("[happy", (None, "", False)),
+    ("[happy] Hel", ("happy", "Hel", True)),
+    ("[other] Hi", (None, "Hi", True)),
+    ("Hello", (None, "Hello", True)),
+    ("[docs](", (None, "[docs](", True)),
+])
+def test_split_emotion_partial(partial, expected):
+    """A half-received tag is held back; anything else is shown as soon as it arrives."""
+    from agent.emotion import split_emotion_partial
+
+    assert split_emotion_partial(partial) == expected

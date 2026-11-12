@@ -62,3 +62,28 @@ def test_close_keeps_history_and_clear_wipes_it(qapp):
     assert closed and "hello" in bubble._history.toPlainText()
     bubble.clear_history()
     assert bubble._history.toPlainText() == ""
+
+
+def test_streamed_reply_is_replaced_in_place(qapp):
+    """Each partial reply replaces the previous one; the final text stays once."""
+    bubble = make_bubble()
+    bubble.append_message("You", "hello")
+    bubble.set_thinking(True)
+    bubble.stream_message("Hi")
+    bubble.stream_message("Hi the")
+    assert bubble._thinking.text() == ""
+    bubble.finish_stream("Hi there, **friend**!")
+    text = bubble._history.toPlainText()
+    assert text == "hello\nHi there, friend!"   # no blank lines left by the replaced parts
+    bubble.append_message("You", "next")
+    assert bubble._history.toPlainText().endswith("next")
+
+
+def test_error_after_partial_keeps_partial(qapp):
+    """If the answer breaks off, what arrived stays and the error is added below it."""
+    bubble = make_bubble()
+    bubble.stream_message("Half an ans")
+    bubble.finish_stream(None)
+    bubble.append_message("Lavenzure", "My flame flickered.")
+    text = bubble._history.toPlainText()
+    assert "Half an ans" in text and text.endswith("My flame flickered.")
