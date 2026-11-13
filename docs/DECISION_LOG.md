@@ -178,6 +178,10 @@
 - **Bỏ chế độ "tốc độ khung hình tự đổi"** (ô Adaptive trong Settings và toàn bộ code của nó: mức đứng yên / ngủ, `calm_fps`, `sleep_fps`).
 - **User hỏi 45 fps có phổ biến không:** không. Các mức hay dùng: 24 (phim), 25 / 50 (TV châu Âu), 30 / 60 (video, game, màn hình 60 Hz), 120 / 144 (màn hình tần số cao). Màn hình 60 Hz chỉ hiện đều các mức chia hết 60 (60, 30, 20, 15); 45 phải vẽ 3 lần bỏ 1 lần nên nhịp không đều. **Claude tự quyết (user có thể đổi):** vẫn giữ nút 45 vì user muốn có; nếu muốn thay bằng mức khác thì báo.
 
+### Lượt 17 (2026-11-13) — bỏ mức 45 fps
+- **User yêu cầu bỏ mốc 45 fps** trong code và Settings; chỉ giữ **30 và 60**. Settings Frame rate giờ có 2 nút: 30 (mặc định) / 60.
+- **Claude tự quyết (user có thể đổi):** nếu file settings cũ lưu 45 thì app tự chuyển về mức gần nhất còn lại (30 hoặc 60) khi mở. `FramePacer` giữ nguyên (vẫn giúp nhịp đều khi timer lệch nhẹ), chỉ bỏ phần mô tả riêng cho 45 fps.
+
 ## Còn bàn
 
 - Đo lại 60 phút ở 30 fps + lửa nhẹ (`src/perf_check.py`, cần thoát pet đang chạy).

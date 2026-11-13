@@ -9,7 +9,7 @@ defaults.
 
 Current settings (roadmap Phase 12):
 
-- ``max_fps`` - frame rate of every animation (30 / 45 / 60; default 30, chosen by the user).
+- ``max_fps`` - frame rate of every animation (30 / 60; default 30, chosen by the user).
 """
 from __future__ import annotations
 

@@ -12,11 +12,10 @@ Click-through is handled by Windows itself: for per-pixel-alpha (layered) window
 transparent pixels let mouse events fall through to the app underneath, so only the visible flame
 catches clicks. (No ``setMask()`` — a mask would also clip the soft glow and the embers.)
 
-Frame rate (``set_max_fps``; Settings window: 30 / 45 / 60, default ``character.fps`` = 30): the
+Frame rate (``set_max_fps``; Settings window: 30 / 60, default ``character.fps`` = 30): the
 frames per second drawn for every animation. ``frame_rate_changed`` reports the real frame rate
 once a second. Frames are paced against a schedule (``FramePacer``), not just "time since the
-last frame", so a rate that does not divide the screen refresh still averages out: 45 fps on a
-60 Hz screen draws 3 refreshes out of 4.
+last frame", so the rate stays even despite timer jitter.
 
 Frame statistics (how many frames were drawn and how long each took) are written to the log every
 ``diagnostics.frame_stats_seconds`` (config.yaml; the ``LAVENZURE_FRAME_STATS_SECONDS`` environment
@@ -109,8 +108,8 @@ class FramePacer:
     Each frame has a scheduled time; a pass draws once it reaches the next scheduled time (minus
     a little slack, because the timer can fire a hair early), and the schedule then moves on by
     exactly one frame period. Keeping the schedule, instead of measuring from the last drawn
-    frame, lets rates that don't divide the screen refresh come out right on average (45 fps on a
-    60 Hz timer = 3 passes drawn out of 4) while 60 and 30 fps stay perfectly even. After a long
+    frame, keeps the rate steady despite timer jitter (60 fps = every pass, 30 fps = every second
+    pass on a 60 Hz timer). After a long
     stall the schedule restarts from "now" instead of drawing a burst of catch-up frames.
     """
 

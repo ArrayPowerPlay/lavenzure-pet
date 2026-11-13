@@ -38,20 +38,19 @@ def test_long_frames_are_simulated_in_short_steps(qapp):
 
 
 def test_window_frame_rate_defaults_to_30_and_can_change(qapp):
-    """The pet draws 30 fps by default (config.yaml); Settings can switch it to 45 or 60."""
+    """The pet draws 30 fps by default (config.yaml); Settings can switch it to 60."""
     sprite = OverlaySprite()
     assert sprite.max_fps == 30
-    sprite.set_max_fps(45)
-    assert sprite.max_fps == 45
+    sprite.set_max_fps(60)
+    assert sprite.max_fps == 60
     sprite.set_max_fps(1)
     assert sprite.max_fps == 10  # never absurdly low
     sprite.deleteLater()
 
 
-@pytest.mark.parametrize("fps, drawn", [(60, 60), (45, 45), (30, 30), (15, 15)])
+@pytest.mark.parametrize("fps, drawn", [(60, 60), (30, 30)])
 def test_pacer_hits_the_rate_on_a_60hz_timer(fps, drawn):
-    """On a 60 Hz animation timer (with a little jitter) the pacer draws the asked rate, also
-    45 fps, which does not divide 60 (3 passes drawn out of 4)."""
+    """On a 60 Hz animation timer (with a little jitter) the pacer draws the asked rate."""
     pacer = FramePacer()
     count = 0
     for i in range(600):  # 10 seconds
@@ -87,11 +86,10 @@ def test_settings_window_reports_frame_rate(qapp):
     window = SettingsWindow(max_fps=30)
     seen = []
     window.max_fps_changed.connect(seen.append)
-    assert list(window.fps_buttons) == [30, 45, 60]
+    assert list(window.fps_buttons) == [30, 60]
     assert window.fps_buttons[30].isChecked()
-    window.fps_buttons[45].setChecked(True)
     window.fps_buttons[60].setChecked(True)
-    assert seen == [45, 60]
+    assert seen == [60]
     assert not hasattr(window, "adaptive_box") and not hasattr(window, "lite_box")
     window.show_frame_rate(29.6)
     assert window.live.text() == "Drawing: 30 fps"
@@ -114,7 +112,7 @@ def test_user_settings_survive_a_broken_file(tmp_path):
     path.write_text("{not json", encoding="utf-8")
     settings = UserSettings(path)
     assert settings.get("max_fps") == 30
-    settings.set("max_fps", 45)
-    assert UserSettings(path).get("max_fps") == 45
+    settings.set("max_fps", 60)
+    assert UserSettings(path).get("max_fps") == 60
     with pytest.raises(KeyError):
         settings.set("adaptive_fps", True)

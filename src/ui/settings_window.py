@@ -2,7 +2,7 @@
 
 For now it holds one performance option (roadmap Phase 12):
 
-- **Frame rate** - 30 / 45 / 60 fps for every animation. 30 is the default the user chose
+- **Frame rate** - 30 / 60 fps for every animation. 30 is the default the user chose
   (``character.fps`` in config.yaml); a choice made here is remembered (``user_settings``).
 
 A small live readout shows how many frames per second the pet is really drawing, so the effect of
@@ -42,7 +42,7 @@ QPushButton:hover { background: #f08a1c; }
 """
 
 # Frame rates offered in the window (30 = the default the user chose).
-FPS_CHOICES = (30, 45, 60)
+FPS_CHOICES = (30, 60)
 
 
 class SettingsWindow(QWidget):
@@ -80,8 +80,7 @@ class SettingsWindow(QWidget):
         fps_row.addStretch(1)
         self.fps_group.idToggled.connect(self._on_fps_toggled)
         fps_note = self._note("Frames drawn per second, for every animation. Higher = smoother "
-                              "motion, more CPU and GPU. 45 fps on a 60 Hz screen draws 3 "
-                              "refreshes out of 4, so motion can look a bit uneven.")
+                              "motion, more CPU and GPU.")
 
         self.live = QLabel("Drawing: -")
         self.live.setObjectName("live")

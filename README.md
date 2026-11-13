@@ -72,7 +72,7 @@ The goal was a flat, hand-inked "sticker" look that *moves* like real fire and *
 - **Background monitoring**: alerts when battery < 30%, CPU > 90% or RAM > 90%; the alert stays until you click the pet.
 - **Ambient lines**: after 15 minutes without interaction the pet says a random fact or joke.
 - **Chat history lives in RAM only** and is wiped after 15 minutes without chatting — nothing is written to disk.
-- **System tray icon** (a portrait of the pet): `Hide Pet` / `Show Pet`, `Settings` (frame rate 30 / 45 / 60 fps, applied live), `Quit App`.
+- **System tray icon** (a portrait of the pet): `Hide Pet` / `Show Pet`, `Settings` (frame rate 30 / 60 fps, applied live), `Quit App`.
 - **Single instance**: starting the app again just opens the running pet's chat bubble.
 
 ## Requirements
@@ -129,7 +129,7 @@ Non-secret settings live in [`config.yaml`](./config.yaml):
 | `llm.model`, `llm.temperature` | Gemini model used for chat (default `gemini-flash-lite-latest`: fast, no thinking; `gemini-flash-latest` is smarter but 2-3x slower) |
 | `llm.timeout_seconds`, `llm.max_retries` | How long to wait / how often to retry before reporting an error |
 | `character.scale` | Character size (0.75 = 150×177 px) |
-| `character.fps` | Default frame rate, 30 (Settings also offers 45 / 60); higher = smoother, more CPU |
+| `character.fps` | Default frame rate, 30 (Settings also offers 60); higher = smoother, more CPU |
 | `character.flame_renderer` | Flame body renderer: `shader` (default, GPU) / `metaball` / `baked` |
 | `performance.lite_flame` | Lite flame: the flame is rendered at `lite_flame_supersample` (1.5) instead of 2.0 (on by default) |
 | `behavior.state_weights` | How often the pet idles / walks / floats / jumps |

@@ -79,10 +79,10 @@ Mục tiêu (đề xuất, chỉnh nếu muốn):
 
 ### Số khung hình/giây (lượt 16)
 
-Khay → `Settings` → mục **Performance** → **Frame rate**. Mặc định 30 fps (user chốt); chọn 45 / 60 có hiệu lực ngay, dòng `Drawing: … fps` cho biết pet đang vẽ bao nhiêu khung/giây.
+Khay → `Settings` → mục **Performance** → **Frame rate**. Mặc định 30 fps (user chốt); chọn 60 có hiệu lực ngay, dòng `Drawing: … fps` cho biết pet đang vẽ bao nhiêu khung/giây.
 
 - [ ] Mở app lần đầu (chưa chọn gì trong Settings) → dòng `Drawing` hiện ~30 fps.
-- [ ] Chọn 45 / 60 → dòng `Drawing` hiện ~45 / ~60; thoát rồi mở lại app → vẫn giữ mức đã chọn.
+- [ ] Chọn 60 → dòng `Drawing` hiện ~60; thoát rồi mở lại app → vẫn giữ mức đã chọn.
 - [ ] (Tùy chọn) Thoát pet rồi chạy `perf_check.py --minutes 60` để đo lại ở 30 fps.
 
 ### Kết quả đo

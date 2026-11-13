@@ -13,7 +13,7 @@ memory:
 
 character:
   scale: 0.75 # size multiplier of the code-drawn flame character (1.0 = 280x236 px window, 0.75 = 210x177)
-  fps: 30 # default frame rate (user chose 30; Settings also offers 45 / 60); higher = more CPU
+  fps: 30 # default frame rate (user chose 30; Settings also offers 60); higher = more CPU
   flame_renderer: shader   # flame body: shader (GPU, chosen) | metaball | baked (pre-simulated clips); falls back to metaball
 
 performance:

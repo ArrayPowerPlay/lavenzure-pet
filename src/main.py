@@ -37,7 +37,7 @@ from overlay.overlay_window import OverlaySprite
 from overlay.speech_bubble import SpeechBubble
 from single_instance import SingleInstance
 from ui.menus import PetMenu, themed_menu
-from ui.settings_window import SettingsWindow
+from ui.settings_window import FPS_CHOICES, SettingsWindow
 from ui.tray_icon import make_tray_icon
 from user_settings import UserSettings
 
@@ -100,7 +100,9 @@ class LavenzureApp(QObject):
         self.settings: SettingsWindow | None = None
         # Performance modes chosen in the Settings window (remembered between runs).
         self.user_settings = UserSettings()
-        self.sprite.set_max_fps(int(self.user_settings.get("max_fps")))
+        # A rate saved by an older version (e.g. 45) snaps to the nearest one still offered.
+        saved_fps = int(self.user_settings.get("max_fps"))
+        self.sprite.set_max_fps(min(FPS_CHOICES, key=lambda choice: abs(choice - saved_fps)))
         self.sprite.character.set_lite_flame(bool(config.get("performance.lite_flame", True)))
         self.memory = SessionMemory(
             ttl_seconds=config.get("memory.idle_timeout_minutes", 15) * 60
