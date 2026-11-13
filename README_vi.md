@@ -72,7 +72,7 @@ Mục tiêu: nét vẽ phẳng, viền mực như sticker vẽ tay, nhưng *chuy
 - **Theo dõi máy nền**: tự cảnh báo khi pin < 30%, CPU > 90% hoặc RAM > 90%; cảnh báo giữ nguyên đến khi bạn click vào pet.
 - **Câu nói ngẫu nhiên**: sau 15 phút không tương tác, pet tự nói một fact/câu đùa (tiếng Anh).
 - **Lịch sử chat chỉ nằm trong RAM**, tự xóa sau 15 phút không chat — không lưu gì xuống ổ đĩa.
-- **Icon ở khay hệ thống** (vẽ chính hình pet): `Hide Pet` / `Show Pet`, `Settings` (tạm để trống), `Quit App`.
+- **Icon ở khay hệ thống** (vẽ chính hình pet): `Hide Pet` / `Show Pet`, `Settings` (chế độ hiệu năng: tốc độ khung hình tự đổi và lửa nhẹ, bật/tắt ngay), `Quit App`.
 - **Chỉ chạy 1 bản**: mở app lần nữa sẽ chỉ mở bong bóng chat của con pet đang chạy.
 
 ## Yêu cầu
@@ -131,6 +131,7 @@ Các cài đặt không bí mật nằm trong [`config.yaml`](./config.yaml):
 | `character.scale` | Kích thước nhân vật (0.75 = 150×177 px) |
 | `character.fps` | Số khung hình/giây; giảm xuống 30 để tiết kiệm CPU |
 | `character.flame_renderer` | Cách vẽ thân lửa: `shader` (mặc định, GPU) / `metaball` / `baked` |
+| `performance.*` | Mặc định của các chế độ trong cửa sổ Settings: `adaptive_fps` (`calm_fps` 30 / `sleep_fps` 15 khi không di chuyển) và `lite_flame` (`lite_flame_supersample` 1.5) |
 | `behavior.state_weights` | Tỉ lệ chọn đứng yên / đi / bay / nhảy |
 | `system_status.*` | Chu kỳ kiểm tra máy và ngưỡng cảnh báo |
 | `ambient.random_fact_or_joke.idle_minutes` | Bao lâu không tương tác thì pet tự nói |
@@ -200,4 +201,4 @@ assets/flame/               # dữ liệu lửa đã tính sẵn cho renderer `b
 - Nhân vật, chuyển động, click/kéo, khay hệ thống, theo dõi máy, chat với 4 công cụ: đã chạy (chat đã chuyển sang `gemini-flash-latest` sau khi Google ngừng `gemini-2.0-flash`).
 - Mới: bong bóng chat, bộ hoạt ảnh khi click, menu chuột phải, biểu cảm mới do AI chọn cảm xúc, bay trên khúc củi, ngủ / ngủ gật, dáng vẻ ban đêm, icon khay vẽ từ nhân vật.
 - Có 85 test tự động và kiểm tra code bằng ruff.
-- Còn lại: dùng thử lâu dài trên desktop thật; nội dung Settings và tay thật (E3) (đang chờ quyết định); đóng gói `.exe` (để sau).
+- Còn lại: dùng thử lâu dài trên desktop thật; chọn chế độ hiệu năng mặc định; tay thật (E3) (đang chờ quyết định); đóng gói `.exe` (để sau).

@@ -77,9 +77,19 @@ Mục tiêu (đề xuất, chỉnh nếu muốn):
 | RAM / handle tăng sau phút đầu | gần 0 mỗi giờ | rò rỉ bộ nhớ: chạy lâu sẽ phình dần |
 | `frame stats` | ~60 fps, work avg dưới 8 ms | hoạt ảnh bị giật |
 
+### Thử các chế độ hiệu năng (lượt 14)
+
+Khay → `Settings` → mục **Performance**. Bật/tắt có hiệu lực ngay; dòng `Drawing: … fps (…)` cho biết pet đang vẽ bao nhiêu khung/giây và vì sao.
+
+- [ ] **Adaptive frame rate** bật: lúc pet đứng yên, dòng hiển thị ~30 fps (`standing still`); lúc đi / bay / nhảy / bị kéo / click / đang nói → ~60 fps (`moving or reacting`); lúc ngủ (menu `Idle`) → ~15 fps (`asleep`). Ghi lại có chỗ nào thấy giật hoặc kém mượt không.
+- [ ] **Lite flame** bật: so viền lửa với lúc tắt, ghi lại có thấy mờ / răng cưa hơn không.
+- [ ] Thử đủ 4 tổ hợp (tắt cả hai / chỉ 1 / chỉ 2 / cả hai) và chọn tổ hợp muốn dùng mặc định. Lựa chọn được nhớ sau khi thoát app.
+- [ ] (Tùy chọn) Để tổ hợp đã chọn, thoát pet rồi chạy `perf_check.py --minutes 60` để đo lại.
+
 ### Kết quả đo
 
 | Ngày | Phiên bản | Thời gian | CPU tb / max | GPU tb | RAM | RAM tăng/giờ | Frame (fps, ms) | Ghi chú |
 |---|---|---|---|---|---|---|---|---|
 | 2026-11-12 | trước tối ưu | 1.5 phút | 3.7% / 4.7% | 11.9% | 657 → 690 MB | — (quá ngắn) | 57-61 fps, 9.9 ms | OpenBLAS chiếm ~490 MB; đọc ảnh lửa từ GPU chiếm ~6 ms/khung |
 | 2026-11-13 | sau tối ưu (đọc ảnh lửa bất đồng bộ, OpenBLAS 1 luồng) | 60 phút (pet chạy ~21 phút, sau đó màn hình tắt nên pet tự ngừng vẽ) | 3.0–4.1% | 12–13% | 207 → 223 MB rồi đứng yên | ~0 | 61–62 fps, 6.6–7.0 ms (max ~70 ms) | không rò rỉ RAM/handle/GDI; CPU và GPU vẫn trên mục tiêu |
+| 2026-11-13 | lượt 14, từng chế độ (pet chủ yếu đứng yên) | 4 × 60 giây | tắt cả hai 3.2% · adaptive 2.0% · lite 2.9% · cả hai 1.7% | 12% (tắt cả hai) | — | — | 61 fps · ~31-34 fps khi adaptive | đo nhanh bằng script, chưa phải 60 phút; GPU từng chế độ chưa đo được (user đang dùng máy) |

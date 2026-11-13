@@ -159,7 +159,16 @@
 - **Sửa lỗi có sẵn (phát hiện khi thử streaming):** câu trả lời của AI trước giờ được xử lý ở luồng phụ của agent chứ không phải luồng giao diện (vì `LavenzureApp` không phải `QObject`, PySide gọi thẳng hàm trong luồng phụ) → có thể làm app crash ngẫu nhiên khi chat. Giờ `LavenzureApp` là `QObject`, các hàm nhận câu trả lời là `@Slot` nối kiểu queued → luôn chạy ở luồng giao diện (đã thử 3 câu hỏi trên app thật).
 - **Mục tiêu hiệu năng đề xuất** (user có thể đổi): CPU dưới 2% cả máy, GPU dưới 10%, RAM dưới 250 MB, không tăng dần theo giờ, ~60 fps.
 
+### Lượt 14 (2026-11-13) — giảm CPU / GPU
+- **Đo 60 phút sau tối ưu lượt 13:** CPU 3-4% cả máy, GPU 12-13%, RAM ~220 MB không tăng → vẫn trên mục tiêu CPU/GPU. Claude đưa 5 cách, **user chọn:**
+  1. **Làm luôn** cách 1 (bớt tính toán thừa, không đổi hình ảnh).
+  2. Cách 2 (tốc độ khung hình tự đổi) và cách 4 (lửa độ phân giải thấp) **thành chế độ bật/tắt** để user tự thử từng tổ hợp rồi duyệt.
+  3. Cách 3 (tạm dừng khi có app toàn màn hình) và cách 5 (lửa 30 khung/giây, chuyển động 60) **chưa làm**.
+- **Cách 1 (đã làm):** giá trị biểu cảm đã tới đích thì dừng tính; hình học mắt (bị hỏi 6 lần mỗi khung) tính 1 lần; môi, vùng an toàn, viền mắt chép tính bằng numpy; ngữ cảnh OpenGL giữ nguyên giữa các khung; mép trên ngọn lửa (chỗ sinh tàn lửa) chỉ đọc 1/3 số cột. Ảnh vẽ từng khung so với trước giống hệt (chỉ lệch dưới 1 pixel / vị trí tàn lửa ngẫu nhiên). Đo thử: ~8,5 → ~7,2 ms/khung.
+- **Claude tự quyết (user có thể đổi):** hai chế độ nằm trong **cửa sổ Settings** (khay → `Settings`), bật/tắt có hiệu lực ngay, kèm dòng hiển thị số khung/giây đang vẽ và lý do (đang di chuyển / đứng yên / ngủ). Lựa chọn được nhớ trong `%LOCALAPPDATA%\Lavenzure\settings.json`; mặc định (cả hai tắt) nằm ở `config.yaml` mục `performance`. "Tốc độ tự đổi": 60 fps khi đi / bay / nhảy / bị kéo / đang phản ứng (click, cảm xúc AI) / đang nói; 30 fps khi đứng yên; 15 fps khi ngủ (số chỉnh trong `config.yaml`). "Lửa nhẹ": độ phân giải lửa 1,5 thay vì 2,0 (~56% số điểm ảnh).
+- **Đo nhanh trên app thật** (mỗi tổ hợp 60 giây, pet chủ yếu đứng yên; máy 16 luồng): tắt cả hai 3,2% CPU / GPU 12%; tốc độ tự đổi 2,0%; lửa nhẹ 2,9%; cả hai 1,7%.
+
 ## Còn bàn
 
-- Kết quả đo hiệu năng 60 phút sau tối ưu (cần user tắt pet đang chạy để đo, hoặc cho phép Claude tắt).
-- Nếu vẫn vượt mục tiêu: có giảm độ phân giải lửa / vẽ lửa 30 khung/giây / tạm dừng khi có app toàn màn hình không (đều ảnh hưởng hình ảnh hoặc hành vi → cần user chọn).
+- **User thử và duyệt** hai chế độ hiệu năng (từng tổ hợp) → chốt bật mặc định chế độ nào. Sau đó đo lại 60 phút (`src/perf_check.py` đo theo chế độ đang chọn).
+- Cách 3 (tạm dừng khi có app toàn màn hình) và cách 5 (lửa 30 khung/giây) — user để lại, chưa làm.

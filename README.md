@@ -72,7 +72,7 @@ The goal was a flat, hand-inked "sticker" look that *moves* like real fire and *
 - **Background monitoring**: alerts when battery < 30%, CPU > 90% or RAM > 90%; the alert stays until you click the pet.
 - **Ambient lines**: after 15 minutes without interaction the pet says a random fact or joke.
 - **Chat history lives in RAM only** and is wiped after 15 minutes without chatting — nothing is written to disk.
-- **System tray icon** (a portrait of the pet): `Hide Pet` / `Show Pet`, `Settings` (empty for now), `Quit App`.
+- **System tray icon** (a portrait of the pet): `Hide Pet` / `Show Pet`, `Settings` (performance modes: adaptive frame rate and lite flame, switchable live), `Quit App`.
 - **Single instance**: starting the app again just opens the running pet's chat bubble.
 
 ## Requirements
@@ -131,6 +131,7 @@ Non-secret settings live in [`config.yaml`](./config.yaml):
 | `character.scale` | Character size (0.75 = 150×177 px) |
 | `character.fps` | Frames per second; lower it to 30 to save CPU |
 | `character.flame_renderer` | Flame body renderer: `shader` (default, GPU) / `metaball` / `baked` |
+| `performance.*` | Defaults of the Settings-window modes: `adaptive_fps` (`calm_fps` 30 / `sleep_fps` 15 when not moving) and `lite_flame` (`lite_flame_supersample` 1.5) |
 | `behavior.state_weights` | How often the pet idles / walks / floats / jumps |
 | `system_status.*` | Polling interval and alert thresholds |
 | `ambient.random_fact_or_joke.idle_minutes` | Idle time before the pet says something on its own |
@@ -202,4 +203,4 @@ The design documents are written in Vietnamese:
 - Character, movement, click/drag, tray icon, system monitoring and chat with all 4 tools work (chat moved to `gemini-flash-latest` after Google shut down `gemini-2.0-flash`).
 - New: chat bubble, click animation pool, right-click menu, new expressions with emotion chosen by the AI, flying on a log, sleeping / dozing, night look, tray icon drawn from the character.
 - 85 automated tests and ruff linting.
-- Still to do: long-term testing on the real desktop; Settings content and real arms (E3) (awaiting a decision); `.exe` packaging (later).
+- Still to do: long-term testing on the real desktop; choosing the default performance mode; real arms (E3) (awaiting a decision); `.exe` packaging (later).
