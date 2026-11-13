@@ -42,6 +42,7 @@ system_status:
   cpu_threshold_percent: 90
   ram_threshold_percent: 90
   battery_threshold_percent: 30
+  snooze_minutes: 10 # after you click away an alert, stay quiet this long before alerting again
 
 ambient:
   random_fact_or_joke:

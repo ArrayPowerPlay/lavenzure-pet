@@ -20,8 +20,8 @@ DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
 
 
 class BackgroundMonitor(QObject):
-    """Emits ``alert_triggered`` (CPU/RAM/battery over threshold, once until cleared),
-    ``reminder_triggered`` (a reminder is due) and ``joke_triggered`` (after idle time)."""
+    """Emits ``alert_triggered`` (CPU/RAM/battery over threshold, once until cleared, then quiet
+    for ``system_status.snooze_minutes`` after the user dismisses it), ``reminder_triggered`` (a reminder is due) and ``joke_triggered`` (after idle time)."""
 
     alert_triggered = Signal(str)
     joke_triggered = Signal(str)
@@ -35,6 +35,7 @@ class BackgroundMonitor(QObject):
         self._ram_threshold = config.get("system_status.ram_threshold_percent", 90)
         self._battery_threshold = config.get("system_status.battery_threshold_percent", 30)
         self._poll_interval = config.get("system_status.poll_interval_seconds", 45)
+        self._snooze_seconds = float(config.get("system_status.snooze_minutes", 10)) * 60
         self._idle_minutes = config.get("ambient.random_fact_or_joke.idle_minutes", 15)
 
         facts_filename = Path(
@@ -44,6 +45,7 @@ class BackgroundMonitor(QObject):
         self._lines: list[str] = json.loads(facts_path.read_text(encoding="utf-8"))["lines"]
 
         self._alert_active = False
+        self._snoozed_until = 0.0   # no new alerts before this time (set when one is dismissed)
         self._last_activity = time.time()
         self._reminders: list[tuple[float, str]] = []
 
@@ -67,8 +69,10 @@ class BackgroundMonitor(QObject):
         self._last_activity = time.time()
 
     def clear_alert(self) -> None:
-        """The user acknowledged the alert (clicked the pet); allow new alerts again."""
+        """The user dismissed the alert (clicked the pet or chose Idle): stay quiet for the snooze
+        time, then alert again if the problem is still there."""
         self._alert_active = False
+        self._snoozed_until = time.time() + self._snooze_seconds
 
     def schedule_reminder(self, minutes: float, message: str) -> None:
         """Schedule a reminder ``minutes`` from now. Safe to call from any thread."""
@@ -79,9 +83,12 @@ class BackgroundMonitor(QObject):
         self._reminders.append((time.time() + minutes * 60, message))
 
     def _check_system_status(self) -> None:
-        """Poll CPU/RAM/battery and raise at most one alert until the user clears it."""
+        """Poll CPU/RAM/battery and raise at most one alert until the user clears it (and none
+        during the snooze time after that)."""
         if self._alert_active:
             return  # don't stack alerts; wait for the user to click the pet first
+        if time.time() < self._snoozed_until:
+            return  # the user just dismissed an alert; don't nag again right away
         cpu = psutil.cpu_percent(interval=None)
         ram = psutil.virtual_memory().percent
         battery = psutil.sensors_battery()

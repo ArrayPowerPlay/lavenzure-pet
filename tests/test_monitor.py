@@ -33,14 +33,22 @@ def test_no_alert_when_calm(monitor):
 
 
 def test_cpu_alert_fires_once_until_cleared(monitor):
-    """An alert is not repeated until the user clears it by clicking the pet."""
+    """An alert is not repeated until the user clears it, nor during the snooze after that."""
     monitor.readings.cpu = 97
     monitor._check_system_status()
     monitor._check_system_status()
     assert len(monitor.alerts) == 1 and "97%" in monitor.alerts[0]
     monitor.clear_alert()
     monitor._check_system_status()
-    assert len(monitor.alerts) == 2
+    assert len(monitor.alerts) == 1          # snoozed: still quiet right after dismissing
+    monitor._snoozed_until -= monitor._snooze_seconds + 1
+    monitor._check_system_status()
+    assert len(monitor.alerts) == 2          # snooze over and still high: alert again
+
+
+def test_snooze_is_ten_minutes_by_default(monitor):
+    """Dismissing an alert keeps the pet quiet for 10 minutes (config default)."""
+    assert monitor._snooze_seconds == 600
 
 
 def test_battery_alert_only_when_unplugged(monitor):

@@ -132,7 +132,7 @@ class LavenzureApp(QObject):
         self.sprite.clicked.connect(self._on_pet_clicked)
         self.sprite.right_clicked.connect(self._show_pet_menu)
         self.pet_menu.chat_requested.connect(self._open_chat)
-        self.pet_menu.rest_requested.connect(self.behavior.set_resting)
+        self.pet_menu.rest_requested.connect(self._set_resting)
         self.behavior.speak_requested.connect(self._say_random_line)
         self.chat.message_sent.connect(self._on_chat_message)
         self.chat.closed.connect(lambda: self.behavior.set_chatting(False))
@@ -185,15 +185,27 @@ class LavenzureApp(QObject):
                                   auto_hide_ms or 10_000)
 
     def _on_pet_clicked(self) -> None:
-        """A click only clears an active alert; otherwise the pet plays a random reaction."""
+        """A click only dismisses an active alert; otherwise the pet plays a random reaction."""
         self.monitor.notify_activity()
         if self.behavior.state == PetState.ALERT:
-            self.behavior.clear_alert()
-            self.monitor.clear_alert()
-            self._alert_message = ""
-            self.bubble.hide()
+            self._dismiss_alert()
             return
         self.behavior.play_random_reaction()
+
+    def _dismiss_alert(self) -> None:
+        """The user acknowledged the alert: calm face, bubble gone, and the monitor stays quiet
+        for ``system_status.snooze_minutes`` before alerting again."""
+        self.behavior.clear_alert()
+        self.monitor.clear_alert()
+        self._alert_message = ""
+        self.bubble.hide()
+
+    def _set_resting(self, active: bool) -> None:
+        """Right-click menu ``Idle`` / ``Wander``. Choosing ``Idle`` during an alert also
+        dismisses the alert, so the pet goes straight to sleep."""
+        self.behavior.set_resting(active)
+        if active and self.behavior.state == PetState.ALERT:
+            self._dismiss_alert()
 
     def _say_random_line(self) -> None:
         """The "speak" reaction: one random line from ``data/click_reactions.json``."""
