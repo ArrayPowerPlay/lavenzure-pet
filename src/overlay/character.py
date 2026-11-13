@@ -29,6 +29,11 @@ Pieces:
 
 Mood layering (highest wins): a transient mood from ``play()`` > alert > sleeping > thinking >
 riding the log > normal.
+
+Saving work: ``activity()`` tells the hosting window how lively the pet is right now (moving or
+reacting / just standing / asleep), so it can draw fewer frames when little happens (the
+"adaptive fps" mode); ``update()`` splits a long frame into short steps so the physics behave
+the same at any frame rate. ``set_lite_flame()`` lowers the flame's internal resolution.
 """
 from __future__ import annotations
 
@@ -118,6 +123,8 @@ EMBER_RATES = {Mood.ALERT: 8.0, Mood.HAPPY: 7.0, Mood.SURPRISED: 5.0, Mood.THINK
                Mood.SCARED: 11.0, Mood.ANGRY: 10.0, Mood.CHILL: 1.5, Mood.SLEEP: 0.5,
                Mood.YAWN: 1.0, Mood.TAKEOFF: 9.0, Mood.FLY: 3.0, Mood.WAKE: 4.0,
                Mood.YUCK: 4.0}
+MAX_FRAME_DT = 0.1                 # a longer gap (a hitch) is treated as this long
+MAX_STEP_DT = 1 / 30               # longer frames are simulated in steps of at most this
 SEAT_SINK = 0.05                   # R: the body's flat bottom sits this far into the log
 FACE_LIFT_ON_LOG = 0.24            # R: the face moves up while sitting on the log ...
 MOUTH_FLOOR_ON_LOG = -0.56         # ... and the mouth stays above this height (R, feet = 0)
@@ -203,6 +210,32 @@ class FlameCharacter:
     def renderer_name(self) -> str:
         """Name of the flame renderer actually in use (after any fallback)."""
         return self.flame.name
+
+    def set_lite_flame(self, lite: bool) -> None:
+        """Turn the "lite flame" mode on or off (lower internal flame resolution; only the
+        shader renderer has it)."""
+        self.flame.set_lite(lite)
+
+    def activity(self) -> str:
+        """How lively the pet is right now, for choosing the frame rate:
+
+        - ``"active"`` - moving, hopping, wobbling, reacting (a transient mood), talking, or a
+          prop / poof animation is running: needs every frame to look smooth;
+        - ``"asleep"`` - sleeping (after the yawn) and nothing else going on;
+        - ``"calm"`` - everything else: standing or floating in place, only the fire flickers.
+        """
+        lively = (
+            abs(self._vx) > 6.0 or abs(self._vy) > 6.0
+            or self._hop_y < -0.01 or self._hop_v != 0.0
+            or abs(self._squash.velocity) > 0.05 or abs(self._lean.velocity) > 0.05
+            or self._transient is not None
+            or self.face.talking
+            or bool(self._poofs) or self.log.crumbling
+            or (self.log.visible and abs(self.log.amount - 1.0) > 0.02)
+        )
+        if lively:
+            return "active"
+        return "asleep" if self._sleeping else "calm"
 
     def set_alert(self, active: bool) -> None:
         """Turn the persistent alert look (red-hot, cross eyes, shaking) on or off."""
@@ -343,11 +376,23 @@ class FlameCharacter:
 
         ``window_pos`` is the global top-left of the hosting window (used to derive velocity and
         to keep embers in screen space); ``cursor`` is the mouse position in widget-local
-        coordinates, or ``None`` if unknown.
+        coordinates, or ``None`` if unknown. A frame longer than ``MAX_STEP_DT`` (low frame
+        rates) is simulated as several short steps, the window gliding between its old and new
+        position, so springs and physics behave exactly as at 60 fps.
         """
-        dt = clamp(dt, 0.0, 0.05)
+        dt = clamp(dt, 0.0, MAX_FRAME_DT)
         if dt == 0.0:
             return
+        steps = max(1, math.ceil(dt / MAX_STEP_DT - 1e-9))
+        start = self._prev_window_pos
+        for i in range(1, steps + 1):
+            pos = window_pos
+            if window_pos is not None and start is not None and i < steps:
+                pos = start + (window_pos - start) * (i / steps)
+            self._step(dt / steps, pos, cursor)
+
+    def _step(self, dt: float, window_pos: QPointF | None, cursor: QPointF | None) -> None:
+        """One simulation step of ``dt`` seconds (see ``update``)."""
         self._t += dt
 
         if self._transient_until is not None and self._t >= self._transient_until:

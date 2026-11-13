@@ -247,6 +247,10 @@ class FlameRenderer:
     def flare(self, strength: float = 1.0) -> None:
         """Sudden flare-up of the fire (used for happy / surprised reactions)."""
 
+    def set_lite(self, lite: bool) -> None:
+        """Turn the "lite flame" mode (lower internal resolution = less work) on or off.
+        Renderers without such a knob ignore it."""
+
     def step(self, drive: FlameDrive) -> None:
         """Advance the fire by one frame."""
         raise NotImplementedError
@@ -271,14 +275,18 @@ class ImageFlame(FlameRenderer):
     def __init__(self, R: float, rng: random.Random) -> None:
         """Work out the bitmap size from ``R``."""
         super().__init__(R, rng)
-        px_per_r = R * self.SUPERSAMPLE
+        self._allocate()
+        self._rect = QRectF(self.X_RANGE[0] * R, self.Y_RANGE[0] * R,
+                            (self.X_RANGE[1] - self.X_RANGE[0]) * R,
+                            (self.Y_RANGE[1] - self.Y_RANGE[0]) * R)
+
+    def _allocate(self) -> None:
+        """(Re)create the empty bitmap for the current ``SUPERSAMPLE``."""
+        px_per_r = self.R * self.SUPERSAMPLE
         self.img_w = int(math.ceil((self.X_RANGE[1] - self.X_RANGE[0]) * px_per_r))
         self.img_h = int(math.ceil((self.Y_RANGE[1] - self.Y_RANGE[0]) * px_per_r))
         self.image = QImage(self.img_w, self.img_h, QImage.Format.Format_ARGB32_Premultiplied)
         self.image.fill(0)
-        self._rect = QRectF(self.X_RANGE[0] * R, self.Y_RANGE[0] * R,
-                            (self.X_RANGE[1] - self.X_RANGE[0]) * R,
-                            (self.Y_RANGE[1] - self.Y_RANGE[0]) * R)
 
     def paint(self, painter: QPainter, colors: FlameColors) -> None:
         """Blit the bitmap (colours were already baked in during ``step()``)."""

@@ -367,6 +367,11 @@ class Face:
         """Move the mouth like speaking for ``seconds``, on top of whatever expression is shown."""
         self._talk_until = max(self._talk_until, self._t + seconds)
 
+    @property
+    def talking(self) -> bool:
+        """True while the mouth is moving like speaking (``talk()`` or the TALKING mood)."""
+        return self._mood == Mood.TALKING or self._t < self._talk_until or self._talk_amount > 0.01
+
     def _start_mood(self, mood: Mood) -> None:
         """Pick a variant of ``mood``, schedule the mouth to follow, and kick the springs."""
         self._mood = mood

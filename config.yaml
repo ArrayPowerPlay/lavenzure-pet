@@ -16,6 +16,15 @@ character:
   fps: 60 # redraw rate; lower it (e.g. 30) to save CPU
   flame_renderer: shader   # flame body: shader (GPU, chosen) | metaball | baked (pre-simulated clips); falls back to metaball
 
+performance:
+  # Defaults of the two modes that can be switched live in tray -> Settings. A choice made there is
+  # remembered in %LOCALAPPDATA%\Lavenzure\settings.json and wins over these values.
+  adaptive_fps: false # full fps only while the pet moves or reacts; fewer frames when still / asleep
+  calm_fps: 30 # adaptive fps: frame rate while standing or floating in place
+  sleep_fps: 15 # adaptive fps: frame rate while asleep
+  lite_flame: false # render the flame at a lower internal resolution (less GPU work)
+  lite_flame_supersample: 1.5 # lite flame: bitmap pixels per screen pixel (normal = 2.0)
+
 overlay:
   always_on_top: true
   click_through_transparent_areas: true

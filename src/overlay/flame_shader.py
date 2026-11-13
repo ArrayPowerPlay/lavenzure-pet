@@ -45,6 +45,7 @@ from PySide6.QtOpenGL import (
     QOpenGLVertexArrayObject,
 )
 
+import config
 from overlay.flame_common import (
     BODY_CY,
     BODY_RX,
@@ -378,6 +379,12 @@ class _AsyncReadback:
             ready.unmap()
             ready.release()
 
+    def destroy(self) -> None:
+        """Free both buffers (the GL context must be current)."""
+        for buffer in self._buffers:
+            buffer.destroy()
+        self._buffers = []
+
 
 class ShaderFlame(ImageFlame):
     """Flame body drawn by the GLSL shader above into an offscreen framebuffer."""
@@ -385,6 +392,10 @@ class ShaderFlame(ImageFlame):
     name = "shader"
     X_RANGE = (-3.0, 3.0)   # wide enough for puffed-up, wind-blown bodies
     Y_RANGE = (-4.4, 0.25)
+    # "Lite flame" mode: pixels per screen pixel instead of ``SUPERSAMPLE`` (2.0). 1.5 has ~56 %
+    # of the pixels, so the shader and the read-back do about half the work; the bitmap is
+    # still larger than the flame on screen, the edges only get a little softer.
+    LITE_SUPERSAMPLE = float(config.get("performance.lite_flame_supersample", 1.5))
 
     def __init__(self, R: float, rng: random.Random) -> None:
         """Create the GL context, framebuffer and shader program; raises if GL 3.3 fails."""
@@ -448,6 +459,25 @@ class ShaderFlame(ImageFlame):
     def flare(self, strength: float = 1.0) -> None:
         """Push the cone taller for a moment; the noise turns it into a burst of tongues."""
         self._flare = min(1.4, self._flare + strength)
+
+    def set_lite(self, lite: bool) -> None:
+        """Switch between the full (``SUPERSAMPLE``) and the lite (``LITE_SUPERSAMPLE``)
+        internal resolution: rebuilds the bitmap, the framebuffer and the read-back buffers."""
+        supersample = self.LITE_SUPERSAMPLE if lite else type(self).SUPERSAMPLE
+        if supersample == self.SUPERSAMPLE:
+            return
+        if QOpenGLContext.currentContext() is not self._ctx and not self._ctx.makeCurrent(
+                self._surface):
+            log.warning("Cannot switch the lite flame mode: OpenGL context unavailable")
+            return
+        if self._readback is not None:
+            self._readback.destroy()
+        self.SUPERSAMPLE = supersample           # instance value, shadows the class default
+        self._allocate()
+        self._fbo = QOpenGLFramebufferObject(self.img_w, self.img_h)
+        self._readback = self._make_readback()
+        self._dirty = True
+        log.info("Flame resolution: %.2fx (%dx%d px)", supersample, self.img_w, self.img_h)
 
     def step(self, drive: FlameDrive) -> None:
         """Render one frame on the GPU and read it back into ``self.image``."""

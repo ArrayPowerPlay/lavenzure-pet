@@ -39,6 +39,7 @@ from single_instance import SingleInstance
 from ui.menus import PetMenu, themed_menu
 from ui.settings_window import SettingsWindow
 from ui.tray_icon import make_tray_icon
+from user_settings import UserSettings
 
 log = logging.getLogger(__name__)
 
@@ -97,6 +98,10 @@ class LavenzureApp(QObject):
         self.activity = UserActivityWatcher()
         self.pet_menu = PetMenu()
         self.settings: SettingsWindow | None = None
+        # Performance modes chosen in the Settings window (remembered between runs).
+        self.user_settings = UserSettings()
+        self.sprite.set_adaptive_fps(bool(self.user_settings.get("adaptive_fps")))
+        self.sprite.character.set_lite_flame(bool(self.user_settings.get("lite_flame")))
         self.memory = SessionMemory(
             ttl_seconds=config.get("memory.idle_timeout_minutes", 15) * 60
         )
@@ -154,10 +159,28 @@ class LavenzureApp(QObject):
         self.tray.show()
 
     def _open_settings(self) -> None:
-        """Open the (for now empty) Settings window."""
+        """Open the Settings window (built on first use and wired to the pet)."""
         if self.settings is None:
-            self.settings = SettingsWindow()
+            self.settings = SettingsWindow(
+                adaptive_fps=bool(self.user_settings.get("adaptive_fps")),
+                lite_flame=bool(self.user_settings.get("lite_flame")),
+            )
+            self.settings.adaptive_fps_toggled.connect(self._set_adaptive_fps)
+            self.settings.lite_flame_toggled.connect(self._set_lite_flame)
+            self.sprite.frame_rate_changed.connect(self.settings.show_frame_rate)
         self.settings.open()
+
+    def _set_adaptive_fps(self, enabled: bool) -> None:
+        """Settings: switch the adaptive frame rate and remember the choice."""
+        self.sprite.set_adaptive_fps(enabled)
+        self.user_settings.set("adaptive_fps", enabled)
+        log.info("Adaptive frame rate %s", "on" if enabled else "off")
+
+    def _set_lite_flame(self, enabled: bool) -> None:
+        """Settings: switch the lite flame and remember the choice."""
+        self.sprite.character.set_lite_flame(enabled)
+        self.user_settings.set("lite_flame", enabled)
+        log.info("Lite flame %s", "on" if enabled else "off")
 
     # ------------------------------------------------------------------ bubble / pet reactions
 
