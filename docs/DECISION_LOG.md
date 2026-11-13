@@ -190,6 +190,11 @@
 - **User chốt:** trong bong bóng chat, **mỗi tin nhắn có khung bo tròn riêng**. **Claude tự quyết (user có thể đổi):** tin của user bên phải, nền cam nhạt viền cam; tin của pet bên trái, nền trắng viền đỏ nâu; khung ôm vừa chữ.
 - **Claude tự quyết (user có thể đổi):** hết 10 phút mà pet đang ngủ (Idle) và máy vẫn quá ngưỡng thì cảnh báo vẫn đánh thức pet như trước.
 
+### Lượt 19 (2026-11-14) — chọn cải tiến, lập TASKS.md
+- Claude đề xuất 8 cải tiến; **user chỉ thấy 2 mục đáng làm:** nhắc việc + Pomodoro, kéo file thả vào pet. Cả hai **pending**: chỉ làm khi user chốt.
+- Lập **`docs/TASKS.md`** (danh sách việc cần làm: pending / nghiên cứu / không chọn).
+- User hỏi về tương tác với icon desktop và thành phần trong app / web → Claude thử thật (chỉ đọc) và ghi 7 hướng (N1-N7) kèm độ khả thi vào `TASKS.md`; chờ user chọn.
+
 ## Còn bàn
 
 - Đo lại 60 phút ở 30 fps + lửa nhẹ (`src/perf_check.py`, cần thoát pet đang chạy).
