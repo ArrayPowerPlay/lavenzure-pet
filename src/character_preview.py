@@ -158,6 +158,7 @@ def main() -> int:
 
     button("Day / night", 3, 1, toggle_night)
     button("Yuck", 3, 3, each(lambda ch: ch.play(Mood.YUCK, 2.4)))
+    button("Cool (shades)", 3, 4, each(lambda ch: ch.play(Mood.COOL, 3.0)))
 
     def toggle_bg() -> None:
         """Switch the backdrop between dark and light."""

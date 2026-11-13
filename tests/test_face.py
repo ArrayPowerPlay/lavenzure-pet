@@ -18,7 +18,7 @@ def _matches(expr, target) -> bool:
 
 
 @pytest.mark.parametrize("mood", [Mood.HAPPY, Mood.SURPRISED, Mood.ALERT, Mood.SCARED,
-                                  Mood.ANGRY, Mood.CHILL, Mood.SLEEP])
+                                  Mood.ANGRY, Mood.CHILL, Mood.SLEEP, Mood.COOL])
 def test_mood_settles_on_target(qapp, mood):
     """After a few seconds the springs reach one of the mood's target variants."""
     face = Face(60.0, random.Random(1), seed=1)
@@ -101,3 +101,17 @@ def test_eye_geometry_cache_follows_every_change(qapp):
             face.lift = 0.2
         for side in (-1, 1):
             assert face._eye_geom(side) == face._compute_eye_geom(side)
+
+
+def test_cool_mood_wears_sunglasses_and_takes_them_off(qapp):
+    """``cool`` drops the sunglasses on (round 21); when the mood ends they lift away."""
+    from overlay.character import FlameCharacter
+
+    ch = FlameCharacter(seed=2)
+    ch.play(Mood.COOL, 1.0)
+    for _ in range(30):                      # 1 s at 30 fps: landed
+        ch.update(1 / 30, QPointF(0, 0), None)
+    assert ch.shades.visible
+    for _ in range(45):                      # mood over, glasses rise and fade out
+        ch.update(1 / 30, QPointF(0, 0), None)
+    assert not ch.shades.visible

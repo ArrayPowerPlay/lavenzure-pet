@@ -33,6 +33,16 @@ def test_yuck_is_offered_to_the_model():
     assert "yuck" in EMOTIONS and "[yuck]" in EMOTION_INSTRUCTIONS
 
 
+def test_cool_is_offered_to_the_model():
+    """The AI may pick the ``cool`` face (sunglasses + smirk, round 21)."""
+    from agent.emotion import EMOTION_INSTRUCTIONS, EMOTIONS
+    from main import EMOTION_MOODS
+    from overlay.face import Mood
+
+    assert "cool" in EMOTIONS and "[cool]" in EMOTION_INSTRUCTIONS
+    assert EMOTION_MOODS["cool"] == Mood.COOL
+
+
 @pytest.mark.parametrize(("partial", "expected"), [
     ("", (None, "", False)),
     ("[", (None, "", False)),

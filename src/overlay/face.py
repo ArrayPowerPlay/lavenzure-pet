@@ -79,6 +79,7 @@ class Mood(Enum):
     FLY = auto()         # riding the log through the air (calm, content)
     TAKEOFF = auto()     # the moment the log is summoned (excited)
     YUCK = auto()        # fig. 8: wonky, mismatched eyes, a wide grimace with the tongue out
+    COOL = auto()        # sunglasses (a prop drawn over the eyes) and a one-sided smirk
 
 
 @dataclass
@@ -207,6 +208,12 @@ MOOD_TARGETS: dict[Mood, tuple[Expression, ...]] = {
                            tongue_out=1.0,
                            flame=1.0, flicker=1.3, wild=1.2, shake=0.15, body_w=1.06,
                            body_h=0.98),),
+    # "cool" (no reference: designed freely, round 21): sunglasses hide the eyes (the
+    # ``SunglassesProp``), so the eyes only matter while the glasses slide down; the mouth is a
+    # closed smirk with one corner pulled up, the head tipped a little, the fire calm and steady.
+    Mood.COOL: (Expression(eye_open=0.78, gaze_x=0.35, gaze_lock=1.0, smile=0.2, smirk=1.0,
+                           mouth_width=1.2, mouth_curl=0.25, tilt=0.07, flame=1.02,
+                           flicker=0.8, wild=0.75, body_w=1.03, body_h=1.01),),
 }
 
 # Small expressions the idle face drifts through: name -> (weight, (min, max) seconds, values).
@@ -411,6 +418,8 @@ class Face:
         elif mood == Mood.YUCK:
             vel["body_h"] -= 1.2         # recoils
             vel["eye_scale"] -= 1.5
+        elif mood == Mood.COOL:
+            vel["body_h"] += 0.7         # straightens up, chin high
 
     def update(self, dt: float, cursor: QPointF | None, body_vy: float) -> None:
         """Advance ``dt`` seconds. ``cursor`` is the mouse relative to the face centre (pixels,
@@ -713,6 +722,11 @@ class Face:
     def eye_top(self) -> float:
         """Highest point of the eyes (body pixels), e.g. so the frying pan sits above them."""
         return min(cy - ry for cx, cy, rx, ry in (self._eye_geom(-1), self._eye_geom(1)))
+
+    def eye_boxes(self) -> tuple[tuple[float, float, float, float], ...]:
+        """Centre and radii ``(cx, cy, rx, ry)`` of the left and right eye (body pixels), e.g.
+        so the sunglasses sit over them."""
+        return self._eye_geom(-1), self._eye_geom(1)
 
     def _paint_brow(self, painter: QPainter, side: int) -> None:
         """A thick, tapered brow (heavy at the nose end, thin at the outer end) floating a clear

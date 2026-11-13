@@ -273,6 +273,11 @@ class BehaviorController(QObject):
         """Pulls a lopsided, tongue-out "yuck" face, as if it bit on an eggshell (fig. 8)."""
         return self._play(Mood.YUCK, 2.4)
 
+    @reaction("cool")
+    def _react_cool(self) -> float:
+        """Slides on a pair of sunglasses and smirks (the glasses drop in, a glint, then off)."""
+        return self._play(Mood.COOL, 3.0)
+
     @reaction("speak")
     def _react_speak(self) -> float:
         """Says one random line (``data/click_reactions.json``) with a moving mouth."""

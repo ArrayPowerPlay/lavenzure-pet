@@ -48,7 +48,7 @@ DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 # Emotion tag of an AI reply -> face the pet shows while the reply appears (decision E1).
 EMOTION_MOODS = {"happy": Mood.HAPPY, "scared": Mood.SCARED, "angry": Mood.ANGRY,
                  "chill": Mood.CHILL, "surprised": Mood.SURPRISED, "thinking": Mood.THINKING,
-                 "yuck": Mood.YUCK}
+                 "yuck": Mood.YUCK, "cool": Mood.COOL}
 EMOTION_SECONDS = 5.0
 
 

@@ -13,6 +13,9 @@ painting happens in the character's body coordinates (pixels, origin at the feet
   for the ``chill`` mood (reference figure 7): drawn in front of the fire, its bottom just
   above the eyes, tipped a little with the handle hanging down to one side. It drops in from
   above, settles, sizzles (steam wisps and popping grease) and lifts off again.
+- ``SunglassesProp`` - black sunglasses for the ``cool`` mood (no reference figure; designed
+  freely): they drop from above onto the eyes, a glint sweeps across the lenses once they land,
+  and they slide back up and fade when the mood ends.
 - ``Snores`` - "z" letters that float up from a sleeping pet, sway, grow and fade.
 """
 from __future__ import annotations
@@ -487,6 +490,178 @@ class PanProp:
                 painter.setBrush(QColor(STEAM.red(), STEAM.green(), STEAM.blue(), alpha))
                 size = w.size * (1.6 - 0.6 * k)
                 painter.drawEllipse(QPointF(w.x, w.y), size, size * 0.8)
+
+
+# ---------------------------------------------------------------------- sunglasses
+
+SHADES_FRAME = QColor(24, 18, 28)
+SHADES_LENS_TOP = QColor(58, 50, 78)
+SHADES_LENS_BOTTOM = QColor(20, 16, 30)
+SHADES_SHINE = QColor(255, 255, 255)
+SHADES_MIN_HALF_W = 0.29    # smallest lens half width (R); the lenses grow with bigger eyes
+SHADES_MIN_HALF_H = 0.23    # smallest lens half height (R)
+SHADES_ARM_X = 0.78         # where the arms disappear behind the flame's sides (R from centre)
+GLINT_SECONDS = 0.5         # one sweep of the glint across both lenses
+
+
+class SunglassesProp:
+    """Black wayfarer-style sunglasses over the eyes (``cool`` mood).
+
+    ``show()`` drops them from above (a springy landing with a small dip), then a bright glint
+    sweeps across the lenses; ``hide()`` pushes them back up while they fade. They follow the eyes
+    every frame (``paint`` gets the eye boxes), so they move, tilt and squash with the face.
+    """
+
+    def __init__(self, R: float) -> None:
+        """``R`` = character radius in pixels."""
+        self.R = R
+        self.visible = False
+        # 0 = above the head, 1 = on the eyes; slightly under-damped so it lands with a dip.
+        self._drop = Spring(0.0, stiffness=190.0, damping=17.0)
+        self._target = 0.0
+        self._alpha = 0.0
+        self._glint = -1.0          # < 0 = no glint; 0..1 = sweep progress
+        self._landed = False
+
+    def show(self) -> None:
+        """Drop the glasses onto the eyes (again from above if they were gone)."""
+        if not self.visible:
+            self._drop.value = 0.0
+            self._drop.velocity = 0.0
+            self._alpha = 0.0
+            self._landed = False
+            self._glint = -1.0
+        self.visible = True
+        self._target = 1.0
+
+    def hide(self) -> None:
+        """Push the glasses back up; they fade out on the way."""
+        self._target = 0.0
+
+    def update(self, dt: float) -> None:
+        """Drop / lift spring, fade and the glint sweep."""
+        if not self.visible:
+            return
+        self._drop.step(self._target, dt)
+        rising = self._target < 0.5
+        self._alpha = approach_linear(self._alpha, 0.0 if rising else 1.0,
+                                      dt / (0.3 if rising else 0.12))
+        if rising and self._alpha <= 0.01:
+            self.visible = False
+            return
+        if not rising and not self._landed and self._drop.value > 0.97:
+            self._landed = True
+            self._glint = 0.0
+        if self._glint >= 0.0:
+            self._glint += dt / GLINT_SECONDS
+            if self._glint > 1.0:
+                self._glint = -1.0
+
+    def landing_impact(self) -> bool:
+        """True on the frame the glasses land on the nose (the character gives a little nod)."""
+        return self._target > 0.5 and self._drop.value > 0.97 and self._drop.velocity > 1.2
+
+    def paint(self, painter: QPainter, eyes: tuple[tuple[float, float, float, float], ...],
+              tilt: float) -> None:
+        """Draw the glasses over ``eyes`` (left and right ``(cx, cy, rx, ry)`` in body pixels),
+        rotated by the head ``tilt`` (radians)."""
+        if not self.visible or self._alpha <= 0.01:
+            return
+        R = self.R
+        (lx, ly, lrx, lry), (rx_, ry_, rrx, rry) = eyes
+        half_w = max(SHADES_MIN_HALF_W * R, 1.2 * max(lrx, rrx))
+        half_h = max(SHADES_MIN_HALF_H * R, 0.9 * max(lry, rry))
+        mx, my = (lx + rx_) / 2.0, (ly + ry_) / 2.0
+        gap = (rx_ - lx) / 2.0               # lens centres sit on the eye centres
+        painter.save()
+        painter.setOpacity(painter.opacity() * self._alpha)
+        painter.translate(mx, my + (1.0 - self._drop.value) * -1.5 * R)
+        painter.rotate(math.degrees(tilt))
+        lenses = [self._lens_path(side * gap, half_w, half_h) for side in (-1, 1)]
+        self._paint_frame(painter, gap, half_w, half_h)
+        for lens in lenses:
+            self._paint_lens(painter, lens, half_h)
+        if self._glint >= 0.0:
+            self._paint_glint(painter, lenses, gap, half_w, half_h)
+        painter.restore()
+
+    @staticmethod
+    def _lens_path(cx: float, half_w: float, half_h: float) -> QPainterPath:
+        """One wayfarer lens centred at (``cx``, 0): a nearly straight top edge rising a little
+        toward the outer side, and a full rounded bottom."""
+        out = 1.0 if cx > 0 else -1.0
+        inner_x, outer_x = cx - out * half_w, cx + out * half_w
+        top_inner, top_outer = -0.72 * half_h, -0.9 * half_h
+        path = QPainterPath(QPointF(inner_x, top_inner))
+        path.lineTo(outer_x, top_outer)
+        path.cubicTo(QPointF(outer_x + out * 0.08 * half_w, 0.2 * half_h),
+                     QPointF(cx + out * 0.55 * half_w, 1.05 * half_h),
+                     QPointF(cx, 1.0 * half_h))
+        path.cubicTo(QPointF(cx - out * 0.6 * half_w, 0.95 * half_h),
+                     QPointF(inner_x - out * 0.02 * half_w, 0.35 * half_h),
+                     QPointF(inner_x, top_inner))
+        path.closeSubpath()
+        return path
+
+    def _paint_frame(self, painter: QPainter, gap: float, half_w: float, half_h: float) -> None:
+        """The arms going back to the flame's sides, and the thick top bar with the bridge."""
+        R = self.R
+        pen = QPen(SHADES_FRAME, 0.07 * R, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap,
+                   Qt.PenJoinStyle.RoundJoin)
+        painter.setPen(pen)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        for side in (-1, 1):
+            start = QPointF(side * (gap + half_w), -0.82 * half_h)
+            end = QPointF(side * max(SHADES_ARM_X * R, gap + half_w + 0.12 * R), -0.62 * half_h)
+            painter.drawLine(start, end)
+        bar = QPainterPath(QPointF(-(gap + half_w), -0.9 * half_h))
+        bar.lineTo(-(gap - half_w), -0.72 * half_h)
+        bar.quadTo(QPointF(0.0, -0.95 * half_h), QPointF(gap - half_w, -0.72 * half_h))
+        bar.lineTo(gap + half_w, -0.9 * half_h)
+        painter.setPen(QPen(SHADES_FRAME, 0.11 * R, Qt.PenStyle.SolidLine,
+                            Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
+        painter.drawPath(bar)
+
+    def _paint_lens(self, painter: QPainter, lens: QPainterPath, half_h: float) -> None:
+        """A dark lens with a soft top-to-bottom sheen and a small fixed highlight."""
+        R = self.R
+        fill = QLinearGradient(0.0, -half_h, 0.0, half_h)
+        fill.setColorAt(0.0, SHADES_LENS_TOP)
+        fill.setColorAt(1.0, SHADES_LENS_BOTTOM)
+        painter.setPen(QPen(SHADES_FRAME, 0.05 * R, Qt.PenStyle.SolidLine,
+                            Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
+        painter.setBrush(fill)
+        painter.drawPath(lens)
+        box = lens.boundingRect()
+        shine = QColor(SHADES_SHINE)
+        shine.setAlpha(110)
+        painter.setPen(QPen(shine, 0.035 * R, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+        x0 = box.left() + box.width() * 0.22
+        painter.drawLine(QPointF(x0, box.top() + box.height() * 0.32),
+                         QPointF(x0 + box.width() * 0.16, box.top() + box.height() * 0.18))
+
+    def _paint_glint(self, painter: QPainter, lenses: list[QPainterPath], gap: float,
+                     half_w: float, half_h: float) -> None:
+        """A slanted bright band sliding left to right across both lenses (clipped to them)."""
+        R = self.R
+        clip = QPainterPath()
+        for lens in lenses:
+            clip = clip.united(lens)
+        span = 2.0 * (gap + half_w) + 0.6 * R
+        x = -span / 2.0 + span * smoothstep(0.0, 1.0, self._glint)
+        band = QPainterPath(QPointF(x - 0.06 * R, -1.3 * half_h))
+        band.lineTo(x + 0.1 * R, -1.3 * half_h)
+        band.lineTo(x - 0.12 * R, 1.3 * half_h)
+        band.lineTo(x - 0.28 * R, 1.3 * half_h)
+        band.closeSubpath()
+        painter.save()
+        painter.setClipPath(clip)
+        glow = QColor(SHADES_SHINE)
+        glow.setAlpha(int(200 * math.sin(math.pi * clamp(self._glint, 0.0, 1.0))))
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(glow)
+        painter.drawPath(band)
+        painter.restore()
 
 
 def approach_linear(current: float, target: float, step: float) -> float:

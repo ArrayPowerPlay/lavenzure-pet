@@ -59,7 +59,7 @@ from overlay.flame_common import (
     noise1,
     smoothstep,
 )
-from overlay.props import LOG_CY, LOG_RADIUS, LogProp, PanProp, Snores
+from overlay.props import LOG_CY, LOG_RADIUS, LogProp, PanProp, Snores, SunglassesProp
 
 __all__ = ["FlameCharacter", "Mood"]
 
@@ -121,7 +121,7 @@ _FLARE_RATE = 0.4                  # spontaneous flare-ups per second at wild = 
 EMBER_RATES = {Mood.ALERT: 8.0, Mood.HAPPY: 7.0, Mood.SURPRISED: 5.0, Mood.THINKING: 1.2,
                Mood.SCARED: 11.0, Mood.ANGRY: 10.0, Mood.CHILL: 1.5, Mood.SLEEP: 0.5,
                Mood.YAWN: 1.0, Mood.TAKEOFF: 9.0, Mood.FLY: 3.0, Mood.WAKE: 4.0,
-               Mood.YUCK: 4.0}
+               Mood.YUCK: 4.0, Mood.COOL: 1.5}
 MAX_FRAME_DT = 0.1                 # a longer gap (a hitch) is treated as this long
 MAX_STEP_DT = 1 / 30               # longer frames are simulated in steps of at most this
 SEAT_SINK = 0.05                   # R: the body's flat bottom sits this far into the log
@@ -192,6 +192,7 @@ class FlameCharacter:
         # Props
         self.log = LogProp(self.R, self._rng, self._seed)
         self.pan = PanProp(self.R, self._rng, self._seed)
+        self.shades = SunglassesProp(self.R)
         self.snores = Snores(self.R, self._rng)
 
         self._embers: list[_Ember] = []
@@ -298,6 +299,8 @@ class FlameCharacter:
             self._squash.velocity += 3.0   # stretch
         elif mood == Mood.CHILL:
             self.pan.show()
+        elif mood == Mood.COOL:
+            self.shades.show()
 
     def talk(self, seconds: float) -> None:
         """Move the mouth like speaking for ``seconds`` without changing the expression."""
@@ -383,6 +386,8 @@ class FlameCharacter:
         self.face.set_mood(mood)
         if mood != Mood.CHILL:
             self.pan.hide()
+        if mood != Mood.COOL:
+            self.shades.hide()
         ride = clamp(self.log.amount, 0.0, 1.0) if self.log.visible else 0.0
         self.face.lift = FACE_LIFT_ON_LOG * ride
         self.face.floor_y = MOUTH_FLOOR_ON_LOG * self.R if ride > 0.05 else None
@@ -488,11 +493,14 @@ class FlameCharacter:
         ))
 
     def _update_props(self, dt: float) -> None:
-        """Log (and its crumbling embers), frying pan, snoring "z"s and poof rings."""
+        """Log (and its crumbling embers), frying pan, sunglasses, snoring "z"s and poof rings."""
         self.log.update(dt)
         self.pan.update(dt)
         if self.pan.landing_impact():
             self._squash.velocity -= 1.2      # the pan lands on the head: squish
+        self.shades.update(dt)
+        if self.shades.landing_impact():
+            self._squash.velocity -= 0.6      # the sunglasses land on the nose: a small nod
         if self.log.crumbling:
             self._crumble_debt += dt * 70.0
             n = int(self._crumble_debt)
@@ -608,6 +616,7 @@ class FlameCharacter:
         # The pan rests *on* the head, in front of the fire (reference fig. 7): its bottom sits
         # just above the eyes and the flame shows around and behind it.
         self.pan.paint(painter, self.face.eye_top() - 0.07 * self.R)
+        self.shades.paint(painter, self.face.eye_boxes(), self.face.expr.tilt)
         painter.restore()
 
         if not log_behind:
