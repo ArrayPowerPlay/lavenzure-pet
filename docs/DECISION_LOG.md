@@ -195,7 +195,91 @@
 - Lập **`docs/TASKS.md`** (danh sách việc cần làm: pending / nghiên cứu / không chọn).
 - User hỏi về tương tác với icon desktop và thành phần trong app / web → Claude thử thật (chỉ đọc) và ghi 7 hướng (N1-N7) kèm độ khả thi vào `TASKS.md`; chờ user chọn.
 
+### Lượt 20 (2026-11-14) — câu quan tâm mỗi 5 phút, Pomodoro, biểu cảm cool (CHƯA CODE)
+
+> User yêu cầu ghi lại, **chưa code**. Các chi tiết ghi "Claude đề xuất" là gợi ý, chờ user chốt.
+
+#### 1. Câu quan tâm mỗi 5 phút
+- **User chốt ý tưởng:** cứ **5 phút** pet nói 1 câu quan tâm tới user (nhắc ngủ sớm, hỏi ăn sáng chưa, hỏi ngày hôm nay thế nào, mong sự xuất hiện của pet sưởi ấm trái tim user…). Có **khoảng 20 câu tiếng Anh + 20 câu tiếng Việt**; ngôn ngữ theo mục **Language** trong Settings.
+- **Hiện trạng:** Settings hiện **chưa có mục Language** (chỉ có Frame rate) → phải thêm mục này: `English` / `Tiếng Việt`. Quy tắc "mọi câu pet nói trên màn hình là tiếng Anh" trong `CLAUDE.md` sẽ phải sửa khi làm.
+- **Claude đề xuất cách chạy:**
+  - Câu nằm trong file dữ liệu `data/care_lines.json` (mỗi ngôn ngữ một danh sách), sửa câu không cần đụng code. Chu kỳ chỉnh trong `config.yaml` (`care_lines.interval_minutes: 5`).
+  - Một số câu **chỉ hợp vài giờ trong ngày** (hỏi ăn sáng chỉ buổi sáng, nhắc ngủ chỉ buổi tối / khuya) → mỗi câu có khung giờ, tới lượt thì chỉ bốc trong các câu hợp giờ.
+  - Bốc kiểu "xáo bài": nói hết các câu hợp giờ rồi mới lặp lại, không bao giờ nói 2 lần liền một câu. Lưu ý: 5 phút/câu = 12 câu/giờ, nên với 20 câu thì **khoảng 1,5 giờ là bắt đầu lặp** — muốn ít lặp thì thêm câu hoặc giãn chu kỳ.
+  - **Không nói khi:** pet đang ngủ / user đi vắng (không có ai đọc), đang có cảnh báo, đang mở bong bóng chat, đang trong giờ tập trung Pomodoro. Bị bỏ qua thì đếm lại 5 phút từ lúc rảnh.
+  - Bong bóng tự tắt sau ~8 giây; pet làm mặt `happy` hoặc `chill` khi nói.
+- **Cần chốt trước khi làm:**
+  - Language chỉ đổi câu quan tâm, hay đổi **mọi câu pet nói** (phản ứng khi click, fact/joke, cảnh báo, nhắc việc)? Claude đề xuất: đổi tất cả cho thống nhất (khi đó phải dịch thêm các file câu có sẵn). Chat với AI vẫn trả lời theo ngôn ngữ user gõ như hiện nay.
+  - Giữ hay bỏ **fact/joke khi rảnh 15 phút** đang có (dễ chồng lên câu quan tâm)? Claude đề xuất: gộp chung một nhịp — mỗi 5 phút bốc câu quan tâm là chính, thỉnh thoảng (vd 1/4) thay bằng fact/joke.
+  - Có cho tắt / chỉnh chu kỳ trong Settings không, hay chỉ trong `config.yaml`?
+- **Danh sách câu (Claude soạn, user sửa thoải mái).** Khung giờ: *sáng* 5-10h, *trưa* 11-13h, *tối* 17-20h, *đêm* 22-4h, *chiều tối* 18-23h; không ghi = lúc nào cũng được.
+
+| # | English | Tiếng Việt | Khung giờ |
+|---|---|---|---|
+| 1 | Good morning! Let's make today a good one. | Chào buổi sáng! Hôm nay cùng cố lên nhé. | sáng |
+| 2 | Have you had breakfast yet? Don't skip it! | Bạn ăn sáng chưa đó? Đừng bỏ bữa nha! | sáng |
+| 3 | Lunch time soon. Eat something warm, okay? | Sắp trưa rồi, nhớ ăn gì đó cho ấm bụng nhé. | trưa |
+| 4 | Dinner time! Did you eat yet? | Tới giờ ăn tối rồi, bạn ăn chưa? | tối |
+| 5 | It's getting late. Try to sleep early tonight, okay? | Khuya rồi đó, tối nay ngủ sớm chút nha. | đêm |
+| 6 | Still up? Your bed misses you. Go get some sleep! | Vẫn còn thức à? Đi ngủ thôi, mai còn có sức nè. | đêm |
+| 7 | Rough day? Be kind to yourself tonight. | Hôm nay mệt hả? Tối nay nhớ thương bản thân một chút nha. | chiều tối |
+| 8 | How's your day going so far? | Hôm nay của bạn thế nào rồi? | |
+| 9 | Take a sip of water. I'll wait! | Uống một ngụm nước đi, mình đợi nè! | |
+| 10 | Give your eyes a break. Look at something far away for 20 seconds. | Cho mắt nghỉ chút đi: nhìn ra xa 20 giây nhé. | |
+| 11 | Stretch your shoulders a little. Ahh, better? | Vươn vai một cái nào. Dễ chịu hơn chưa? | |
+| 12 | Sit up straight! Your back will thank you. | Ngồi thẳng lưng lên nào, lưng bạn sẽ cảm ơn đó. | |
+| 13 | You've been sitting a while. How about a short walk? | Ngồi lâu rồi đó, đứng dậy đi lại chút nhé. | |
+| 14 | Breathe in... and out. Feeling lighter? | Hít một hơi thật sâu... rồi thở ra. Thấy nhẹ hơn chưa? | |
+| 15 | I hope my little flame keeps your heart warm today. | Mong ngọn lửa nhỏ này sưởi ấm trái tim bạn hôm nay. | |
+| 16 | You're doing great. Really. | Bạn đang làm tốt lắm, thật đó. | |
+| 17 | Whatever happens today, I'm right here with you. | Dù hôm nay ra sao, mình vẫn ở đây với bạn. | |
+| 18 | Proud of you for trying your best today. | Mình tự hào về bạn vì đã cố gắng hôm nay. | |
+| 19 | If something's bothering you, tell me. Right-click me anytime. | Có chuyện gì buồn thì kể mình nghe nha, click chuột phải vào mình là được. | |
+| 20 | Smile a little. It suits you! | Cười lên một chút nào, bạn cười xinh lắm! | |
+
+  Xưng hô tiếng Việt: pet xưng **"mình"**, gọi user là **"bạn"** (Claude chọn; muốn "tớ / cậu" hay khác thì báo).
+
+#### 2. Pomodoro dự định hoạt động thế nào (giải thích, thuộc mục P1 trong `TASKS.md`)
+- **Pomodoro là gì:** chia thời gian làm việc thành từng "hiệp": **25 phút tập trung → 5 phút nghỉ ngắn**; sau **4 hiệp** thì **nghỉ dài 15 phút**. Mục đích: tập trung sâu trong thời gian ngắn và nghỉ đều để không đuối.
+- **Bắt đầu:** chọn `Focus` trong menu chuột phải của pet, hoặc chat "bắt đầu pomodoro" / "tập trung 50 phút" (AI có thêm công cụ `start_focus`). Có thể chỉnh độ dài khi gọi bằng chat.
+- **Trong 25 phút tập trung:** pet **ngồi yên** ở góc dưới màn hình (không đi lang thang, không câu quan tâm, không fact/joke), mặt bình thản. Rê chuột lên pet thì hiện số phút còn lại. Click pet vẫn phản ứng nhẹ nhưng không nhảy nhót. Cảnh báo máy (CPU / RAM) **dời tới giờ nghỉ**, riêng pin yếu vẫn báo ngay.
+- **Hết giờ tập trung:** pet bật dậy, bong bóng "Time for a break! Stand up and drink some water." Bong bóng giữ tới khi user click pet (để không bị lỡ).
+- **Trong giờ nghỉ:** pet chơi tự do như thường, có thể nhắc vươn vai / uống nước. Hết giờ nghỉ: "Ready for round 2?" — **chờ user click mới bắt đầu hiệp tiếp** (không tự ép làm tiếp), hoặc tự chạy tiếp nếu user chọn vậy.
+- **Dừng / tạm dừng:** menu chuột phải có `Pause` / `Stop focus` khi đang chạy. Máy ngủ (gập laptop) quá giờ thì khi mở lại pet báo luôn là đã hết giờ.
+- **Lưu ở đâu:** chỉ trong RAM — tắt app là mất hiệp đang chạy (giống chat). Có thể đếm số hiệp xong trong ngày ("3 pomodoros today!").
+- **Khác với nhắc việc:** nhắc việc (`set_timer_reminder`) là hẹn **một lần** ("nhắc tôi uống nước sau 30 phút"); Pomodoro là **chu kỳ lặp** kèm thay đổi cách pet cư xử. Hai cái dùng chung bộ đếm giờ trong `BackgroundMonitor`.
+- **Vẫn cần chốt (như đã ghi ở P1):** bật bằng menu, chat hay cả hai; độ dài mặc định (25/5/15, 4 hiệp); hết giờ nghỉ tự chạy tiếp hay chờ click; bong bóng hết giờ giữ tới khi click hay tự tắt.
+
+#### 3. Biểu cảm mới: `cool` (ngầu)
+- **User yêu cầu:** miệng **cười nhếch mép** (một khoé miệng nhếch lên, lệch một bên) + **đeo kính râm che mắt**.
+- **Claude đề xuất chi tiết:**
+  - Kính râm đen, hai tròng ôm theo vị trí mắt, có một vệt sáng chạy chéo qua tròng kính lúc vừa đeo. Kính là đồ vật vẽ thêm (như cái chảo của `chill`), không thay hình mắt.
+  - Kính **rơi từ trên xuống** đậu vào mắt khi bắt đầu, lúc hết thì **đẩy lên** biến mất. Đeo kính nên mắt không nhìn theo chuột.
+  - Lửa cháy đều, hơi ngả nhẹ người sang một bên cho "ngầu".
+- **Cần chốt:** `cool` có vào nhóm hoạt ảnh ngẫu nhiên khi click không; có thêm vào danh sách cảm xúc AI chọn khi chat không (vd khi user khen pet); user có **hình tham khảo** không (như các hình 1-8 trong `docs/references/`) — nếu có thì Claude sẽ vẽ theo đúng hình.
+
+#### 4. Thêm tính năng cho pet (Claude đề xuất, chờ user chọn; đã tránh các mục trong "Không chọn" của `TASKS.md`)
+
+| # | Ý tưởng | Pet làm gì | Công sức | Lưu ý |
+|---|---|---|---|---|
+| T1 | Chào khi quay lại | User rời máy lâu (đã có bộ đo thời gian không dùng chuột/phím) rồi quay lại → pet chạy ra "Welcome back!"; lần đầu mở máy trong ngày thì chào buổi sáng | Ít | Dùng lại code ngủ gật (E2) |
+| T2 | Bản tin thời tiết buổi sáng | Lần đầu thấy user trong ngày, pet báo thời tiết hôm nay, trời mưa thì nhắc mang ô | Ít | Dùng lại công cụ `weather` (Open-Meteo, không tốn quota AI); cần chốt thành phố |
+| T3 | Vuốt ve pet | Rê chuột qua lại trên pet vài lần → pet nheo mắt sướng, lửa bùng nhẹ | Ít | Không cần click, rất "pet" |
+| T4 | Nhắc nghỉ theo thời gian dùng máy thật | Dùng máy liên tục 60 phút không nghỉ → pet nhắc đứng dậy (thông minh hơn câu quan tâm theo giờ) | Ít | Có thể gộp vào mục 1 |
+| T5 | Nhún theo nhạc | Máy đang phát nhạc (Spotify, YouTube…) → pet lắc lư theo, rê chuột thấy tên bài | Vừa | Đọc qua "Media controls" của Windows, chỉ đọc trên máy |
+| T6 | Ngày lễ | Tết đội nón / lì xì, Giáng sinh đội mũ Noel, sinh nhật user có câu chúc | Vừa | Cần vẽ thêm đồ vật; ngày sinh nhật user tự nhập |
+
+#### 5. Có nên làm pet thành một "agent" không? (Claude phân tích)
+- **Hiện tại pet đã là agent một nửa:** khung chat dùng agent có công cụ (thời tiết, tìm web, trạng thái máy), nhưng **chỉ chạy khi user hỏi**. Phần còn lại (đi lại, biểu cảm, cảnh báo, câu nói) là luật viết sẵn.
+- **Ba mức có thể đi tiếp:**
+  1. **Agent khi được gọi (như bây giờ) + thêm công cụ:** bật Pomodoro, đặt nhắc việc, đọc file thả vào (P2), nhìn màn hình khi user bảo (N7), mở trang web / app (có hỏi xác nhận). Rẻ, an toàn, hữu ích ngay.
+  2. **Agent chủ động:** cứ vài phút AI tự xem tình hình (giờ, user đang dùng app gì, thời tiết, câu chat gần đây) rồi tự quyết có nói gì / làm mặt gì. Nghe "sống" hơn nhưng: tốn quota Gemini liên tục, chậm, cần mạng, phải gửi thông tin máy (tên app, tiêu đề cửa sổ) lên Google, và AI có thể nói linh tinh / lặp.
+  3. **Agent điều khiển máy:** tự mở app, sửa file, click chuột thay user. Rủi ro cao (làm sai là mất dữ liệu), không hợp một pet cá nhân.
+- **Claude đề xuất:** **giữ mô hình lai.** Những gì xảy ra thường xuyên (câu quan tâm, Pomodoro, phản ứng, cảnh báo) dùng **luật viết sẵn** — miễn phí, tức thì, chạy cả khi mất mạng. AI chỉ dùng khi user chủ động (mức 1) và được thêm dần công cụ an toàn. Nếu muốn pet "thông minh" hơn mà vẫn rẻ: cho AI viết **vài câu quan tâm riêng mỗi ngày** dựa trên thời tiết / giờ (tối đa vài lần/ngày, bật tắt được) thay vì để AI chạy liên tục. Không làm mức 3.
+- **Chờ user chọn** hướng nào.
+
 ## Còn bàn
 
 - Đo lại 60 phút ở 30 fps + lửa nhẹ (`src/perf_check.py`, cần thoát pet đang chạy).
 - Cách 3 (tạm dừng khi có app toàn màn hình) và cách 5 (lửa 30 khung/giây) — user để lại, chưa làm.
+- Lượt 20: chốt chi tiết câu quan tâm (phạm vi Language, gộp với fact/joke), Pomodoro (P1), biểu cảm `cool` (hình tham khảo?), chọn tính năng T1-T6, chọn hướng agent.
