@@ -77,3 +77,27 @@ def test_reference_data_is_sane():
         assert len(m.top) == len(m.bottom) == MOUTH_SAMPLES
         assert all(b >= t for t, b in zip(m.top, m.bottom, strict=True))
     assert REF_FACES["fig7"].mouth.closed and not REF_FACES["fig1"].mouth.closed
+
+
+def test_settled_values_land_exactly_on_the_goal(qapp):
+    """Once the springs have settled, the values sit exactly on the goal and stop being blended
+    (the speed-up must not leave them hovering just off it)."""
+    face = Face(60.0, random.Random(2), seed=2)
+    face.set_mood(Mood.SURPRISED)
+    for _ in range(600):  # 10 s at 60 fps
+        face.update(1 / 60, None, 0.0)
+    goal = face._target()
+    for name in SETTLED_FIELDS:
+        assert getattr(face.expr, name) == getattr(goal, name), name
+
+
+def test_eye_geometry_cache_follows_every_change(qapp):
+    """The cached eye geometry always equals a fresh computation, also right after a change."""
+    face = Face(60.0, random.Random(3), seed=3)
+    for step in range(120):
+        face.update(1 / 60, QPointF(40.0 * (step % 7 - 3), -20.0), 0.0)
+        if step == 60:
+            face.expr.eye_scale = 1.4      # a direct change between two frames
+            face.lift = 0.2
+        for side in (-1, 1):
+            assert face._eye_geom(side) == face._compute_eye_geom(side)

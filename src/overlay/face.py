@@ -25,6 +25,10 @@ mechanical:
 
 All sizes are in units of R (the character's base radius); drawing happens in the character's
 body coordinates (pixels, origin at the feet, y up is negative).
+
+Speed (this runs 60 times a second): values that have reached their goal are snapped onto it and
+skipped, the eye geometry is computed once per frame instead of six times, and the lip curves are
+computed with numpy arrays - none of which changes what is drawn.
 """
 from __future__ import annotations
 
@@ -33,8 +37,9 @@ import random
 from dataclasses import dataclass, fields, replace
 from enum import Enum, auto
 
+import numpy as np
 from PySide6.QtCore import QPointF, Qt
-from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen
+from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen, QPolygonF
 
 from overlay.face_refs import MOUTH_SAMPLES, REF_FACES, RefFace, mouth_s
 from overlay.flame_common import (
@@ -241,6 +246,36 @@ DROWSY_MOODS = frozenset({Mood.SLEEP, Mood.YAWN})
 DROWSY_SLOW_FIELDS = frozenset({"eye_open", "slant", "eye_y", "tilt", "happy_eyes",
                                 "mouth_wave", "smirk"})
 MOUTH_DELAY = 0.075     # seconds the mouth lags behind the eyes when the mood changes
+FIELD_NAMES = tuple(f.name for f in fields(Expression))
+# A value this close to its goal and moving this slowly is snapped onto the goal and then skipped
+# until the goal changes (far below a hundredth of a pixel, so it never shows).
+SETTLE_EPS = 1e-4
+
+# Lip sample positions and the per-sample shape terms of the parametric mouth (constant).
+_LIP_S = np.array([mouth_s(i) for i in range(MOUTH_SAMPLES)])
+_LIP_ABS_S = np.abs(_LIP_S)
+_LIP_BOW = 1.0 - _LIP_S * _LIP_S                        # smile / frown curve
+_LIP_T = (_LIP_S + 1.0) * 0.5                           # 0 at the left corner, 1 at the right
+_LIP_WAVE = np.sin(3.0 * math.pi * _LIP_S)              # worried wobble
+_LIP_CAT = np.exp(-((_LIP_S / 0.28) ** 2))              # cat-like "w" bump in the middle
+_LIP_DIP = np.exp(-((_LIP_S / 0.3) ** 2))               # soft "m" dip of the upper lip
+
+# Angles at which a copied (traced) eye outline is sampled, and each traced eye's radial profile
+# at those angles (filled on first use; the traced data never changes).
+_EYE_N = 96
+_EYE_ANGLES = [i * math.tau / _EYE_N for i in range(_EYE_N)]
+_EYE_COS = np.cos(_EYE_ANGLES)
+_EYE_SIN = np.sin(_EYE_ANGLES)
+_EYE_PROFILES: dict[int, np.ndarray] = {}
+
+
+def _eye_profile(eye) -> np.ndarray:
+    """Radial profile of a traced reference eye at ``_EYE_ANGLES`` (cached per eye)."""
+    profile = _EYE_PROFILES.get(id(eye))
+    if profile is None:
+        profile = np.array([eye.radius(a) for a in _EYE_ANGLES])
+        _EYE_PROFILES[id(eye)] = profile
+    return profile
 
 EYE_X = 0.34            # eye centres, left/right of the face centre (R)
 EYE_Y = -0.13           # eye centres relative to the face centre (R, negative = up)
@@ -303,6 +338,12 @@ class Face:
         # reach (body pixels, ``None`` = no limit).
         self.lift = 0.0
         self.floor_y: float | None = None
+
+        # Caches (pure speed-ups, see the module doc): the merged mood + mouth goal, and the
+        # last eye geometry of each side together with the inputs it was computed from.
+        self._merged_from: tuple[Expression, Expression] | None = None
+        self._merged_goal = self._goal
+        self._eye_cache: dict[int, tuple[tuple, tuple[float, float, float, float]]] = {}
 
     # ------------------------------------------------------------------ simulation
 
@@ -406,8 +447,15 @@ class Face:
     def _target(self) -> Expression:
         """Current goal: eyes follow the mood now, the mouth a beat later, plus micro-overlay."""
         mouth_goal = self._mouth_goal
-        goal = replace(self._goal, **{name: getattr(mouth_goal, name) for name in MOUTH_FIELDS})
+        merged_from = self._merged_from
+        if (merged_from is None or merged_from[0] is not self._goal
+                or merged_from[1] is not mouth_goal):
+            self._merged_goal = replace(self._goal, **{name: getattr(mouth_goal, name)
+                                                       for name in MOUTH_FIELDS})
+            self._merged_from = (self._goal, mouth_goal)
+        goal = self._merged_goal                 # shared: only read, never changed in place
         if self._micro is not None:
+            goal = replace(goal)
             _, _, values = MICRO_EXPRESSIONS[self._micro]
             env = (smoothstep(self._micro_start, self._micro_start + 0.3, self._t)
                    * (1.0 - smoothstep(self._micro_end - 0.4, self._micro_end, self._t)))
@@ -418,37 +466,47 @@ class Face:
         return goal
 
     def _update_expression(self, dt: float) -> None:
-        """Blend every parameter toward the target (springs for sizes, easing for the rest)."""
+        """Blend every parameter toward the target (springs for sizes, easing for the rest).
+
+        A parameter that has reached its goal and stopped moving is snapped onto it and skipped
+        (``SETTLE_EPS``): most of the ~45 values rest most of the time."""
         target = self._target()
-        for f in fields(Expression):
-            name = f.name
-            current = getattr(self.expr, name)
+        expr = self.expr
+        drowsy = self._mood in DROWSY_MOODS
+        for name in FIELD_NAMES:
+            current = getattr(expr, name)
             goal = getattr(target, name)
             spring = SPRUNG_FIELDS.get(name)
+            vels = self._vel if spring is not None else self._ease_vel
+            vel = vels[name]
+            if current == goal and vel == 0.0:
+                continue
+            if abs(goal - current) < SETTLE_EPS and abs(vel) < SETTLE_EPS:
+                setattr(expr, name, goal)
+                vels[name] = 0.0
+                continue
             if spring is not None:
                 stiffness, damping = spring
-                if name in BODY_FIELDS and self._mood in DROWSY_MOODS:
+                if name in BODY_FIELDS and drowsy:
                     stiffness, damping = 22.0, 8.0     # melt down slowly when dozing off
-                vel = self._vel[name]
                 vel += (stiffness * (goal - current) - damping * vel) * dt
                 self._vel[name] = vel
-                setattr(self.expr, name, current + vel * dt)
+                setattr(expr, name, current + vel * dt)
             else:
                 rate = 20.0 if name in FAST_FIELDS else 2.5 if name in SLOW_FIELDS else 9.0
-                if self._mood in DROWSY_MOODS and name in DROWSY_SLOW_FIELDS:
+                if drowsy and name in DROWSY_SLOW_FIELDS:
                     rate = min(rate, 2.4)          # lids droop and the face relaxes slowly
                 # Critically damped easing (no overshoot): unlike a plain exponential approach
                 # it starts gently instead of jumping off at full speed, so a change of mood
                 # eases in and out (this was the "not smooth" feel of falling asleep / waking).
                 omega = 1.7 * rate
-                vel = self._ease_vel[name]
                 steps = max(1, math.ceil(omega * dt / 0.4))   # stays stable on a slow frame
                 h = dt / steps
                 for _ in range(steps):
                     vel += (omega * omega * (goal - current) - 2.0 * omega * vel) * h
                     current += vel * h
                 self._ease_vel[name] = vel
-                setattr(self.expr, name, current)
+                setattr(expr, name, current)
 
         if self._mood == Mood.TALKING or self._t < self._talk_until:
             # Irregular "syllables" from noise, gated by a slower noise so phrases have pauses.
@@ -569,9 +627,11 @@ class Face:
         ax *= 1.0 + 0.6 * self.expr.boxy
         ay *= 1.0 + 0.35 * self.expr.boxy
         scale = 1.0
+        xy = np.asarray(pts, dtype=float)
+        px, py = xy[:, 0], xy[:, 1]
         for _ in range(3):
-            worst = max(((cx + px * scale - ex) / ax) ** 2 + ((cy + py * scale - ey) / ay) ** 2
-                        for px, py in pts)
+            worst = float(np.max(((cx + px * scale - ex) / ax) ** 2
+                                 + ((cy + py * scale - ey) / ay) ** 2))
             if worst <= 1.0:
                 break
             scale *= 0.97 / math.sqrt(worst) if worst > 1.0 else 1.0
@@ -614,7 +674,23 @@ class Face:
                 inward * 0.38 * w, 0.08 * w, w)
 
     def _eye_geom(self, side: int) -> tuple[float, float, float, float]:
-        """Centre (body pixels) and radii of one eye after the safe-area fit."""
+        """Centre (body pixels) and radii of one eye after the safe-area fit.
+
+        Asked for six times per frame (eyes, mouth clearance, frying pan), so the result is kept
+        and reused while every input it depends on is unchanged."""
+        ex = self.expr
+        key = (ex.eye_y, ex.eye_scale, ex.eye_wide, ex.eye_wonk, ex.fig1, ex.fig7, ex.body_w,
+               ex.body_h, ex.boxy, ex.tilt, ex.gaze_lock, self._look_x, self._look_y,
+               self._lag, self.lift, self._mirror)
+        cached = self._eye_cache.get(side)
+        if cached is not None and cached[0] == key:
+            return cached[1]
+        geom = self._compute_eye_geom(side)
+        self._eye_cache[side] = (key, geom)
+        return geom
+
+    def _compute_eye_geom(self, side: int) -> tuple[float, float, float, float]:
+        """The uncached work of ``_eye_geom``."""
         R = self.R
         ex = self.expr
         size = self._eye_tweak(side)[0]
@@ -725,17 +801,13 @@ class Face:
                          refs: list[tuple[RefFace, float]]) -> QPainterPath:
         """The white of the eye morphing from an ellipse (radius 1 in every direction) into the
         traced reference eyes, by blending their radial profiles angle by angle."""
-        n = 96
-        pts = []
-        for i in range(n):
-            a = i * math.tau / n
-            r = 1.0
-            for ref, w in refs:
-                r = lerp(r, ref.eyes[0 if side < 0 else 1].radius(a), w)
-            pts.append(QPointF(r * math.cos(a) * rx, cy + r * math.sin(a) * ry))
-        path = QPainterPath(pts[0])
-        for pt in pts[1:]:
-            path.lineTo(pt)
+        r = np.ones(_EYE_N)
+        for ref, w in refs:
+            r = r + (_eye_profile(ref.eyes[0 if side < 0 else 1]) - r) * w
+        xs = (r * _EYE_COS * rx).tolist()
+        ys = (cy + r * _EYE_SIN * ry).tolist()
+        path = QPainterPath()
+        path.addPolygon(QPolygonF([QPointF(x, y) for x, y in zip(xs, ys, strict=True)]))
         path.closeSubpath()
         return path
 
@@ -914,36 +986,34 @@ class Face:
         bend = (1.0 - 0.6 * k_open) * (1.0 - rnd)
         y_left = -max(-ex.smirk, 0.0) * 0.35 * w + max(ex.smirk, 0.0) * 0.08 * w
         y_right = -max(ex.smirk, 0.0) * 0.35 * w + max(-ex.smirk, 0.0) * 0.08 * w
-        top, bottom = [], []
-        for i in range(MOUTH_SAMPLES):
-            s = mouth_s(i)
-            x = s * half_w
-            bow = 1.0 - s * s
-            centre = (bend * smile * w * (0.42 * bow - 0.3)
-                      + lerp(y_left, y_right, (s + 1.0) * 0.5) * (1.0 - rnd)
-                      + ex.mouth_wave * 0.09 * w * math.sin(3.0 * math.pi * s) * (1.0 - rnd)
-                      - ex.mouth_cat * 0.13 * w * math.exp(-(s / 0.28) ** 2) * (1.0 - rnd))
-            prof = (1.0 - abs(s) ** prof_e) ** (1.0 / prof_e)   # rounded, slightly square ends
-            # A tall upper lip (scream) is a smooth arch rather than a box.
-            prof_top = (1.0 - abs(s) ** arch_e) ** (1.0 / arch_e)
-            upper = centre - top_h * prof_top + dip * top_h * 0.55 * math.exp(-(s / 0.3) ** 2)
-            lower = centre + bot_h * prof
-            top.append((x, upper))
-            bottom.append((x, max(lower, upper)))
+        # Every lip sample at once (numpy arrays over ``_LIP_S``, left corner -> right corner).
+        flat = 1.0 - rnd
+        centre = (bend * smile * w * (0.42 * _LIP_BOW - 0.3)
+                  + (y_left + (y_right - y_left) * _LIP_T) * flat
+                  + ex.mouth_wave * 0.09 * w * _LIP_WAVE * flat
+                  - ex.mouth_cat * 0.13 * w * _LIP_CAT * flat)
+        prof = (1.0 - _LIP_ABS_S ** prof_e) ** (1.0 / prof_e)  # rounded, slightly square ends
+        # A tall upper lip (scream) is a smooth arch rather than a box.
+        prof_top = (1.0 - _LIP_ABS_S ** arch_e) ** (1.0 / arch_e)
+        top_y = centre - top_h * prof_top + dip * top_h * 0.55 * _LIP_DIP
+        bottom_y = np.maximum(centre + bot_h * prof, top_y)
+        top_x = _LIP_S * half_w
+        bottom_x = top_x
         for ref, weight in self._refs():
             m = ref.mouth
             uR = ref.scale * R
             k = self._ref_mouth_weight(m.closed, weight)
             chatter = 1.0 - 0.6 * clamp(self._talk_amount / 0.7, 0.0, 1.0)
-            for i in range(MOUTH_SAMPLES):
-                rx = mouth_s(i) * m.half_w * uR * squeeze
-                rt = m.top[i] * uR
-                rb = rt + (m.bottom[i] - m.top[i]) * uR * chatter
-                t_x, t_y = top[i]
-                b_x, b_y = bottom[i]
-                top[i] = (lerp(t_x, rx, k), lerp(t_y, rt, k))
-                bottom[i] = (lerp(b_x, rx, k), max(lerp(b_y, rb, k), top[i][1]))
-        gap = max(b[1] - t[1] for t, b in zip(top, bottom, strict=True))
+            ref_x = _LIP_S * (m.half_w * uR * squeeze)
+            ref_top = np.asarray(m.top) * uR
+            ref_bottom = ref_top + (np.asarray(m.bottom) - np.asarray(m.top)) * uR * chatter
+            top_x = top_x + (ref_x - top_x) * k
+            top_y = top_y + (ref_top - top_y) * k
+            bottom_x = bottom_x + (ref_x - bottom_x) * k
+            bottom_y = np.maximum(bottom_y + (ref_bottom - bottom_y) * k, top_y)
+        gap = float(np.max(bottom_y - top_y))
+        top = list(zip(top_x.tolist(), top_y.tolist(), strict=True))
+        bottom = list(zip(bottom_x.tolist(), bottom_y.tolist(), strict=True))
         return top, bottom, gap
 
     def _ref_mouth_weight(self, closed: bool, weight: float) -> float:

@@ -50,6 +50,9 @@ BODY_RY = 1.0    # half-height of the body (outer outline)
 MID_INSET = 0.12
 INNER_INSET = 0.24
 
+# Sparks are spawned on the flame's top edge, sampled at every this-many-th bitmap column.
+TOP_POINT_STEP = 3
+
 # Face "safe area": an ellipse inside the yellow body that every face feature must stay within.
 FACE_CY = 0.98   # centre height above the feet
 FACE_RX = BODY_RX - INNER_INSET - 0.1
@@ -284,22 +287,27 @@ class ImageFlame(FlameRenderer):
         painter.drawImage(self._rect, self.image)
         painter.restore()
 
-    def _update_top_points(self, alpha: np.ndarray) -> None:
-        """Find the flame's top edge from an alpha array (rows top->bottom) for spark spawning."""
+    def _update_top_points(self, alpha: np.ndarray, step: int = 1) -> None:
+        """Find the flame's top edge from an alpha array (rows top->bottom) for spark spawning.
+
+        ``step`` = the array already holds only every ``step``-th pixel column (cheaper);
+        otherwise every third solid column is used."""
         solid = alpha > 128
         has = solid.any(axis=0)
-        cols = np.nonzero(has)[0][::3]
+        cols = np.nonzero(has)[0]
+        if step == 1:
+            cols = cols[::TOP_POINT_STEP]
         if len(cols) == 0:
             self.top_points = []
             return
         rows = solid[:, cols].argmax(axis=0)
         scale = 1.0 / (self.R * self.SUPERSAMPLE)
-        xs = (self.X_RANGE[0] + (cols + 0.5) * scale) * self.R
+        xs = (self.X_RANGE[0] + (cols * step + 0.5) * scale) * self.R
         ys = (self.Y_RANGE[0] + (rows + 0.5) * scale) * self.R
-        pts = [(float(x), float(y)) for x, y in zip(xs, ys, strict=True)]
-        self.tip = min(pts, key=lambda p: p[1])
-        cut = -(BODY_CY + 0.4) * self.R
-        self.top_points = [p for p in pts if p[1] < cut]
+        top = int(np.argmin(ys))                 # first highest point, like min() would pick
+        self.tip = (float(xs[top]), float(ys[top]))
+        high = ys < -(BODY_CY + 0.4) * self.R
+        self.top_points = list(zip(xs[high].tolist(), ys[high].tolist(), strict=True))
 
 
 def make_flame_renderer(name: str, R: float, rng: random.Random) -> FlameRenderer:

@@ -51,6 +51,7 @@ from overlay.flame_common import (
     BODY_RY,
     INNER_INSET,
     MID_INSET,
+    TOP_POINT_STEP,
     FlameColors,
     FlameDrive,
     ImageFlame,
@@ -467,7 +468,10 @@ class ShaderFlame(ImageFlame):
         drive = getattr(self, "_drive", None)
         if drive is None:
             return
-        if not self._ctx.makeCurrent(self._surface):
+        # The context stays current between frames (nothing else in the app uses OpenGL), so the
+        # costly switch only happens when something else made another context current.
+        if QOpenGLContext.currentContext() is not self._ctx and not self._ctx.makeCurrent(
+                self._surface):
             return
         try:
             prog = self._prog
@@ -503,13 +507,16 @@ class ShaderFlame(ImageFlame):
             gl.glDrawArrays(_GL_TRIANGLE_STRIP, 0, 4)
             self._vao.release()
             self._read_back()
-            self._fbo.release()
+            # Hand the queued commands to the GPU now: with the context staying current nothing
+            # else flushes them, and the next frame would then wait for this read-back.
+            gl.glFlush()
         finally:
-            self._ctx.doneCurrent()
+            self._fbo.release()
         bits = np.frombuffer(self.image.constBits(), dtype=np.uint8)
         stride = self.image.bytesPerLine()
-        alpha = bits.reshape(self.img_h, stride)[:, 3:self.img_w * 4:4]
-        self._update_top_points(alpha)
+        # Every third pixel column is plenty to find the top edge for spawning sparks.
+        alpha = bits.reshape(self.img_h, stride)[:, 3:self.img_w * 4:4 * TOP_POINT_STEP]
+        self._update_top_points(alpha, TOP_POINT_STEP)
 
     def _read_back(self) -> None:
         """Copy the framebuffer (bound, context current) into ``self.image``."""
