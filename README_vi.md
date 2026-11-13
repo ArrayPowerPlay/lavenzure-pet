@@ -55,24 +55,25 @@ Mục tiêu: nét vẽ phẳng, viền mực như sticker vẽ tay, nhưng *chuy
 
 ## Tính năng
 
-- **Nhân vật vẽ hoàn toàn bằng code**, lửa chạy bằng GPU shader và khuôn mặt giàu cảm xúc (xem [Hoạt ảnh](#hoạt-ảnh)): vui (hai kiểu mặt), ngạc nhiên, hoảng, giận, chill, ghê (`yuck`), suy nghĩ, cảnh báo, ngủ.
+- **Nhân vật vẽ hoàn toàn bằng code**, lửa chạy bằng GPU shader và khuôn mặt giàu cảm xúc (xem [Hoạt ảnh](#hoạt-ảnh)): vui (hai kiểu mặt), ngạc nhiên, hoảng, giận, chill, ghê (`yuck`), ngầu (`cool`, đeo kính râm), suy nghĩ, cảnh báo, ngủ.
 - **Tự di chuyển**: đứng yên, đi dọc đáy màn hình, cưỡi khúc củi bay lượn, nhảy — chọn ngẫu nhiên.
 - **Ngủ**: chọn `Idle` thì pet nằm ngủ (thở chậm, bay chữ "z"); sau 10 phút không đụng chuột/bàn phím pet tự ngủ gật, dùng máy lại thì tỉnh.
 - **Ban đêm**: từ 20h đến 5h sáng lửa dịu và trầm màu hơn, pet cử động chậm hơn.
 - **Luôn nổi trên cùng, trong suốt, click xuyên qua**: chỉ phần có hình nhân vật mới nhận chuột, vùng xung quanh vẫn bấm được vào app bên dưới.
 - **Tương tác chuột**: click trái → một hoạt ảnh ngẫu nhiên (không lặp lại hai lần liền); giữ và kéo → mang nhân vật đi; chuột phải → menu nhỏ `Chat`, `Idle` / `Wander` và `Hide Pet`.
 - **Bong bóng thoại đi theo pet** khi nó di chuyển.
-- **Chat với AI agent** (LangGraph + Google Gemini `gemini-flash-lite-latest`), trả lời theo ngôn ngữ bạn gõ, chữ hiện dần trong bong bóng ngay khi model bắt đầu trả lời, tự chọn cảm xúc cho mỗi câu trả lời (pet làm mặt đó ngay khi câu trả lời bắt đầu), có 3 công cụ:
+- **Chat với AI agent** (LangGraph + Google Gemini `gemini-flash-lite-latest`), trả lời theo ngôn ngữ bạn gõ, chữ hiện dần trong bong bóng ngay khi model bắt đầu trả lời, tự chọn cảm xúc cho mỗi câu trả lời (pet làm mặt đó ngay khi câu trả lời bắt đầu), có 4 công cụ:
   - `weather` — thời tiết theo địa danh (Open-Meteo, không cần key)
   - `web_search` — tìm kiếm web (Tavily)
   - `system_status` — CPU / RAM / pin hiện tại
-  - (hẹn giờ nhắc việc tạm tắt)
+  - `set_timer_reminder` — "nhắc tôi sau 30 phút…" / "nhắc tôi lúc 11 giờ…": app tự tính giờ, tới giờ pet hiện ra nhắc và bong bóng giữ tới khi bạn click vào pet. Lời nhắc được lưu ở `%LOCALAPPDATA%\Lavenzure\reminders.json` nên chat bị xoá hay tắt app mở lại vẫn còn (nếu lỡ giờ vì máy ngủ / app tắt thì nhắc ngay khi có thể, kèm số phút trễ)
 - **Bong bóng chat** tông màu lửa, gắn cạnh pet (pet đứng yên khi bong bóng mở), mỗi tin nhắn nằm trong một khung bo tròn riêng (của bạn bên phải, của pet bên trái), hiển thị Markdown, Esc để đóng, tự đóng sau 30 giây không chat (không tính lúc đang gõ hoặc AI đang trả lời).
 - **Báo lỗi dễ hiểu**: thiếu/sai key, hết quota, mất mạng… đều được pet giải thích trong chat thay vì im lặng hay crash.
 - **Theo dõi máy nền**: tự cảnh báo khi pin < 30%, CPU > 90% hoặc RAM > 90%; cảnh báo giữ nguyên đến khi bạn click vào pet (hoặc chọn `Idle`), sau đó pet im 10 phút mới báo lại (`system_status.snooze_minutes`).
-- **Câu nói ngẫu nhiên**: sau 15 phút không tương tác, pet tự nói một fact/câu đùa (tiếng Anh).
-- **Lịch sử chat chỉ nằm trong RAM**, tự xóa sau 15 phút không chat — không lưu gì xuống ổ đĩa.
-- **Icon ở khay hệ thống** (vẽ chính hình pet): `Hide Pet` / `Show Pet`, `Settings` (chọn 30 / 60 fps, có hiệu lực ngay), `Quit App`.
+- **Pet tự nói**: cứ 5 phút (tính từ câu gần nhất, lần click hoặc chat gần nhất) pet nói một câu, xen kẽ câu quan tâm (ăn chưa, uống nước, ngủ sớm…; vài câu chỉ nói đúng khung giờ) và fact / câu đùa về lửa. Hoạt ảnh "nói" khi click cũng bốc trong 75 câu này.
+- **Tiếng Anh hoặc tiếng Việt**: `Settings` → `Language` đổi mọi câu pet nói trên màn hình (câu click, câu quan tâm, fact/joke, cảnh báo, nhắc việc); câu trả lời trong chat vẫn theo ngôn ngữ bạn gõ.
+- **Lịch sử chat chỉ nằm trong RAM**, tự xóa sau 15 phút không chat — không bao giờ lưu xuống ổ đĩa (lời nhắc lưu riêng).
+- **Icon ở khay hệ thống** (vẽ chính hình pet): `Hide Pet` / `Show Pet`, `Settings` (ngôn ngữ English / Tiếng Việt, chọn 30 / 60 fps, đều có hiệu lực ngay), `Quit App`.
 - **Chỉ chạy 1 bản**: mở app lần nữa sẽ chỉ mở bong bóng chat của con pet đang chạy.
 
 ## Yêu cầu
@@ -134,11 +135,12 @@ Các cài đặt không bí mật nằm trong [`config.yaml`](./config.yaml):
 | `performance.lite_flame` | Lửa nhẹ: lửa vẽ ở độ phân giải `lite_flame_supersample` (1.5) thay vì 2.0 (bật sẵn) |
 | `behavior.state_weights` | Tỉ lệ chọn đứng yên / đi / bay / nhảy |
 | `system_status.*` | Chu kỳ kiểm tra máy, ngưỡng cảnh báo và thời gian im sau khi tắt cảnh báo |
-| `ambient.random_fact_or_joke.idle_minutes` | Bao lâu không tương tác thì pet tự nói |
+| `ambient.interval_minutes` | Bao lâu pet tự nói một câu (5 phút) |
+| `language` | Ngôn ngữ mặc định của câu pet nói: `en` / `vi` (Settings ghi đè) |
 | `chat.reply_bubble_max_chars` | Câu trả lời ngắn hơn số ký tự này hiện cả trong bong bóng (0 = tắt) |
 | `memory.idle_timeout_minutes` | Bao lâu không chat thì xóa lịch sử |
 
-Câu thoại khi click và kho fact/joke nằm trong `data/click_reactions.json` và `data/facts_jokes.json` (luôn viết bằng tiếng Anh).
+Câu quan tâm và kho fact/joke nằm trong `data/care_lines.json` (25 câu mỗi ngôn ngữ, có thể kèm khung giờ `hours`) và `data/facts_jokes.json` (50 câu mỗi ngôn ngữ), mỗi file có danh sách `en` và `vi`.
 
 ## Phát triển
 
@@ -183,7 +185,7 @@ src/
 └── autostart/              # tạo shortcut khởi động cùng Windows
 tests/                      # test tự động (pytest)
 docs/                       # tài liệu thiết kế (tiếng Việt)
-data/                       # câu thoại click + kho fact/joke
+data/                       # câu quan tâm + kho fact/joke (Anh + Việt)
 assets/flame/               # dữ liệu lửa đã tính sẵn cho renderer `baked`
 ```
 

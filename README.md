@@ -55,24 +55,25 @@ The goal was a flat, hand-inked "sticker" look that *moves* like real fire and *
 
 ## Features
 
-- **Character drawn entirely in code** with a GPU-shader flame and an expressive face (see [The animation](#the-animation)): happy (two faces), surprised, scared, angry, chill, yuck, thinking, alert, sleeping.
+- **Character drawn entirely in code** with a GPU-shader flame and an expressive face (see [The animation](#the-animation)): happy (two faces), surprised, scared, angry, chill, yuck, cool (sunglasses), thinking, alert, sleeping.
 - **Moves on its own**: idles, walks along the bottom of the screen, flies around on a log, jumps — picked at random.
 - **Sleeps**: lies down and sleeps (slow breathing, floating "z"s) when you choose `Idle`, and dozes off by itself after 10 minutes without mouse/keyboard input, waking up when you come back.
 - **Night look**: from 20:00 to 05:00 the fire is calmer and dimmer and the pet moves slower.
 - **Always on top, transparent, click-through**: only the visible flame catches the mouse; the empty area around it passes clicks to the app underneath.
 - **Mouse interaction**: left-click → a random animation (never the same twice in a row); press and drag → carry the pet; right-click → a small menu with `Chat`, `Idle` / `Wander` and `Hide Pet`.
 - **Speech bubbles follow the pet** as it moves.
-- **Chat with an AI agent** (LangGraph + Google Gemini `gemini-flash-lite-latest`) that answers in your language, streams its reply into the bubble word by word, picks an emotion for each reply (the pet shows that face as soon as the reply starts) and has 3 tools:
+- **Chat with an AI agent** (LangGraph + Google Gemini `gemini-flash-lite-latest`) that answers in your language, streams its reply into the bubble word by word, picks an emotion for each reply (the pet shows that face as soon as the reply starts) and has 4 tools:
   - `weather` — current weather for a place name (Open-Meteo, no key needed)
   - `web_search` — web search (Tavily)
   - `system_status` — current CPU / RAM / battery
-  - (reminders are switched off for now)
+  - `set_timer_reminder` — "remind me in 30 minutes to…" / "remind me at 11:00 to…": the app works out the time, the pet pops up at that time and the reminder stays until you click the pet. Reminders are saved in `%LOCALAPPDATA%\Lavenzure\reminders.json`, so they survive the chat being wiped and the app restarting (one missed while the PC slept or the app was closed shows up late, saying how late)
 - **Chat bubble** in warm flame colours, attached to the pet (it stands still while the bubble is open), shows every message in its own rounded box (yours on the right, the pet's on the left), renders Markdown, closes with Esc or by itself after 30 seconds without chatting (not while you type or the AI answers).
 - **Clear error messages**: a missing/invalid key, exhausted quota, no internet… the pet explains it in the chat instead of failing silently or crashing.
 - **Background monitoring**: alerts when battery < 30%, CPU > 90% or RAM > 90%; the alert stays until you click the pet (or pick `Idle`), then the pet stays quiet for 10 minutes (`system_status.snooze_minutes`).
-- **Ambient lines**: after 15 minutes without interaction the pet says a random fact or joke.
-- **Chat history lives in RAM only** and is wiped after 15 minutes without chatting — nothing is written to disk.
-- **System tray icon** (a portrait of the pet): `Hide Pet` / `Show Pet`, `Settings` (frame rate 30 / 60 fps, applied live), `Quit App`.
+- **Ambient lines**: every 5 minutes (counted from the last line, click or chat) the pet says something on its own — a caring line (have you eaten, drink some water, sleep early…; some only at fitting hours) and a fire fact / joke take turns. The "speak" click reaction draws from the same 75 lines.
+- **English or Vietnamese**: `Settings` → `Language` switches everything the pet says on screen (click lines, caring lines, facts/jokes, alerts, reminders); chat replies follow the language you write in.
+- **Chat history lives in RAM only** and is wiped after 15 minutes without chatting — it is never written to disk (reminders are kept separately).
+- **System tray icon** (a portrait of the pet): `Hide Pet` / `Show Pet`, `Settings` (language English / Tiếng Việt, frame rate 30 / 60 fps, both applied live), `Quit App`.
 - **Single instance**: starting the app again just opens the running pet's chat bubble.
 
 ## Requirements
@@ -134,11 +135,12 @@ Non-secret settings live in [`config.yaml`](./config.yaml):
 | `performance.lite_flame` | Lite flame: the flame is rendered at `lite_flame_supersample` (1.5) instead of 2.0 (on by default) |
 | `behavior.state_weights` | How often the pet idles / walks / floats / jumps |
 | `system_status.*` | Polling interval, alert thresholds and the quiet time after an alert is dismissed |
-| `ambient.random_fact_or_joke.idle_minutes` | Idle time before the pet says something on its own |
+| `ambient.interval_minutes` | How often the pet says a line on its own (5) |
+| `language` | Default language of the pet's lines: `en` / `vi` (Settings overrides it) |
 | `chat.reply_bubble_max_chars` | Replies up to this length also appear in the bubble (0 = off) |
 | `memory.idle_timeout_minutes` | Idle time before the chat history is wiped |
 
-Click reactions and the fact/joke pool live in `data/click_reactions.json` and `data/facts_jokes.json` (always in English).
+The caring lines and the fact/joke pool live in `data/care_lines.json` (25 per language, optional `hours` window) and `data/facts_jokes.json` (50 per language), with an `en` and a `vi` list each.
 
 ## Development
 
@@ -183,7 +185,7 @@ src/
 └── autostart/              # Windows Startup shortcut
 tests/                      # automated tests (pytest)
 docs/                       # design docs (Vietnamese)
-data/                       # click reactions + fact/joke pool
+data/                       # caring lines + fact/joke pool (English + Vietnamese)
 assets/flame/               # pre-computed fire data for the `baked` renderer
 ```
 

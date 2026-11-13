@@ -12,15 +12,18 @@ Khi một mục được chốt: ghi quyết định vào `DECISION_LOG.md`, chu
 
 ## Pending (chờ chốt mới làm)
 
-### P1. Nhắc việc qua chat
-- **Ý tưởng:** chat "nhắc tôi uống nước sau 30 phút" hoặc "nhắc tôi lúc 11 giờ gọi cho mẹ" → đúng giờ pet nhảy lên nhắc.
-- **Hiện trạng:** công cụ `set_timer_reminder` và phần nhắc trong `BackgroundMonitor` đã có code nhưng đang **tạm tắt** (G4, 2026-11-12). Pomodoro đã bỏ (lượt 21).
-- **Cách làm + câu cần chốt:** xem `DECISION_LOG.md` lượt 21, mục "Nhắc việc".
+### P1. Nhắc việc qua chat — **đã làm** (lượt 24, xem `implementation_plan.md` H3)
 
 ### P2. Kéo file thả vào pet
 - **Ý tưởng:** kéo một file (PDF, ảnh, văn bản) thả lên pet → pet "ăn" file (hoạt ảnh nhai), mở khung chat và tóm tắt / trả lời câu hỏi về file đó.
 - **Cách làm:** cửa sổ pet nhận drag & drop của Qt (`setAcceptDrops`); gửi nội dung file cho Gemini (Gemini đọc được ảnh và PDF trực tiếp); câu trả lời hiện trong khung chat như bình thường.
 - **Cần chốt trước khi làm:** loại file nào, giới hạn dung lượng; thả file xong thì tự tóm tắt luôn hay chờ user hỏi; có hoạt ảnh "ăn" riêng không. Lưu ý: nội dung file được gửi lên Google.
+
+### P3. T1 — chào khi quay lại máy
+- **Ý tưởng:** rời máy đủ lâu (pet đã ngủ gật) rồi quay lại → pet thức dậy và chào "Welcome back! You were away 25 minutes." (`DECISION_LOG.md` lượt 21-22).
+
+### P4. T6 — trang phục ngày lễ
+- **Ý tưởng:** Tết, Giáng sinh, Halloween, sinh nhật user → pet đeo đồ + câu chúc riêng. Ước lượng công sức ở `DECISION_LOG.md` lượt 23 (đợt đầu đề xuất: mũ tiệc, mũ Noel, bao lì xì).
 
 ---
 

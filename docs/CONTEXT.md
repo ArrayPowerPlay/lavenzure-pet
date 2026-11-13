@@ -79,10 +79,10 @@ flowchart TB
 | Lịch sử hội thoại | Không lưu lâu dài — chỉ lưu trong RAM, tự xóa sạch sau **15 phút** không chat (TTL; chốt 2026-11-12, code hiện vẫn 10 phút cho tới khi làm), không có cách lấy lại |
 | Tool: weather | **Open-Meteo** (free, không cần API key). Vị trí lấy từ prompt người dùng (LLM trích xuất tên địa điểm → geocode qua Open-Meteo Geocoding API → lấy thời tiết) |
 | Tool: web_search | **Tavily** (free tier, cần API key) |
-| Tool: set_timer_reminder | Đặt hẹn giờ theo yêu cầu chat (tối đa 24 giờ, chỉ lưu trong RAM), hết giờ → pet nhảy lên + hiện bong bóng nhắc nhở; đang có cảnh báo thì nhắc nhở hiện chung bong bóng với cảnh báo; pet đang ẩn thì hiện thông báo ở khay hệ thống |
+| Tool: set_timer_reminder | Đặt nhắc việc qua chat: "sau N phút" (`minutes`) hoặc "lúc HH:MM" (`at`); **code tự tính giờ** (giờ đã qua trong ngày = ngày mai, tối đa 7 ngày), model được biết giờ hiện tại của máy. Lưu ra file `%LOCALAPPDATA%\Lavenzure\reminders.json` (không mất khi chat bị xoá hay tắt app; lỡ giờ thì nhắc ngay khi mở lại kèm số phút trễ). Tới giờ: pet đang ẩn thì hiện ra, đang ngủ thì thức dậy, nhảy lên + bong bóng **giữ tới khi click vào pet** (chung bong bóng với cảnh báo nếu có). Không có lệnh liệt kê / huỷ (user chốt lượt 22) |
 | Tool: system_status | Theo dõi CPU/RAM/pin định kỳ (background thread); ngưỡng cảnh báo đã chốt: **pin < 30%**, **CPU > 90%**, **RAM > 90%** → tự động trigger animation cảnh báo + bong bóng thông báo, **giữ nguyên cho tới khi người dùng click vào pet** (hoặc chọn `Idle`) mới tắt; tắt xong pet **im 10 phút** rồi mới báo lại nếu vẫn quá ngưỡng (`system_status.snooze_minutes`, user chốt 2026-11-14). Cũng có thể được LLM gọi chủ động khi người dùng hỏi (vd "pin còn bao nhiêu") |
-| Tool: random_fact_or_joke | Không phải tool do LLM gọi — là hành vi chủ động (ambient): sau một khoảng thời gian idle (không chat), tự động hiện bong bóng với 1 câu random từ list 50 câu (đã soạn sẵn trong `data/facts_jokes.json`) |
-| Ngôn ngữ câu thoại tự động | Tất cả các câu hiển thị tự động trên màn hình (fact/joke, phản ứng khi click) đều bằng **tiếng Anh** |
+| Pet tự nói (ambient) | Không phải tool do LLM gọi. Cứ **5 phút** (tính từ câu / click / chat gần nhất) pet nói 1 câu, **xen kẽ câu quan tâm** (`data/care_lines.json`, 25 câu, vài câu có khung giờ) **và fact/joke** (`data/facts_jokes.json`, 50 câu); bốc kiểu xáo bài, không lặp. Không nói khi pet ẩn / ngủ, đang mở chat, đang có bong bóng giữ (cảnh báo, nhắc việc). Hoạt ảnh "nói" khi click bốc trong cùng 75 câu (lượt 20-22) |
+| Ngôn ngữ câu thoại tự động | **Tiếng Anh hoặc tiếng Việt** theo Settings → Language (mặc định `language: en` trong `config.yaml`): đổi mọi câu pet nói trên màn hình (câu click, câu quan tâm, fact/joke, cảnh báo, nhắc việc). Chat vẫn trả lời theo ngôn ngữ user gõ (lượt 22) |
 | Autostart | Giai đoạn dev: shortcut trong thư mục Startup Windows chạy bằng `pythonw.exe`; giai đoạn sau: Task Scheduler khi đóng gói .exe |
 | Bản quyền | Dùng fan art tự tạo/stylized, không dùng asset gốc phim; chỉ dùng cá nhân |
 
@@ -109,8 +109,8 @@ pet/
 ├── assets/
 │   └── flame/                  # baked_flame.npz: clip mô phỏng lửa cho bộ vẽ `baked`
 ├── data/
-│   ├── click_reactions.json     # list câu thoại khi click
-│   └── facts_jokes.json           # list ~50 câu random_fact_or_joke
+│   ├── care_lines.json          # 25 câu quan tâm mỗi ngôn ngữ (en / vi)
+│   └── facts_jokes.json           # 50 fact/joke mỗi ngôn ngữ (en / vi)
 ├── src/
 │   ├── main.py                  # entry point, khởi tạo QApplication, nối các thành phần bằng signal
 │   ├── config.py                # đọc config.yaml + .env
@@ -177,3 +177,4 @@ tests/                          # pytest (chạy headless)
 - 2026-11-13 (cập nhật 4): User chốt **lửa nhẹ** (luôn bật, bỏ ô bật/tắt khỏi Settings). Thêm lựa chọn **giới hạn 60 / 45 / 30 fps** cho mọi hoạt ảnh trong Settings để thử (`DECISION_LOG.md` lượt 15).
 - 2026-11-13 (cập nhật 5): User chốt **30 fps mặc định** (Settings vẫn cho chọn 45 / 60) và **bỏ chế độ tốc độ khung hình tự đổi** (`DECISION_LOG.md` lượt 16).
 - 2026-11-13 (cập nhật 6): User bỏ mức **45 fps**, Settings chỉ còn **30 / 60** (`DECISION_LOG.md` lượt 17).
+- 2026-11-14: Thêm **Settings → Language** (Anh / Việt cho mọi câu pet nói), **câu quan tâm + fact/joke mỗi 5 phút** (25 + 50 câu mỗi ngôn ngữ, câu click bốc trong cùng 75 câu, bỏ `click_reactions.json`), **bật lại nhắc việc** (theo phút hoặc giờ, lưu file, bong bóng giữ tới khi click), biểu cảm mới **`cool`** (kính râm + cười nhếch mép). Pomodoro bỏ (`DECISION_LOG.md` lượt 20-24).

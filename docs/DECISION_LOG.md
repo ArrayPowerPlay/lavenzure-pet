@@ -365,8 +365,22 @@
   - **Tổng:** khoảng **1 lượt khung + 1-2 lượt cho mỗi món dễ, 3-4 lượt cho món khó** (tính cả góp ý của user). **Claude đề xuất** nếu làm: bắt đầu với mũ tiệc + mũ Noel + bao lì xì (đều là đồ đặt trên đầu / bên cạnh), bỏ khăn quàng và Halloween ở đợt đầu.
   - T6 vẫn **pending**.
 
+### Lượt 24 (2026-11-14) — user chốt lưu file, Claude làm các phần đã chốt (ĐÃ CODE)
+- **User chốt:** nhắc việc **lưu ra file** (`%LOCALAPPDATA%\Lavenzure\reminders.json`), rồi yêu cầu làm mọi phần đã chốt ở lượt 20-23.
+- **Đã làm:**
+  - **Settings → Language** (English / Tiếng Việt), đổi ngay, được nhớ; mặc định `language: en` trong `config.yaml`. Đổi mọi câu pet nói: câu click, câu quan tâm, fact/joke, cảnh báo máy, chữ "Reminder:" (`src/pet_lines.py`).
+  - **Pet tự nói mỗi 5 phút** (`ambient.interval_minutes: 5`, tính từ câu / click / chat gần nhất), xen kẽ câu quan tâm (`data/care_lines.json`, 25 câu như bảng lượt 20 + 22, kèm khung giờ) và fact/joke (`data/facts_jokes.json`, 50 câu chọn từ 100 câu Anh cũ + bản Việt viết lại). Bốc kiểu xáo bài, không lặp tới khi hết bộ. Không nói khi pet ẩn / ngủ, đang mở chat, đang có bong bóng giữ. Câu click "nói" bốc trong 75 câu; **xoá** `data/click_reactions.json`.
+  - **Nhắc việc bật lại:** AI gọi công cụ với `minutes` hoặc `at`; code tự tính giờ; mỗi lần chat AI được cho biết giờ hiện tại của máy. Tới giờ: pet đang ẩn thì hiện ra, đang ngủ thì thức dậy và nhảy lên, bong bóng **giữ tới khi click vào pet** (chung với cảnh báo nếu có). Lỡ giờ (máy ngủ / app tắt) thì nhắc ngay khi có thể kèm "trễ N phút".
+  - **Biểu cảm `cool`:** kính râm đen rơi từ trên xuống, có vệt sáng lướt qua tròng kính khi đáp, cười nhếch mép một bên, đầu hơi nghiêng; hết thì kính đẩy lên và mờ dần. Có trong phản ứng click (3 giây) và cảm xúc AI `[cool]` (khi được khen / khoe).
+- **Claude tự quyết (user có thể đổi):**
+  - Hẹn nhắc xa nhất **7 ngày**; "lúc 11 giờ" mà 11 giờ hôm nay đã qua thì hiểu là 11 giờ ngày mai.
+  - Bong bóng câu tự nói hiện 4-9 giây tuỳ độ dài câu; khi tự nói pet làm mặt `happy` ngắn và nhép miệng.
+  - Click khi đang có nhắc việc / cảnh báo thì chỉ tắt bong bóng đó (không chạy hoạt ảnh).
+  - Cửa sổ Settings vẫn ghi bằng tiếng Anh (chỉ câu pet nói đổi theo Language).
+- **Kiểm tra:** 140+ test tự động đều qua; chạy thử app thật ở chế độ không màn hình với Gemini thật: đổi sang tiếng Việt → câu tự nói / câu click ra tiếng Việt; chat "nhắc tôi uống nước sau 1 phút nhé" → file nhắc có lời nhắc, pet đang ẩn tự hiện ra, bong bóng "Nhắc nhở: Uống nước" vẫn còn sau 10 giây, click thì tắt và file rỗng; "nhắc tôi lúc 11 giờ gọi cho mẹ" (lúc 2 giờ sáng) → 11:00 hôm nay; "remind me tomorrow at 7:30…" → 7:30 ngày mai. **Chưa thử trên desktop thật** (pet của user đang chạy; cần tắt và mở lại pet để có tính năng mới).
+
 ## Còn bàn
 
 - Đo lại 60 phút ở 30 fps + lửa nhẹ (`src/perf_check.py`, cần thoát pet đang chạy).
 - Cách 3 (tạm dừng khi có app toàn màn hình) và cách 5 (lửa 30 khung/giây) — user để lại, chưa làm.
-- Lượt 23: nhắc việc lưu file hay RAM; T1, T6 pending; âm thanh (cùng âm thanh hoạt ảnh) và hướng agent để sau.
+- Lượt 24: user thử các tính năng mới trên desktop thật và góp ý; T1, T6, P2 vẫn pending; âm thanh và hướng agent để sau.

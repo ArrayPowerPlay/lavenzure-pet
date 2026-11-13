@@ -175,7 +175,14 @@ Còn thiếu / cần làm tiếp:
 - [x] **G1. Chuột trái = 1 phản ứng ngẫu nhiên** từ bộ gồm mọi hoạt ảnh của pet + "nói 1 câu ngẫu nhiên" (trừ mặt cảnh báo và tư thế ngủ). Hoạt ảnh mới tự đăng ký vào bộ.
 - [x] **G2. Chuột phải = menu `Chat` / `Idle`**; đang Idle thì `Idle` đổi thành `Wander`. Idle có tư thế nằm nghỉ/ngủ riêng (vẽ mới).
 - [x] **G3. Bong bóng chat thay cửa sổ chat:** gắn với pet, cuộn đọc lại tin cũ; tự đóng sau 30 giây không chat (không đếm khi đang gõ hoặc AI đang trả lời); lịch sử xóa sau 15 phút không chat (đổi `memory.idle_timeout_minutes` 10 → 15).
-- [x] **G4. Tạm tắt công cụ hẹn giờ** (gỡ `set_timer_reminder` khỏi danh sách tool, giữ code).
+- [x] **G4. Tạm tắt công cụ hẹn giờ** (gỡ `set_timer_reminder` khỏi danh sách tool, giữ code). *Đã bật lại ở H3 (lượt 24).*
+
+### Giai đoạn H — Câu nói, ngôn ngữ, nhắc việc (chốt lượt 20-24, 2026-11-14)
+- [x] **H1. Settings → Language** (English / Tiếng Việt): đổi mọi câu pet nói trên màn hình; mặc định `language` trong `config.yaml`, lựa chọn lưu ở `settings.json`.
+- [x] **H2. Pet tự nói mỗi 5 phút:** xen kẽ 25 câu quan tâm (có khung giờ) và 50 fact/joke mỗi ngôn ngữ; câu click "nói" bốc trong cùng 75 câu (`src/pet_lines.py`, `data/care_lines.json`, `data/facts_jokes.json`).
+- [x] **H3. Bật lại nhắc việc** (thay G4): theo phút hoặc giờ, code tự tính giờ, lưu file `reminders.json`, bong bóng giữ tới khi click.
+- [x] **H4. Biểu cảm `cool`:** kính râm rơi xuống + cười nhếch mép; có trong phản ứng click và cảm xúc AI.
+- [ ] **H5. T1 (chào khi quay lại máy), T6 (trang phục ngày lễ)** — pending, chờ user chốt.
 
 ### Giai đoạn F — Đóng gói (Phase 11) — *để sau (user chốt 2026-11-12)*
 - [ ] **F1. PyInstaller** ra `.exe` (chú ý: `data/`, `assets/flame/`, shader GLSL, OpenGL trong bản đóng gói).
