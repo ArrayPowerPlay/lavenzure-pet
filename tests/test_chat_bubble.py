@@ -87,3 +87,22 @@ def test_error_after_partial_keeps_partial(qapp):
     bubble.append_message("Lavenzure", "My flame flickered.")
     text = bubble._history.toPlainText()
     assert "Half an ans" in text and text.endswith("My flame flickered.")
+
+
+def test_every_message_gets_its_own_box(qapp):
+    """Each message is remembered (start + sender) so a box is drawn around it; redrawing a
+    streamed reply replaces its box instead of adding another one."""
+    bubble = make_bubble()
+    bubble.open()   # shown, so the text gets laid out
+    bubble.append_message("You", "hi")
+    bubble.stream_message("Hel")
+    bubble.stream_message("Hello there")
+    bubble.finish_stream("Hello there, friend!")
+    view = bubble._history
+    assert [mine for _, mine in view._messages] == [True, False]
+    qapp.processEvents()
+    start, _ = view._messages[1]
+    end = view.document().characterCount()
+    assert view._message_rect(start, end) is not None
+    bubble.clear_history()
+    assert view._messages == []

@@ -7,7 +7,9 @@ What it looks like / how it behaves:
   every frame, so it stays attached when the pet is dragged.
 - Inside: a scrollable history (scroll up to re-read older messages; Lavenzure's replies are
   rendered from Markdown, user text is shown exactly as typed), a "Lavenzure is thinking..." line
-  and an input row.
+  and an input row. Every message sits in its own rounded box (``MessageView``): the user's on the
+  right in warm orange, Lavenzure's on the left in white with a maroon outline, so it is easy to
+  see who said what.
 - It closes itself after ``AUTO_CLOSE_MS`` without chat activity. The countdown restarts on every
   keystroke, scroll or click inside the bubble and after each reply, is paused while Lavenzure is
   answering, and is postponed while the mouse pointer rests on the bubble (someone is reading).
@@ -69,6 +71,16 @@ INK = QColor(108, 14, 22)            # same dark maroon as the pet's outline
 SHADOW = QColor(40, 10, 0, 45)
 USER_COLOR = "#8a4a14"   # the user's lines; Lavenzure's use the browser's text colour
 
+# Rounded box drawn around every message (fill, outline) and the room it needs.
+USER_BOX = (QColor(255, 226, 184), QColor(232, 160, 90))
+PET_BOX = (QColor(255, 253, 247), QColor(176, 92, 70))
+BOX_PAD_X, BOX_PAD_Y = 9, 5   # box padding around the text (px)
+BOX_RADIUS = 11
+MESSAGE_GAP = 2 * BOX_PAD_Y + 7   # space between two messages (the boxes leave ~7 px free)
+PARAGRAPH_GAP = 4                 # space between paragraphs inside one reply
+SIDE_ROOM = 34                    # free room on the far side, so the two speakers look apart
+LIST_MARKER_W = 16                # room for a bullet / number left of a list item's text
+
 STYLE = """
 * { font-family: "Segoe UI", "Arial"; }
 QLabel#title { color: #6c0e16; font-weight: bold; font-size: 13px; }
@@ -101,6 +113,83 @@ QPushButton#send:hover { background: #ff9d33; }
 QPushButton#send:disabled { background: #d9b38f; border-color: #a07060; }
 QLabel#thinking { color: #c8641e; font-style: italic; font-size: 12px; }
 """
+
+
+class MessageView(QTextBrowser):
+    """The chat history: a ``QTextBrowser`` that paints a rounded box behind every message.
+
+    The text itself stays ordinary rich text (selectable, links clickable, Markdown rendered);
+    each message only remembers where it starts in the document and who sent it. Messages are
+    only ever added at the end or removed from the end (a streamed reply being redrawn), so the
+    start positions stay valid. Each box is fitted around the text that was really laid out,
+    so a short message gets a small box and a long one wraps inside a wide box.
+    """
+
+    def __init__(self, parent: QWidget) -> None:
+        """An empty history with room around the text for the boxes."""
+        super().__init__(parent)
+        self._messages: list[tuple[int, bool]] = []   # (start position, sent by the user)
+        self.document().setDocumentMargin(BOX_PAD_Y + 2)
+
+    def add_message_start(self, position: int, mine: bool) -> None:
+        """Remember that a message starts at document ``position`` (``mine`` = the user's)."""
+        self._messages.append((position, mine))
+        self.viewport().update()
+
+    def drop_messages_from(self, position: int) -> None:
+        """Forget every message that starts at or after ``position`` (its text was removed)."""
+        self._messages = [m for m in self._messages if m[0] < position]
+
+    def clear(self) -> None:
+        """Remove all text and every box."""
+        self._messages = []
+        super().clear()
+
+    def _message_rect(self, start: int, end: int) -> QRectF | None:
+        """Tight rectangle (document coordinates) around the laid-out text from ``start`` up to
+        ``end``, or ``None`` when that text has nothing visible."""
+        doc = self.document()
+        layout_of = doc.documentLayout()
+        rect: QRectF | None = None
+        block = doc.findBlock(start)
+        while block.isValid() and block.position() < end:
+            origin = layout_of.blockBoundingRect(block).topLeft()
+            layout = block.layout()
+            for i in range(layout.lineCount()):
+                line = layout.lineAt(i)
+                if line.naturalTextWidth() <= 0:
+                    continue
+                line_rect = line.naturalTextRect().translated(origin)
+                if block.textList() is not None and i == 0:
+                    line_rect.setLeft(line_rect.left() - LIST_MARKER_W)
+                rect = line_rect if rect is None else rect.united(line_rect)
+            block = block.next()
+        return rect
+
+    def paintEvent(self, event) -> None:  # noqa: N802 - Qt override
+        """Draw the message boxes first, then let ``QTextBrowser`` draw the text on top."""
+        if self._messages:
+            painter = QPainter(self.viewport())
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+            painter.translate(-self.horizontalScrollBar().value(),
+                              -self.verticalScrollBar().value())
+            visible = QRectF(self.viewport().rect()).translated(
+                self.horizontalScrollBar().value(), self.verticalScrollBar().value())
+            doc_end = self.document().characterCount()
+            for index, (start, mine) in enumerate(self._messages):
+                end = self._messages[index + 1][0] if index + 1 < len(self._messages) else doc_end
+                rect = self._message_rect(start, end)
+                if rect is None:
+                    continue
+                box = rect.adjusted(-BOX_PAD_X, -BOX_PAD_Y, BOX_PAD_X, BOX_PAD_Y)
+                if not box.intersects(visible):
+                    continue
+                fill, outline = USER_BOX if mine else PET_BOX
+                painter.setBrush(fill)
+                painter.setPen(QPen(outline, 1.4))
+                painter.drawRoundedRect(box, BOX_RADIUS, BOX_RADIUS)
+            painter.end()
+        super().paintEvent(event)
 
 
 def markdown_to_plain(text: str) -> str:
@@ -149,10 +238,9 @@ class ChatBubble(QWidget):
         close_button.setToolTip("Close (Esc)")
         close_button.clicked.connect(self.close_bubble)
 
-        self._history = QTextBrowser(self)
+        self._history = MessageView(self)
         self._history.setOpenExternalLinks(True)
         self._history.setFrameShape(QTextBrowser.Shape.NoFrame)
-        self._history.document().setDocumentMargin(2)
 
         self._thinking = QLabel("", self)
         self._thinking.setObjectName("thinking")
@@ -268,28 +356,33 @@ class ChatBubble(QWidget):
         self._stream_start = None
 
     def _remove_from(self, position: int) -> None:
-        """Delete everything in the history from ``position`` to the end."""
+        """Delete everything in the history from ``position`` to the end (text and boxes)."""
+        self._history.drop_messages_from(position)
         cursor = self._history.textCursor()
         cursor.setPosition(position)
         cursor.movePosition(QTextCursor.MoveOperation.End, QTextCursor.MoveMode.KeepAnchor)
         cursor.removeSelectedText()
 
     def _insert_message(self, sender: str, text: str) -> int:
-        """Append one message (see ``append_message``); returns the position where it starts, so
-        ``_remove_from`` can take it off again."""
+        """Append one message (see ``append_message``) in its own box; returns the position where
+        it starts, so ``_remove_from`` can take it off again."""
         mine = sender != "Lavenzure"
+        first = self._history.document().isEmpty()
         cursor = self._history.textCursor()
         cursor.movePosition(QTextCursor.MoveOperation.End)
         message_start = cursor.position()
+        # Every block of the message: its side, room for the box, small gaps between paragraphs.
         block = QTextBlockFormat()
         block.setAlignment(Qt.AlignmentFlag.AlignRight if mine else Qt.AlignmentFlag.AlignLeft)
-        block.setTopMargin(0 if self._history.document().isEmpty() else 8)
-        block.setLeftMargin(28 if mine else 0)
-        block.setRightMargin(0 if mine else 18)
-        if self._history.document().isEmpty():
+        block.setTopMargin(PARAGRAPH_GAP)
+        block.setBottomMargin(0)
+        block.setLeftMargin(SIDE_ROOM + BOX_PAD_X if mine else BOX_PAD_X)
+        block.setRightMargin(BOX_PAD_X if mine else SIDE_ROOM + BOX_PAD_X)
+        if first:
             cursor.setBlockFormat(block)
         else:
             cursor.insertBlock(block, QTextCharFormat())
+        text_start = cursor.position()
         if mine:
             fmt = QTextCharFormat()
             fmt.setForeground(QColor(USER_COLOR))
@@ -305,6 +398,13 @@ class ChatBubble(QWidget):
             cursor.mergeBlockFormat(block)
             cursor.clearSelection()
             cursor.movePosition(QTextCursor.MoveOperation.End)
+        # The message's first block keeps it apart from the message above.
+        cursor.setPosition(text_start)
+        head = QTextBlockFormat()
+        head.setTopMargin(0 if first else MESSAGE_GAP)
+        cursor.mergeBlockFormat(head)
+        cursor.movePosition(QTextCursor.MoveOperation.End)
+        self._history.add_message_start(text_start, mine)
         self._history.setTextCursor(cursor)
         self._history.ensureCursorVisible()
         bar = self._history.verticalScrollBar()
