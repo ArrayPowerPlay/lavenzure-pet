@@ -72,7 +72,7 @@ Mục tiêu: nét vẽ phẳng, viền mực như sticker vẽ tay, nhưng *chuy
 - **Theo dõi máy nền**: tự cảnh báo khi pin < 30%, CPU > 90% hoặc RAM > 90%; cảnh báo giữ nguyên đến khi bạn click vào pet.
 - **Câu nói ngẫu nhiên**: sau 15 phút không tương tác, pet tự nói một fact/câu đùa (tiếng Anh).
 - **Lịch sử chat chỉ nằm trong RAM**, tự xóa sau 15 phút không chat — không lưu gì xuống ổ đĩa.
-- **Icon ở khay hệ thống** (vẽ chính hình pet): `Hide Pet` / `Show Pet`, `Settings` (hiệu năng: giới hạn 60 / 45 / 30 fps, tốc độ khung hình tự đổi; có hiệu lực ngay), `Quit App`.
+- **Icon ở khay hệ thống** (vẽ chính hình pet): `Hide Pet` / `Show Pet`, `Settings` (chọn 30 / 45 / 60 fps, có hiệu lực ngay), `Quit App`.
 - **Chỉ chạy 1 bản**: mở app lần nữa sẽ chỉ mở bong bóng chat của con pet đang chạy.
 
 ## Yêu cầu
@@ -129,9 +129,9 @@ Các cài đặt không bí mật nằm trong [`config.yaml`](./config.yaml):
 | `llm.model`, `llm.temperature` | Model Gemini dùng cho chat (mặc định `gemini-flash-lite-latest`: nhanh, không "suy nghĩ"; `gemini-flash-latest` thông minh hơn nhưng chậm gấp 2-3 lần) |
 | `llm.timeout_seconds`, `llm.max_retries` | Chờ bao lâu / thử lại mấy lần trước khi báo lỗi |
 | `character.scale` | Kích thước nhân vật (0.75 = 150×177 px) |
-| `character.fps` | Giới hạn khung hình/giây mặc định (Settings cho chọn 60 / 45 / 30); thấp hơn = ít CPU hơn |
+| `character.fps` | Số khung hình/giây mặc định, 30 (Settings cho chọn thêm 45 / 60); cao hơn = mượt hơn, tốn CPU hơn |
 | `character.flame_renderer` | Cách vẽ thân lửa: `shader` (mặc định, GPU) / `metaball` / `baked` |
-| `performance.*` | Mặc định của các chế độ trong cửa sổ Settings: `adaptive_fps` (`calm_fps` 30 / `sleep_fps` 15 khi không di chuyển) và `lite_flame` (bật sẵn, `lite_flame_supersample` 1.5) |
+| `performance.lite_flame` | Lửa nhẹ: lửa vẽ ở độ phân giải `lite_flame_supersample` (1.5) thay vì 2.0 (bật sẵn) |
 | `behavior.state_weights` | Tỉ lệ chọn đứng yên / đi / bay / nhảy |
 | `system_status.*` | Chu kỳ kiểm tra máy và ngưỡng cảnh báo |
 | `ambient.random_fact_or_joke.idle_minutes` | Bao lâu không tương tác thì pet tự nói |

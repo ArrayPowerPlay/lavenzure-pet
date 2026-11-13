@@ -173,7 +173,12 @@
 - **User muốn thử 30 fps và 45 fps cho mọi hoạt ảnh** → Settings có thêm mục **Frame rate: 60 / 45 / 30 fps** (giới hạn số khung/giây cho mọi hoạt ảnh, bật ngay, được nhớ; mặc định = `character.fps` 60).
 - **Claude tự quyết (user có thể đổi):** chế độ "tốc độ tự đổi" vẫn giữ để thử kèm, mức đứng yên / ngủ không bao giờ vượt giới hạn đã chọn. Màn hình 60 Hz chỉ hiện được khung ở mỗi lần làm mới (16,7 ms), nên 45 fps = vẽ 3 lần trong mỗi 4 lần làm mới → nhịp không đều tuyệt đối (16,7 / 16,7 / 33,3 ms), có thể thấy hơi lắc nhẹ khi pet di chuyển; 30 fps thì đều.
 
+### Lượt 16 (2026-11-13) — user chốt 30 fps
+- **User chốt 30 fps mặc định** cho mọi hoạt ảnh (`character.fps: 30`); Settings vẫn cho chọn **45 / 60**. Settings giờ chỉ còn mục Frame rate (thứ tự 30 / 45 / 60).
+- **Bỏ chế độ "tốc độ khung hình tự đổi"** (ô Adaptive trong Settings và toàn bộ code của nó: mức đứng yên / ngủ, `calm_fps`, `sleep_fps`).
+- **User hỏi 45 fps có phổ biến không:** không. Các mức hay dùng: 24 (phim), 25 / 50 (TV châu Âu), 30 / 60 (video, game, màn hình 60 Hz), 120 / 144 (màn hình tần số cao). Màn hình 60 Hz chỉ hiện đều các mức chia hết 60 (60, 30, 20, 15); 45 phải vẽ 3 lần bỏ 1 lần nên nhịp không đều. **Claude tự quyết (user có thể đổi):** vẫn giữ nút 45 vì user muốn có; nếu muốn thay bằng mức khác thì báo.
+
 ## Còn bàn
 
-- **User thử và duyệt** giới hạn 60 / 45 / 30 fps (và có dùng "tốc độ tự đổi" không) → chốt mặc định. Sau đó đo lại 60 phút (`src/perf_check.py` đo theo chế độ đang chọn).
+- Đo lại 60 phút ở 30 fps + lửa nhẹ (`src/perf_check.py`, cần thoát pet đang chạy).
 - Cách 3 (tạm dừng khi có app toàn màn hình) và cách 5 (lửa 30 khung/giây) — user để lại, chưa làm.

@@ -55,7 +55,7 @@ Script chỉ đọc thông tin cửa sổ, không click hay di chuyển gì. Nó
 
 ### Chạy lâu
 - [ ] Để pet chạy cả ngày làm việc bình thường → không crash, không chậm dần, máy không nóng/ồn quạt hơn bình thường
-- [ ] Sau đó xem file log: không có dòng `ERROR` / `CRITICAL` lạ; các dòng `frame stats` vẫn quanh 60 fps
+- [ ] Sau đó xem file log: không có dòng `ERROR` / `CRITICAL` lạ; các dòng `frame stats` vẫn quanh mức fps đã chọn (mặc định 30)
 
 ## 3. Đo hiệu năng (Phase 12)
 
@@ -75,16 +75,15 @@ Mục tiêu (đề xuất, chỉnh nếu muốn):
 | GPU 3D | dưới 10% | tốn pin trên laptop |
 | RAM (private) | dưới 250 MB | chiếm bộ nhớ |
 | RAM / handle tăng sau phút đầu | gần 0 mỗi giờ | rò rỉ bộ nhớ: chạy lâu sẽ phình dần |
-| `frame stats` | ~60 fps, work avg dưới 8 ms | hoạt ảnh bị giật |
+| `frame stats` | ~30 fps (mức mặc định), work avg dưới 8 ms | hoạt ảnh bị giật |
 
-### Thử các chế độ hiệu năng (lượt 14)
+### Số khung hình/giây (lượt 16)
 
-Khay → `Settings` → mục **Performance**. Bật/tắt có hiệu lực ngay; dòng `Drawing: … fps (…)` cho biết pet đang vẽ bao nhiêu khung/giây và vì sao.
+Khay → `Settings` → mục **Performance** → **Frame rate**. Mặc định 30 fps (user chốt); chọn 45 / 60 có hiệu lực ngay, dòng `Drawing: … fps` cho biết pet đang vẽ bao nhiêu khung/giây.
 
-- [ ] **Adaptive frame rate** bật: lúc pet đứng yên, dòng hiển thị ~30 fps (`standing still`); lúc đi / bay / nhảy / bị kéo / click / đang nói → ~60 fps (`moving or reacting`); lúc ngủ (menu `Idle`) → ~15 fps (`asleep`). Ghi lại có chỗ nào thấy giật hoặc kém mượt không.
-- [ ] **Frame rate** (lượt 15): chọn 60 → 45 → 30 fps, mỗi mức xem pet đi / bay / nhảy / bị kéo / click một lúc; dòng `Drawing` phải hiện đúng ~60 / ~45 / ~30. Ghi lại mức nào bắt đầu thấy giật hoặc lắc (45 fps trên màn 60 Hz có nhịp không đều tuyệt đối).
-- [ ] Thử từng mức fps có / không bật Adaptive và chọn kiểu muốn dùng mặc định (lửa nhẹ đã luôn bật). Lựa chọn được nhớ sau khi thoát app.
-- [ ] (Tùy chọn) Để tổ hợp đã chọn, thoát pet rồi chạy `perf_check.py --minutes 60` để đo lại.
+- [ ] Mở app lần đầu (chưa chọn gì trong Settings) → dòng `Drawing` hiện ~30 fps.
+- [ ] Chọn 45 / 60 → dòng `Drawing` hiện ~45 / ~60; thoát rồi mở lại app → vẫn giữ mức đã chọn.
+- [ ] (Tùy chọn) Thoát pet rồi chạy `perf_check.py --minutes 60` để đo lại ở 30 fps.
 
 ### Kết quả đo
 
