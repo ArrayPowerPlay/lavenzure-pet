@@ -280,7 +280,8 @@ class BehaviorController(QObject):
 
     @reaction("speak")
     def _react_speak(self) -> float:
-        """Says one random line (``data/click_reactions.json``) with a moving mouth."""
+        """Says one random line (care line or fact/joke, see ``pet_lines``) with a moving
+        mouth."""
         self.speak_requested.emit()
         self.character.play(Mood.TALKING, 2.0)
         return 2.6

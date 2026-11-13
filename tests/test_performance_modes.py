@@ -116,3 +116,19 @@ def test_user_settings_survive_a_broken_file(tmp_path):
     assert UserSettings(path).get("max_fps") == 60
     with pytest.raises(KeyError):
         settings.set("adaptive_fps", True)
+
+
+def test_settings_language_buttons(qapp):
+    """The Language choice starts on the current language and reports a new pick."""
+    window = SettingsWindow(max_fps=30, language="vi")
+    assert window.language_buttons["vi"].isChecked()
+    picked = []
+    window.language_changed.connect(picked.append)
+    window.language_buttons["en"].setChecked(True)
+    assert picked == ["en"]
+    window.close()
+
+
+def test_language_setting_defaults_to_config(tmp_path):
+    """Without a saved choice the language comes from ``config.yaml`` (English)."""
+    assert UserSettings(tmp_path / "settings.json").get("language") == "en"

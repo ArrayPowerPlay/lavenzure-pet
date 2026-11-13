@@ -1,48 +1,43 @@
-"""Polls system health, fires scheduled reminders, and triggers ambient idle lines.
+"""Polls system health, fires scheduled reminders, and says when it is time for an ambient line.
 
 Everything here runs on the Qt UI thread (QTimers). Reminders requested by the agent's worker
-thread arrive through the queued ``_reminder_requested`` signal.
+thread arrive through the queued ``_reminder_requested`` signal. Alert texts are written in the
+language chosen in Settings (``set_language``); which ambient line to say is up to the app
+(``pet_lines.PetLines``), the monitor only keeps the clock.
 """
 from __future__ import annotations
 
-import json
-import random
 import time
-from pathlib import Path
 
 import psutil
 from PySide6.QtCore import QObject, Qt, QTimer, Signal
 
 import config
+import pet_lines
 from agent.tools import set_timer_reminder as reminder_tool
-
-DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
 
 
 class BackgroundMonitor(QObject):
     """Emits ``alert_triggered`` (CPU/RAM/battery over threshold, once until cleared, then quiet
-    for ``system_status.snooze_minutes`` after the user dismisses it), ``reminder_triggered`` (a reminder is due) and ``joke_triggered`` (after idle time)."""
+    for ``system_status.snooze_minutes`` after the user dismisses it), ``reminder_triggered`` (a
+    reminder is due) and ``ambient_due`` (``ambient.interval_minutes`` since the last line or
+    interaction: time for the pet to say something on its own)."""
 
     alert_triggered = Signal(str)
-    joke_triggered = Signal(str)
+    ambient_due = Signal()
     reminder_triggered = Signal(str)
     _reminder_requested = Signal(float, str)  # internal: worker thread -> UI thread hand-off
 
     def __init__(self) -> None:
-        """Read thresholds/intervals from config, load idle lines and start the poll timers."""
+        """Read thresholds/intervals from config and start the poll timers."""
         super().__init__()
         self._cpu_threshold = config.get("system_status.cpu_threshold_percent", 90)
         self._ram_threshold = config.get("system_status.ram_threshold_percent", 90)
         self._battery_threshold = config.get("system_status.battery_threshold_percent", 30)
         self._poll_interval = config.get("system_status.poll_interval_seconds", 45)
         self._snooze_seconds = float(config.get("system_status.snooze_minutes", 10)) * 60
-        self._idle_minutes = config.get("ambient.random_fact_or_joke.idle_minutes", 15)
-
-        facts_filename = Path(
-            config.get("ambient.random_fact_or_joke.facts_file", "data/facts_jokes.json")
-        ).name
-        facts_path = DATA_DIR / facts_filename
-        self._lines: list[str] = json.loads(facts_path.read_text(encoding="utf-8"))["lines"]
+        self._ambient_seconds = float(config.get("ambient.interval_minutes", 5)) * 60
+        self._language = pet_lines.DEFAULT_LANGUAGE
 
         self._alert_active = False
         self._snoozed_until = 0.0   # no new alerts before this time (set when one is dismissed)
@@ -62,10 +57,15 @@ class BackgroundMonitor(QObject):
 
         self._idle_timer = QTimer(self)
         self._idle_timer.timeout.connect(self._check_idle)
-        self._idle_timer.start(30_000)
+        self._idle_timer.start(15_000)
+
+    def set_language(self, language: str) -> None:
+        """Write future alerts in ``language`` (a ``pet_lines.LANGUAGES`` code)."""
+        self._language = language
 
     def notify_activity(self) -> None:
-        """Call whenever the user chats or clicks the pet, to reset the idle joke clock."""
+        """Call whenever the user chats or clicks the pet, or the pet says a line: the next
+        ambient line comes ``ambient.interval_minutes`` after this."""
         self._last_activity = time.time()
 
     def clear_alert(self) -> None:
@@ -94,15 +94,16 @@ class BackgroundMonitor(QObject):
         battery = psutil.sensors_battery()
 
         if cpu > self._cpu_threshold:
-            self._fire_alert(f"CPU usage is at {cpu:.0f}%! Might want to check what's running.")
+            self._fire_alert(pet_lines.phrase(self._language, "cpu_alert", value=cpu))
         elif ram > self._ram_threshold:
-            self._fire_alert(f"RAM usage is at {ram:.0f}%! Things might slow down soon.")
+            self._fire_alert(pet_lines.phrase(self._language, "ram_alert", value=ram))
         elif (
             battery is not None
             and not battery.power_plugged
             and battery.percent < self._battery_threshold
         ):
-            self._fire_alert(f"Battery is down to {battery.percent:.0f}%. Better plug in!")
+            self._fire_alert(pet_lines.phrase(self._language, "battery_alert",
+                                              value=battery.percent))
 
     def _fire_alert(self, message: str) -> None:
         """Mark an alert as active and announce it."""
@@ -120,7 +121,9 @@ class BackgroundMonitor(QObject):
             self.reminder_triggered.emit(message)
 
     def _check_idle(self) -> None:
-        """After enough time without chat/clicks, emit a random fact or joke."""
-        if time.time() - self._last_activity >= self._idle_minutes * 60:
-            self.joke_triggered.emit(random.choice(self._lines))
-            self._last_activity = time.time()  # reschedule the next idle line
+        """Once ``ambient.interval_minutes`` have passed since the last line or interaction,
+        emit ``ambient_due`` and start counting again (if the app has to skip the line, e.g. the
+        pet is asleep, the next chance comes one interval later)."""
+        if time.time() - self._last_activity >= self._ambient_seconds:
+            self._last_activity = time.time()
+            self.ambient_due.emit()

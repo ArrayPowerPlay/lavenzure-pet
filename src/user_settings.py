@@ -10,6 +10,8 @@ defaults.
 Current settings (roadmap Phase 12):
 
 - ``max_fps`` - frame rate of every animation (30 / 60; default 30, chosen by the user).
+- ``language`` - language of everything the pet says (``en`` / ``vi``; default ``language`` in
+  config.yaml).
 """
 from __future__ import annotations
 
@@ -26,6 +28,7 @@ log = logging.getLogger(__name__)
 # setting name -> (config.yaml path of its default, value if config.yaml has none)
 DEFAULTS: dict[str, tuple[str, Any]] = {
     "max_fps": ("character.fps", 30),
+    "language": ("language", "en"),
 }
 
 

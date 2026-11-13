@@ -17,10 +17,10 @@ def monitor(qapp, monkeypatch):
     monkeypatch.setattr(bm.psutil, "sensors_battery", lambda: readings.battery)
     mon = bm.BackgroundMonitor()
     mon.readings = readings
-    mon.alerts, mon.reminders, mon.jokes = [], [], []
+    mon.alerts, mon.reminders, mon.ambient = [], [], []
     mon.alert_triggered.connect(mon.alerts.append)
     mon.reminder_triggered.connect(mon.reminders.append)
-    mon.joke_triggered.connect(mon.jokes.append)
+    mon.ambient_due.connect(lambda: mon.ambient.append(1))
     yield mon
     for timer in (mon._status_timer, mon._reminder_timer, mon._idle_timer):
         timer.stop()
@@ -71,12 +71,22 @@ def test_reminder_from_worker_thread_fires(qapp, monitor):
     assert monitor.reminders == ["stretch"]
 
 
-def test_idle_line_after_idle_time(monitor):
-    """A fact/joke is emitted only after the idle period, then the clock restarts."""
+def test_ambient_line_every_interval(monitor):
+    """``ambient_due`` fires once the interval (5 min by default) has passed since the last line
+    or interaction, then the clock restarts."""
+    assert monitor._ambient_seconds == 300
     monitor._check_idle()
-    assert monitor.jokes == []
-    monitor._last_activity -= monitor._idle_minutes * 60 + 1
+    assert monitor.ambient == []
+    monitor._last_activity -= monitor._ambient_seconds + 1
     monitor._check_idle()
-    assert len(monitor.jokes) == 1
+    assert len(monitor.ambient) == 1
     monitor._check_idle()
-    assert len(monitor.jokes) == 1
+    assert len(monitor.ambient) == 1
+
+
+def test_alerts_follow_the_language(monitor):
+    """Alert texts are written in the language chosen in Settings."""
+    monitor.set_language("vi")
+    monitor.readings.ram = 95
+    monitor._check_system_status()
+    assert monitor.alerts == ["RAM đã dùng tới 95%! Máy sắp chậm rồi đó."]

@@ -12,10 +12,9 @@ import os
 # so one thread is plenty. This must run before anything imports numpy.
 os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
 
-import json
 import logging
-import random
 import sys
+from datetime import datetime
 from pathlib import Path
 
 from PySide6.QtCore import QObject, Qt, QThread, QTimer, Signal, Slot
@@ -35,6 +34,7 @@ from overlay.behavior import BehaviorController, PetState
 from overlay.character import Mood
 from overlay.overlay_window import OverlaySprite
 from overlay.speech_bubble import SpeechBubble
+from pet_lines import PetLines
 from single_instance import SingleInstance
 from ui.menus import PetMenu, themed_menu
 from ui.settings_window import FPS_CHOICES, SettingsWindow
@@ -50,6 +50,11 @@ EMOTION_MOODS = {"happy": Mood.HAPPY, "scared": Mood.SCARED, "angry": Mood.ANGRY
                  "chill": Mood.CHILL, "surprised": Mood.SURPRISED, "thinking": Mood.THINKING,
                  "yuck": Mood.YUCK, "cool": Mood.COOL}
 EMOTION_SECONDS = 5.0
+
+
+def reading_ms(text: str) -> int:
+    """How long a self-hiding bubble stays up: long enough to read ``text`` (4-9 seconds)."""
+    return max(4000, min(9000, 1500 + 60 * len(text)))
 
 
 class AgentWorker(QObject):
@@ -112,8 +117,9 @@ class LavenzureApp(QObject):
         self._memory_timer.timeout.connect(self._expire_chat_history)
         self._memory_timer.start(20_000)
 
-        click_reactions_path = DATA_DIR / "click_reactions.json"
-        self._click_lines = json.loads(click_reactions_path.read_text(encoding="utf-8"))["lines"]
+        # Everything the pet says, in the language chosen in Settings (alerts too).
+        self.lines = PetLines(DATA_DIR)
+        self._apply_language(str(self.user_settings.get("language")))
 
         self._alert_message = ""
         self._reply_emotion_shown = False   # the streaming reply already played its face
@@ -142,7 +148,7 @@ class LavenzureApp(QObject):
         self.activity.night_changed.connect(self.behavior.set_night)
 
         self.monitor.alert_triggered.connect(self._on_alert)
-        self.monitor.joke_triggered.connect(self._on_joke)
+        self.monitor.ambient_due.connect(self._on_ambient_due)
         self.monitor.reminder_triggered.connect(self._on_reminder)
 
     def _build_tray_icon(self) -> None:
@@ -164,8 +170,10 @@ class LavenzureApp(QObject):
     def _open_settings(self) -> None:
         """Open the Settings window (built on first use and wired to the pet)."""
         if self.settings is None:
-            self.settings = SettingsWindow(max_fps=self.sprite.max_fps)
+            self.settings = SettingsWindow(max_fps=self.sprite.max_fps,
+                                           language=self.lines.language)
             self.settings.max_fps_changed.connect(self._set_max_fps)
+            self.settings.language_changed.connect(self._set_language)
             self.sprite.frame_rate_changed.connect(self.settings.show_frame_rate)
         self.settings.open()
 
@@ -174,6 +182,17 @@ class LavenzureApp(QObject):
         self.sprite.set_max_fps(fps)
         self.user_settings.set("max_fps", fps)
         log.info("Frame rate %d fps", fps)
+
+    def _apply_language(self, language: str) -> None:
+        """Use ``language`` for every line the pet says from now on (pools and alerts)."""
+        self.lines.set_language(language)
+        self.monitor.set_language(self.lines.language)
+
+    def _set_language(self, language: str) -> None:
+        """Settings: switch the pet's language and remember the choice."""
+        self._apply_language(language)
+        self.user_settings.set("language", self.lines.language)
+        log.info("Language %s", self.lines.language)
 
     # ------------------------------------------------------------------ bubble / pet reactions
 
@@ -209,9 +228,11 @@ class LavenzureApp(QObject):
             self._dismiss_alert()
 
     def _say_random_line(self) -> None:
-        """The "speak" reaction: one random line from ``data/click_reactions.json``."""
+        """The "speak" reaction: one random line from the care + fact/joke pools (75 lines)."""
         if not self.bubble.is_sticky():
-            self._say(random.choice(self._click_lines), auto_hide_ms=3000)
+            text = self.lines.random_line(datetime.now())
+            self._say(text, auto_hide_ms=reading_ms(text))
+            self.monitor.notify_activity()
 
     def _show_pet_menu(self) -> None:
         """Right-click on the pet: the small Chat / Idle (Wander) / Hide Pet menu at the cursor."""
@@ -224,11 +245,16 @@ class LavenzureApp(QObject):
         self.behavior.trigger_alert()
         self._say(message, auto_hide_ms=None)
 
-    def _on_joke(self, text: str) -> None:
-        """Ambient fact/joke after idle time (never covers an alert; skipped while hidden or
-        asleep)."""
-        if self.sprite.isVisible() and not self.bubble.is_sticky() and not self.behavior.sleeping:
-            self.bubble.show_text(text, auto_hide_ms=5000)
+    def _on_ambient_due(self) -> None:
+        """Time for a line of its own (care line and fact/joke take turns). Skipped while the pet
+        is hidden or asleep, the chat is open, or a sticky bubble (alert, reminder) is up."""
+        if (not self.sprite.isVisible() or self.behavior.sleeping or self.chat.isVisible()
+                or self.bubble.is_sticky()):
+            return
+        text = self.lines.next_ambient(datetime.now())
+        self.sprite.character.play(Mood.HAPPY, 1.6)
+        self.sprite.character.talk(min(3.0, 0.05 * len(text)))
+        self.bubble.show_text(text, auto_hide_ms=reading_ms(text))
 
     def _on_reminder(self, message: str) -> None:
         """A reminder is due: surprised hop + bubble. During an alert, both stay on screen."""

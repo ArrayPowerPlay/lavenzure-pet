@@ -1,0 +1,221 @@
+{
+  "_comment": "Caring lines the pet says on its own (every ambient.interval_minutes, alternating with facts/jokes) and when clicked. 'hours' = [start, end) local hours when the line fits (end < start wraps past midnight); no 'hours' = any time.",
+  "en": [
+    {
+      "text": "Good morning! Let's make today a good one.",
+      "hours": [
+        5,
+        11
+      ]
+    },
+    {
+      "text": "Have you had breakfast yet? Don't skip it!",
+      "hours": [
+        5,
+        11
+      ]
+    },
+    {
+      "text": "Lunch time soon. Eat something warm, okay?",
+      "hours": [
+        11,
+        14
+      ]
+    },
+    {
+      "text": "Dinner time! Did you eat yet?",
+      "hours": [
+        17,
+        21
+      ]
+    },
+    {
+      "text": "It's getting late. Try to sleep early tonight, okay?",
+      "hours": [
+        22,
+        5
+      ]
+    },
+    {
+      "text": "Still up? Your bed misses you. Go get some sleep!",
+      "hours": [
+        22,
+        5
+      ]
+    },
+    {
+      "text": "Rough day? Be kind to yourself tonight.",
+      "hours": [
+        18,
+        24
+      ]
+    },
+    {
+      "text": "How's your day going so far?"
+    },
+    {
+      "text": "Take a sip of water. I'll wait!"
+    },
+    {
+      "text": "Give your eyes a break. Look at something far away for 20 seconds."
+    },
+    {
+      "text": "Stretch your shoulders a little. Ahh, better?"
+    },
+    {
+      "text": "Sit up straight! Your back will thank you."
+    },
+    {
+      "text": "You've been sitting a while. How about a short walk?"
+    },
+    {
+      "text": "Breathe in... and out. Feeling lighter?"
+    },
+    {
+      "text": "I hope my little flame keeps your heart warm today."
+    },
+    {
+      "text": "You're doing great. Really."
+    },
+    {
+      "text": "Whatever happens today, I'm right here with you."
+    },
+    {
+      "text": "Proud of you for trying your best today."
+    },
+    {
+      "text": "If something's bothering you, tell me. Right-click me anytime."
+    },
+    {
+      "text": "Smile a little. It suits you!"
+    },
+    {
+      "text": "Afternoon slump? A glass of water helps more than you think.",
+      "hours": [
+        13,
+        17
+      ]
+    },
+    {
+      "text": "Remember to eat some fruit today!"
+    },
+    {
+      "text": "Don't forget to message someone you love today."
+    },
+    {
+      "text": "A short break now will make you faster later."
+    },
+    {
+      "text": "Thank you for keeping me company today."
+    }
+  ],
+  "vi": [
+    {
+      "text": "Chào buổi sáng! Hôm nay cùng cố lên nhé.",
+      "hours": [
+        5,
+        11
+      ]
+    },
+    {
+      "text": "Bạn ăn sáng chưa đó? Đừng bỏ bữa nha!",
+      "hours": [
+        5,
+        11
+      ]
+    },
+    {
+      "text": "Sắp trưa rồi, nhớ ăn gì đó cho ấm bụng nhé.",
+      "hours": [
+        11,
+        14
+      ]
+    },
+    {
+      "text": "Tới giờ ăn tối rồi, bạn ăn chưa?",
+      "hours": [
+        17,
+        21
+      ]
+    },
+    {
+      "text": "Khuya rồi đó, tối nay ngủ sớm chút nha.",
+      "hours": [
+        22,
+        5
+      ]
+    },
+    {
+      "text": "Vẫn còn thức à? Đi ngủ thôi, mai còn có sức nè.",
+      "hours": [
+        22,
+        5
+      ]
+    },
+    {
+      "text": "Hôm nay mệt hả? Tối nay nhớ thương bản thân một chút nha.",
+      "hours": [
+        18,
+        24
+      ]
+    },
+    {
+      "text": "Hôm nay của bạn thế nào rồi?"
+    },
+    {
+      "text": "Uống một ngụm nước đi, mình đợi nè!"
+    },
+    {
+      "text": "Cho mắt nghỉ chút đi: nhìn ra xa 20 giây nhé."
+    },
+    {
+      "text": "Vươn vai một cái nào. Dễ chịu hơn chưa?"
+    },
+    {
+      "text": "Ngồi thẳng lưng lên nào, lưng bạn sẽ cảm ơn đó."
+    },
+    {
+      "text": "Ngồi lâu rồi đó, đứng dậy đi lại chút nhé."
+    },
+    {
+      "text": "Hít một hơi thật sâu... rồi thở ra. Thấy nhẹ hơn chưa?"
+    },
+    {
+      "text": "Mong ngọn lửa nhỏ này sưởi ấm trái tim bạn hôm nay."
+    },
+    {
+      "text": "Bạn đang làm tốt lắm, thật đó."
+    },
+    {
+      "text": "Dù hôm nay ra sao, mình vẫn ở đây với bạn."
+    },
+    {
+      "text": "Mình tự hào về bạn vì đã cố gắng hôm nay."
+    },
+    {
+      "text": "Có chuyện gì buồn thì kể mình nghe nha, click chuột phải vào mình là được."
+    },
+    {
+      "text": "Cười lên một chút nào, bạn cười xinh lắm!"
+    },
+    {
+      "text": "Buồn ngủ buổi chiều hả? Một cốc nước giúp nhiều hơn bạn nghĩ đó.",
+      "hours": [
+        13,
+        17
+      ]
+    },
+    {
+      "text": "Hôm nay nhớ ăn chút trái cây nha!"
+    },
+    {
+      "text": "Hôm nay nhớ nhắn hỏi thăm người thân nhé."
+    },
+    {
+      "text": "Nghỉ một chút bây giờ, lát làm sẽ nhanh hơn đó."
+    },
+    {
+      "text": "Cảm ơn bạn đã cho mình ở bên hôm nay."
+    }
+  ]
+}

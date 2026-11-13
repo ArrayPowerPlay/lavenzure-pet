@@ -2,8 +2,8 @@
 
 The system prompt asks for a leading ``[happy]``, ``[scared]``, ``[angry]``, ``[chill]``,
 ``[surprised]``, ``[thinking]``, ``[yuck]``, ``[cool]`` or ``[other]``. ``split_emotion`` takes
-the tag off so the chat only shows the clean text, and the pet plays the matching face for a few seconds
-(``other`` or a missing / unknown tag = keep the current face).
+the tag off so the chat only shows the clean text, and the pet plays the matching face for a
+few seconds (``other`` or a missing / unknown tag = keep the current face).
 
 While a reply is still streaming in, ``split_emotion_partial`` tells whether the start of the text
 can still turn into a tag (e.g. ``"[hap"``), so a half-received tag never flashes in the chat.

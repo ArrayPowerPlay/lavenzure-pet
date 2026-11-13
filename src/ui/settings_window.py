@@ -1,16 +1,19 @@
 """The Settings window opened from the tray menu.
 
-For now it holds one performance option (roadmap Phase 12):
+It holds two options; a choice made here is remembered (``user_settings``):
 
-- **Frame rate** - 30 / 60 fps for every animation. 30 is the default the user chose
-  (``character.fps`` in config.yaml); a choice made here is remembered (``user_settings``).
+- **Language** - English / Tiếng Việt: the language of everything the pet says on screen (click
+  lines, care lines, facts/jokes, alerts, reminders). Chat replies follow the language the user
+  writes in.
+- **Frame rate** - 30 / 60 fps for every animation (roadmap Phase 12). 30 is the default the user
+  chose (``character.fps`` in config.yaml).
 
 A small live readout shows how many frames per second the pet is really drawing, so the effect of
 the choice is visible at once. (The lite flame is not a switch here: the user chose it, so it is
 always on - see ``performance.lite_flame`` in config.yaml.)
 
-The window only *reports* changes (``max_fps_changed``); the app applies them to the pet and
-remembers them.
+The window only *reports* changes (``language_changed``, ``max_fps_changed``); the app applies
+them to the pet and remembers them.
 """
 from __future__ import annotations
 
@@ -24,6 +27,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+from pet_lines import LANGUAGES
 
 STYLE = """
 QWidget#settings { background: #fff8ea; }
@@ -46,12 +51,15 @@ FPS_CHOICES = (30, 60)
 
 
 class SettingsWindow(QWidget):
-    """Small always-on-top window with the frame-rate choice and a live frame-rate readout."""
+    """Small always-on-top window with the language and frame-rate choices and a live
+    frame-rate readout."""
 
+    language_changed = Signal(str)
     max_fps_changed = Signal(int)
 
-    def __init__(self, max_fps: int = 30) -> None:
-        """Build the window; the button matching the current frame rate starts selected."""
+    def __init__(self, max_fps: int = 30, language: str = "en") -> None:
+        """Build the window; the buttons matching the current language and frame rate start
+        selected."""
         super().__init__(None, Qt.WindowType.Window | Qt.WindowType.WindowStaysOnTopHint)
         self.setObjectName("settings")
         self.setWindowTitle("Lavenzure - Settings")
@@ -63,6 +71,24 @@ class SettingsWindow(QWidget):
 
         title = QLabel("Settings")
         title.setObjectName("title")
+
+        language_section = QLabel("Language")
+        language_section.setObjectName("section")
+        language_row = QHBoxLayout()
+        language_row.setContentsMargins(0, 0, 0, 0)
+        self.language_group = QButtonGroup(self)
+        self.language_buttons: dict[str, QRadioButton] = {}
+        for code, name in LANGUAGES.items():
+            button = QRadioButton(name)
+            button.setChecked(code == language)
+            button.toggled.connect(lambda checked, c=code: self._on_language_toggled(c, checked))
+            self.language_group.addButton(button)
+            self.language_buttons[code] = button
+            language_row.addWidget(button)
+        language_row.addStretch(1)
+        language_note = self._note("What the pet says on screen. Chat replies follow the "
+                                   "language you write in.")
+
         section = QLabel("Performance")
         section.setObjectName("section")
 
@@ -88,7 +114,11 @@ class SettingsWindow(QWidget):
         close = QPushButton("Close")
         close.clicked.connect(self.close)
 
-        for widget in (title, section, fps_label):
+        layout.addWidget(title)
+        layout.addWidget(language_section)
+        layout.addLayout(language_row)
+        layout.addWidget(language_note)
+        for widget in (section, fps_label):
             layout.addWidget(widget)
         layout.addLayout(fps_row)
         layout.addWidget(fps_note)
@@ -96,6 +126,11 @@ class SettingsWindow(QWidget):
         layout.addWidget(self.live)
         layout.addSpacing(8)
         layout.addWidget(close, alignment=Qt.AlignmentFlag.AlignRight)
+
+    def _on_language_toggled(self, code: str, checked: bool) -> None:
+        """A language button was picked: report it (ignore the one switched off)."""
+        if checked:
+            self.language_changed.emit(code)
 
     def _on_fps_toggled(self, fps: int, checked: bool) -> None:
         """A frame-rate button was picked: report the new rate (ignore the one switched off)."""

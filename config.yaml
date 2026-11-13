@@ -45,9 +45,11 @@ system_status:
   snooze_minutes: 10 # after you click away an alert, stay quiet this long before alerting again
 
 ambient:
-  random_fact_or_joke:
-    idle_minutes: 15 # trigger a random line after this many minutes without chat/click activity
-    facts_file: data/facts_jokes.json
+  # Every this many minutes (counted from the last line, click or chat) the pet says a line on
+  # its own: a care line (data/care_lines.json) and a fact/joke (data/facts_jokes.json) take turns.
+  interval_minutes: 5
+
+language: en # default language of everything the pet says: en / vi (Settings > Language)
 
 chat:
   auto_close_seconds: 30 # the chat bubble closes after this long without chatting
