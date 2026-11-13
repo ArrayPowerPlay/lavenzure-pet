@@ -32,12 +32,18 @@ DEFAULTS: dict[str, tuple[str, Any]] = {
 }
 
 
-def default_path() -> Path:
-    """Where the settings file lives (see the module doc)."""
+def app_data_dir() -> Path:
+    """The app's own data folder: ``%LOCALAPPDATA%\\Lavenzure`` (or the project folder when
+    ``LOCALAPPDATA`` is not set). Settings and saved reminders live here."""
     base = os.environ.get("LOCALAPPDATA")
     if base:
-        return Path(base) / "Lavenzure" / "settings.json"
-    return Path(__file__).resolve().parent.parent / "settings.json"
+        return Path(base) / "Lavenzure"
+    return Path(__file__).resolve().parent.parent
+
+
+def default_path() -> Path:
+    """Where the settings file lives (see the module doc)."""
+    return app_data_dir() / "settings.json"
 
 
 class UserSettings:

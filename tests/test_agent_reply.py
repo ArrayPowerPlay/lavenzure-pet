@@ -42,9 +42,19 @@ def test_missing_key_raises_clear_error(monkeypatch):
         graph.run_agent([], "hi")
 
 
-def test_reminder_tool_is_switched_off():
-    """Reminders are disabled for now: the model is not offered set_timer_reminder."""
-    assert "set_timer_reminder" not in {t.name for t in graph.TOOLS}
+def test_reminder_tool_is_offered():
+    """Reminders are back on (round 24): the model may call set_timer_reminder."""
+    assert "set_timer_reminder" in {t.name for t in graph.TOOLS}
+
+
+def test_prompt_carries_the_current_time():
+    """Every call tells the model the local date and time (for "tonight", "tomorrow at 7")."""
+    from datetime import datetime
+
+    text = graph.system_prompt(datetime(2026, 11, 14, 15, 20))
+    assert text.endswith("Current local date and time: Saturday 2026-11-14 15:20.")
+    messages = graph._prompt({"messages": []})
+    assert messages[0].content.startswith(graph.SYSTEM_PROMPT)
 
 
 def test_prompt_asks_for_user_language_and_emotion_tag():

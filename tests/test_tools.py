@@ -1,4 +1,6 @@
 """Tests for the agent tools with the network faked out."""
+from datetime import datetime
+
 import pytest
 import requests
 
@@ -81,14 +83,49 @@ def test_web_search_without_key(monkeypatch):
 
 
 @pytest.mark.parametrize(
-    ("minutes", "message", "accepted"),
-    [(10, "drink water", True), (0, "x", False), (-5, "x", False), (1441, "x", False),
-     (5, "   ", False)],
+    ("args", "accepted"),
+    [({"minutes": 10, "message": "drink water"}, True),
+     ({"at": "23:59", "message": "sleep"}, True),
+     ({"minutes": 0, "message": "x"}, False),
+     ({"minutes": -5, "message": "x"}, False),
+     ({"minutes": 7 * 24 * 60 + 1, "message": "x"}, False),
+     ({"minutes": 5, "message": "   "}, False),
+     ({"message": "x"}, False),
+     ({"minutes": 5, "at": "11:00", "message": "x"}, False),
+     ({"at": "half past ten", "message": "x"}, False)],
 )
-def test_reminder_validation(monkeypatch, minutes, message, accepted):
-    """Only sensible reminders reach the scheduler."""
+def test_reminder_validation(monkeypatch, args, accepted):
+    """Only sensible reminders reach the scheduler (as a due timestamp + message)."""
     calls = []
-    monkeypatch.setattr(reminder_module, "_scheduler", lambda m, msg: calls.append((m, msg)))
-    reply = reminder_module.set_timer_reminder.invoke({"minutes": minutes, "message": message})
+    monkeypatch.setattr(reminder_module, "_scheduler", lambda due, msg: calls.append((due, msg)))
+    reply = reminder_module.set_timer_reminder.invoke(args)
     assert bool(calls) is accepted
     assert reply.startswith("Okay") is accepted
+
+
+NOW = datetime(2026, 11, 14, 15, 20)
+
+
+@pytest.mark.parametrize(("minutes", "at", "expected"), [
+    (30, None, datetime(2026, 11, 14, 15, 50)),
+    (None, "11:00", datetime(2026, 11, 15, 11, 0)),       # already past today -> tomorrow
+    (None, "23:00", datetime(2026, 11, 14, 23, 0)),
+    (None, "9 PM", datetime(2026, 11, 14, 21, 0)),
+    (None, "2026-11-16 07:30", datetime(2026, 11, 16, 7, 30)),
+])
+def test_resolve_due(minutes, at, expected):
+    """The code, not the model, works out the due time."""
+    assert reminder_module.resolve_due(minutes, at, NOW) == expected
+
+
+def test_resolve_due_rejects_past_dates():
+    """An explicit date in the past is refused."""
+    with pytest.raises(ValueError):
+        reminder_module.resolve_due(None, "2026-11-13 08:00", NOW)
+
+
+def test_describe_due():
+    """The confirmation says today / tomorrow."""
+    assert reminder_module.describe_due(datetime(2026, 11, 14, 23, 0), NOW) == "23:00 today"
+    assert reminder_module.describe_due(datetime(2026, 11, 15, 11, 0), NOW).startswith(
+        "11:00 tomorrow")

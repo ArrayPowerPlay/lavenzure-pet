@@ -1,13 +1,15 @@
 """Polls system health, fires scheduled reminders, and says when it is time for an ambient line.
 
 Everything here runs on the Qt UI thread (QTimers). Reminders requested by the agent's worker
-thread arrive through the queued ``_reminder_requested`` signal. Alert texts are written in the
+thread arrive through the queued ``_reminder_requested`` signal and are saved to a file
+(``monitor.reminders.ReminderStore``), so they survive restarts. Alert texts are written in the
 language chosen in Settings (``set_language``); which ambient line to say is up to the app
 (``pet_lines.PetLines``), the monitor only keeps the clock.
 """
 from __future__ import annotations
 
 import time
+from pathlib import Path
 
 import psutil
 from PySide6.QtCore import QObject, Qt, QTimer, Signal
@@ -15,21 +17,26 @@ from PySide6.QtCore import QObject, Qt, QTimer, Signal
 import config
 import pet_lines
 from agent.tools import set_timer_reminder as reminder_tool
+from monitor.reminders import ReminderStore
+
+LATE_GRACE_SECONDS = 60   # a reminder going off later than this says how late it is
 
 
 class BackgroundMonitor(QObject):
     """Emits ``alert_triggered`` (CPU/RAM/battery over threshold, once until cleared, then quiet
-    for ``system_status.snooze_minutes`` after the user dismisses it), ``reminder_triggered`` (a
-    reminder is due) and ``ambient_due`` (``ambient.interval_minutes`` since the last line or
+    for ``system_status.snooze_minutes`` after the user dismisses it), ``reminder_triggered``
+    (message, minutes late - 0 when on time; late when the PC slept or the app was closed at the
+    due time) and ``ambient_due`` (``ambient.interval_minutes`` since the last line or
     interaction: time for the pet to say something on its own)."""
 
     alert_triggered = Signal(str)
     ambient_due = Signal()
-    reminder_triggered = Signal(str)
+    reminder_triggered = Signal(str, int)
     _reminder_requested = Signal(float, str)  # internal: worker thread -> UI thread hand-off
 
-    def __init__(self) -> None:
-        """Read thresholds/intervals from config and start the poll timers."""
+    def __init__(self, reminders_path: Path | None = None) -> None:
+        """Read thresholds/intervals from config, load saved reminders and start the poll
+        timers. ``reminders_path`` overrides the reminders file (tests)."""
         super().__init__()
         self._cpu_threshold = config.get("system_status.cpu_threshold_percent", 90)
         self._ram_threshold = config.get("system_status.ram_threshold_percent", 90)
@@ -42,7 +49,7 @@ class BackgroundMonitor(QObject):
         self._alert_active = False
         self._snoozed_until = 0.0   # no new alerts before this time (set when one is dismissed)
         self._last_activity = time.time()
-        self._reminders: list[tuple[float, str]] = []
+        self._reminders = ReminderStore(reminders_path)
 
         self._reminder_requested.connect(self._add_reminder, Qt.ConnectionType.QueuedConnection)
         reminder_tool.register_reminder_scheduler(self.schedule_reminder)
@@ -74,13 +81,13 @@ class BackgroundMonitor(QObject):
         self._alert_active = False
         self._snoozed_until = time.time() + self._snooze_seconds
 
-    def schedule_reminder(self, minutes: float, message: str) -> None:
-        """Schedule a reminder ``minutes`` from now. Safe to call from any thread."""
-        self._reminder_requested.emit(float(minutes), message)
+    def schedule_reminder(self, due: float, message: str) -> None:
+        """Schedule a reminder at unix time ``due``. Safe to call from any thread."""
+        self._reminder_requested.emit(float(due), message)
 
-    def _add_reminder(self, minutes: float, message: str) -> None:
-        """Store a reminder (UI thread only)."""
-        self._reminders.append((time.time() + minutes * 60, message))
+    def _add_reminder(self, due: float, message: str) -> None:
+        """Store (and save) a reminder (UI thread only)."""
+        self._reminders.add(due, message)
 
     def _check_system_status(self) -> None:
         """Poll CPU/RAM/battery and raise at most one alert until the user clears it (and none
@@ -111,14 +118,14 @@ class BackgroundMonitor(QObject):
         self.alert_triggered.emit(message)
 
     def _check_reminders(self) -> None:
-        """Emit every reminder whose time has come and drop it from the list."""
+        """Emit every reminder whose time has come (with how many minutes late it is) and drop
+        it from the saved list. Runs every second, and right after startup for reminders that
+        fell due while the app was closed."""
         now = time.time()
-        due = [r for r in self._reminders if r[0] <= now]
-        if not due:
-            return
-        self._reminders = [r for r in self._reminders if r[0] > now]
-        for _, message in due:
-            self.reminder_triggered.emit(message)
+        for reminder in self._reminders.pop_due(now):
+            late = now - reminder.due
+            minutes_late = int(round(late / 60)) if late > LATE_GRACE_SECONDS else 0
+            self.reminder_triggered.emit(reminder.message, minutes_late)
 
     def _check_idle(self) -> None:
         """Once ``ambient.interval_minutes`` have passed since the last line or interaction,

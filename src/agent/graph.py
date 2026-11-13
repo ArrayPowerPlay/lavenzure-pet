@@ -6,20 +6,25 @@ key is needed instead of the whole app crashing.
 
 ``run_agent`` can stream: given an ``on_text`` callback it reports the reply text as it grows
 (token chunks from the model), so the chat can show the answer while it is still being written.
+
+Every model call gets the system prompt plus the PC's current local date and time (``_prompt``),
+so the model understands "tonight" or "tomorrow at 7" when setting reminders.
 """
 from __future__ import annotations
 
 import logging
 import threading
 from collections.abc import Callable
+from datetime import datetime
 
-from langchain_core.messages import AIMessageChunk
+from langchain_core.messages import AIMessageChunk, SystemMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.prebuilt import create_react_agent
 
 import config
 from agent.emotion import EMOTION_INSTRUCTIONS
 from agent.errors import MissingApiKeyError
+from agent.tools.set_timer_reminder import set_timer_reminder
 from agent.tools.system_status import system_status
 from agent.tools.weather import get_weather
 from agent.tools.web_search import web_search
@@ -30,17 +35,28 @@ SYSTEM_PROMPT = (
     "You are Lavenzure, a small, witty fire spirit living on the user's desktop. "
     "Keep replies short, warm, and a little playful. Use tools when the user asks "
     "about weather, needs a web search, or asks about their PC's CPU/RAM/battery status. "
-    "You cannot set reminders or timers right now; if asked, say so kindly. "
+    "When the user asks to be reminded of something (in N minutes/hours, or at a clock time), "
+    "call set_timer_reminder: pass 'minutes' for a delay or 'at' for a clock time, and let the "
+    "tool work out the exact time; then confirm the time it reports. "
     "Always reply in the same language the user writes in. "
     + EMOTION_INSTRUCTIONS
 )
 
-# Reminders are switched off for now (decision 2026-11-12): ``set_timer_reminder`` stays in the
-# code base but is not offered to the model. Add it back to this list to re-enable it.
-TOOLS = [get_weather, web_search, system_status]
+# Reminders were switched off on 2026-11-12 and switched back on in round 24 (saved to a file).
+TOOLS = [get_weather, web_search, system_status, set_timer_reminder]
 
 _agent = None
 _agent_lock = threading.Lock()
+
+
+def system_prompt(now: datetime) -> str:
+    """The system prompt with the current local date and time appended."""
+    return f"{SYSTEM_PROMPT} Current local date and time: {now:%A %Y-%m-%d %H:%M}."
+
+
+def _prompt(state) -> list:
+    """Messages sent to the model on every step: the timestamped system prompt + the chat."""
+    return [SystemMessage(content=system_prompt(datetime.now())), *state["messages"]]
 
 
 def _build_agent():
@@ -65,7 +81,7 @@ def _build_agent():
     return create_react_agent(
         llm,
         tools=TOOLS,
-        prompt=SYSTEM_PROMPT,
+        prompt=_prompt,
     )
 
 
