@@ -12,10 +12,10 @@ Khi một mục được chốt: ghi quyết định vào `DECISION_LOG.md`, chu
 
 ## Pending (chờ chốt mới làm)
 
-### P1. Nhắc việc + hẹn giờ tập trung (Pomodoro)
-- **Ý tưởng:** chat "nhắc tôi uống nước sau 30 phút" → đúng giờ pet nhảy lên nhắc. Thêm chế độ tập trung kiểu Pomodoro (vd 25 phút làm / 5 phút nghỉ): trong lúc tập trung pet im lặng, ngồi yên; hết giờ thì nhắc nghỉ.
-- **Hiện trạng:** công cụ `set_timer_reminder` và phần nhắc trong `BackgroundMonitor` đã có code nhưng đang **tạm tắt** (G4, 2026-11-12).
-- **Cần chốt trước khi làm:** nhắc chỉ sống trong RAM (tắt app là mất) hay lưu ra file; Pomodoro bật bằng chat, menu chuột phải hay cả hai; độ dài mặc định; pet nhắc bằng bong bóng giữ nguyên tới khi click hay tự tắt.
+### P1. Nhắc việc qua chat
+- **Ý tưởng:** chat "nhắc tôi uống nước sau 30 phút" hoặc "nhắc tôi lúc 11 giờ gọi cho mẹ" → đúng giờ pet nhảy lên nhắc.
+- **Hiện trạng:** công cụ `set_timer_reminder` và phần nhắc trong `BackgroundMonitor` đã có code nhưng đang **tạm tắt** (G4, 2026-11-12). Pomodoro đã bỏ (lượt 21).
+- **Cách làm + câu cần chốt:** xem `DECISION_LOG.md` lượt 21, mục "Nhắc việc".
 
 ### P2. Kéo file thả vào pet
 - **Ý tưởng:** kéo một file (PDF, ảnh, văn bản) thả lên pet → pet "ăn" file (hoạt ảnh nhai), mở khung chat và tóm tắt / trả lời câu hỏi về file đó.
@@ -91,3 +91,4 @@ Khi một mục được chốt: ghi quyết định vào `DECISION_LOG.md`, chu
 - Thêm nội dung cho cửa sổ Settings.
 - Pet đi trên cửa sổ khác (ý đầu, nay chi tiết hơn ở N1 để user xem lại).
 - Tự khởi động cùng Windows (C3).
+- Pomodoro / hẹn giờ tập trung (lượt 21: đã có ngủ gật khi rời máy).

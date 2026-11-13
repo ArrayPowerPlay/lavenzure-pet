@@ -278,8 +278,43 @@
 - **Claude đề xuất:** **giữ mô hình lai.** Những gì xảy ra thường xuyên (câu quan tâm, Pomodoro, phản ứng, cảnh báo) dùng **luật viết sẵn** — miễn phí, tức thì, chạy cả khi mất mạng. AI chỉ dùng khi user chủ động (mức 1) và được thêm dần công cụ an toàn. Nếu muốn pet "thông minh" hơn mà vẫn rẻ: cho AI viết **vài câu quan tâm riêng mỗi ngày** dựa trên thời tiết / giờ (tối đa vài lần/ngày, bật tắt được) thay vì để AI chạy liên tục. Không làm mức 3.
 - **Chờ user chọn** hướng nào.
 
+### Lượt 21 (2026-11-14) — user trả lời lượt 20 (CHƯA CODE)
+
+#### Câu quan tâm + fact/joke
+- **User chốt:** **gộp** câu quan tâm với fact/joke thành một nhịp; fact/joke có thêm **bản tiếng Việt** (giống câu quan tâm); hiện **sau 5 phút** thay vì 15 phút.
+- **Giải thích câu hỏi "Language đổi những gì":** pet đang nói ở 5 chỗ, hiện tất cả là tiếng Anh: (a) 20 câu phản ứng khi click, (b) 100 câu fact/joke, (c) câu quan tâm (mới), (d) cảnh báo máy ("RAM usage is at 93%…"), (e) chữ "Reminder:" khi nhắc việc. Câu hỏi là chọn `Tiếng Việt` thì đổi cả (a)-(e) hay chỉ một phần. Riêng câu trả lời của AI trong chat vẫn theo ngôn ngữ user gõ.
+  - **Claude đề xuất:** đổi **cả (a)-(e)**. Fact/joke tiếng Việt **viết lại cho tự nhiên** (chơi chữ tiếng Anh dịch ra thường mất vui), đủ 100 câu như bản Anh. **Chờ user xác nhận.**
+- **Giải thích "làm sao biết đang giờ tập trung":** giờ tập trung là bộ đếm Pomodoro do chính pet chạy, nên pet tự biết. Nay **Pomodoro bỏ** (xem dưới) → điều kiện này bỏ luôn. Pet vẫn im khi: đang ngủ / user đi vắng, đang cảnh báo, đang mở bong bóng chat, đang ẩn.
+- **Claude đề xuất (user có thể đổi):** 5 phút tính từ câu gần nhất; trộn **xen kẽ** câu quan tâm và fact/joke (quan tâm → fact/joke → quan tâm…), mỗi loại bốc kiểu "xáo bài", câu quan tâm vẫn theo khung giờ. `config.yaml`: `ambient.interval_minutes: 5`.
+
+#### Pomodoro
+- **User:** không cần lắm (đã có cơ chế ngủ gật khi rời máy) → **bỏ Pomodoro**, chuyển sang "Không chọn" trong `TASKS.md`.
+
+#### Nhắc việc ("nhắc tôi sau 30 phút…", "nhắc tôi lúc 11 giờ…") — cách triển khai (Claude đề xuất)
+- **Hiện trạng:** đã có sẵn công cụ `set_timer_reminder` (chỉ nhận **số phút**, tối đa 24 giờ) và phần đếm giờ trong `BackgroundMonitor` (kiểm mỗi giây, tới giờ thì pet nhảy lên + bong bóng 8 giây). Đang **tắt** từ 2026-11-12 (AI được dặn trả lời "chưa đặt nhắc được").
+- **Luồng chạy:**
+  1. User chat "nhắc tôi lúc 11 giờ gọi cho mẹ". AI hiểu câu và gọi công cụ với `message="gọi cho mẹ"`, `at="11:00"` (hoặc `minutes=30` nếu nói "sau 30 phút").
+  2. **Code tự tính giờ**, không để AI tính (AI hay tính sai giờ): `at` đã qua trong hôm nay → hiểu là ngày mai và nói rõ cho user ("11:00 sáng mai nhé"). Mỗi lần chat, AI được cho biết giờ hiện tại của máy để hiểu "tối nay", "chiều mai".
+  3. Pet trả lời xác nhận trong chat: "Okay! 11:00 mình nhắc bạn gọi cho mẹ."
+  4. Tới giờ: pet (đang ngủ thì thức dậy, đang ẩn thì tạm hiện) nhảy lên, bong bóng "Reminder: gọi cho mẹ" **giữ tới khi user click pet** để không bị lỡ.
+- **Thêm 2 công cụ nhỏ:** "đang có nhắc gì?" → liệt kê; "huỷ nhắc lúc 11 giờ" → huỷ.
+- **Máy ngủ / gập laptop qua giờ hẹn:** mở máy lên là pet nhắc ngay (kèm "trễ 10 phút").
+- **Cần chốt:**
+  - Lưu nhắc **chỉ trong RAM** (tắt app là mất) hay **lưu ra file** `%LOCALAPPDATA%\Lavenzure\reminders.json` (mở lại app vẫn còn, hẹn được xa hơn 24 giờ). Claude đề xuất: lưu ra file.
+  - Có cần nhắc **lặp lại** không ("mỗi ngày 7h nhắc uống thuốc")? Claude đề xuất: chưa làm, để sau.
+  - Bong bóng giữ tới khi click (Claude đề xuất) hay tự tắt sau vài giây; có phát **âm thanh** không.
+
+#### Biểu cảm `cool`
+- **User:** chưa có ảnh tham khảo → **Claude tự thiết kế** (theo mô tả lượt 20: kính râm rơi xuống, miệng nhếch mép một bên, vệt sáng lướt trên kính).
+- **Claude tự quyết (user có thể đổi):** `cool` vào nhóm hoạt ảnh ngẫu nhiên khi click, và vào danh sách cảm xúc AI chọn khi chat (vd được khen, khoe điều gì đó).
+
+#### Giải thích T1, T6
+- **T1 "quay lại máy":** user không đụng chuột / bàn phím một lúc (đi ăn, đi họp…), sau 10 phút pet đã tự ngủ gật như hiện nay. Khi user quay lại và đụng chuột, hiện pet chỉ **thức dậy**; T1 thêm một câu chào kiểu "Welcome back! You were away 25 minutes." Chỉ chào khi vắng đủ lâu (vd từ 10 phút) để không chào liên tục.
+- **T6 "ngày lễ":** vào các ngày đặc biệt pet **đeo thêm đồ** và có **câu chúc riêng** trong ngày đó, ví dụ: Tết âm lịch → khăn đỏ / cầm bao lì xì, "Chúc mừng năm mới!"; Giáng sinh → mũ Noel; Halloween → đèn bí ngô; **sinh nhật user** (user tự ghi ngày trong `config.yaml`) → mũ tiệc + "Happy birthday!" và pháo giấy. Ngày khác thì pet như bình thường.
+- T1-T6 vẫn **chờ user chọn**.
+
 ## Còn bàn
 
 - Đo lại 60 phút ở 30 fps + lửa nhẹ (`src/perf_check.py`, cần thoát pet đang chạy).
 - Cách 3 (tạm dừng khi có app toàn màn hình) và cách 5 (lửa 30 khung/giây) — user để lại, chưa làm.
-- Lượt 20: chốt chi tiết câu quan tâm (phạm vi Language, gộp với fact/joke), Pomodoro (P1), biểu cảm `cool` (hình tham khảo?), chọn tính năng T1-T6, chọn hướng agent.
+- Lượt 21: xác nhận Language đổi cả 5 loại câu pet nói; nhắc việc (lưu RAM hay file, lặp lại, âm thanh); chọn tính năng T1-T6; chọn hướng agent (lượt 20 mục 5).
