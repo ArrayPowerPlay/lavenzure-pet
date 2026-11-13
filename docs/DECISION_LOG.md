@@ -343,8 +343,30 @@
 #### T1, T6
 - **User:** T1 (chào khi quay lại máy) và T6 (đồ + câu chúc ngày lễ, sinh nhật) là tính năng hay nhưng tốn nhiều công thiết kế → **pending**, chưa làm. T2-T5 chưa được chọn.
 
+### Lượt 23 (2026-11-14) — file nhắc việc, âm thanh, agent, ước lượng T6 (CHƯA CODE)
+
+- **User hỏi:** lưu nhắc việc ra file thì máy có thêm một file, có bất tiện không?
+  - **Trả lời:** gần như không. App **đã có sẵn** thư mục `%LOCALAPPDATA%\Lavenzure\` (đang chứa `settings.json` của Settings) → chỉ thêm `reminders.json` vào cùng chỗ, không tạo thư mục mới. Thư mục này nằm trong AppData (Windows ẩn sẵn, nơi mọi app lưu cài đặt), user không bao giờ thấy trên Desktop / Documents. File chỉ vài trăm byte, nhắc xong thì dòng đó tự xoá, hết nhắc thì file rỗng. Xoá app thì xoá luôn thư mục này.
+  - **Chờ user chốt** lưu file hay RAM.
+- **User chốt:** **âm thanh để sau**, làm chung với đợt thêm âm thanh cho hoạt ảnh.
+- **User chốt:** **chưa làm hướng agent** (giữ như hiện tại: AI chỉ chạy khi user chat).
+- **User hỏi:** thiết kế trang phục T6 có lâu không? **Claude ước lượng:**
+  - **Phần khung (nhanh, ~1 lượt làm):** kiểm ngày khi mở app và lúc qua nửa đêm; ngày sinh nhật user ghi trong `config.yaml`; **ngày Tết âm lịch đổi mỗi năm** → ghi sẵn bảng ngày Tết 10 năm tới (đơn giản hơn thêm thư viện lịch âm); câu chúc riêng Anh / Việt.
+  - **Phần vẽ là phần lâu.** Đồ được vẽ bằng code như cái chảo của `chill` (chảo ~230 dòng code, mất khoảng 4 lượt góp ý mới ưng). Cái khó chung: đầu ngọn lửa luôn lay động, co giãn, nghiêng theo chuyển động, nên đồ phải bám theo đúng chỗ mà không trông như dán đè.
+
+| Đồ | Độ khó | Lý do |
+|---|---|---|
+| Mũ tiệc sinh nhật + pháo giấy | Dễ | Mũ hình nón đơn giản, đặt trên đầu như chảo; pháo giấy dùng lại hệ thống tàn lửa có sẵn |
+| Mũ Noel (+ tuyết rơi nhẹ) | Dễ - vừa | Nón mềm có quả bông, phần chóp nên đung đưa theo chuyển động |
+| Bao lì xì cầm tay (Tết) | Vừa | Pet không có tay rõ ràng (chỉ có tay lúc ngồi khúc gỗ) → phải thêm cách "cầm" |
+| Khăn quàng đỏ (Tết) | Khó | Phải ôm theo thân lửa luôn đổi hình |
+| Đèn bí ngô (Halloween) | Vừa | Đồ đặt cạnh pet, không phải bám theo người; Halloween không phổ biến lắm ở VN, có thể bỏ |
+
+  - **Tổng:** khoảng **1 lượt khung + 1-2 lượt cho mỗi món dễ, 3-4 lượt cho món khó** (tính cả góp ý của user). **Claude đề xuất** nếu làm: bắt đầu với mũ tiệc + mũ Noel + bao lì xì (đều là đồ đặt trên đầu / bên cạnh), bỏ khăn quàng và Halloween ở đợt đầu.
+  - T6 vẫn **pending**.
+
 ## Còn bàn
 
 - Đo lại 60 phút ở 30 fps + lửa nhẹ (`src/perf_check.py`, cần thoát pet đang chạy).
 - Cách 3 (tạm dừng khi có app toàn màn hình) và cách 5 (lửa 30 khung/giây) — user để lại, chưa làm.
-- Lượt 22: nhắc việc lưu RAM hay file, có âm thanh không; hướng agent (lượt 20 mục 5); T1, T6 pending.
+- Lượt 23: nhắc việc lưu file hay RAM; T1, T6 pending; âm thanh (cùng âm thanh hoạt ảnh) và hướng agent để sau.
