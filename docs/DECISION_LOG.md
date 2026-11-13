@@ -182,6 +182,14 @@
 - **User yêu cầu bỏ mốc 45 fps** trong code và Settings; chỉ giữ **30 và 60**. Settings Frame rate giờ có 2 nút: 30 (mặc định) / 60.
 - **Claude tự quyết (user có thể đổi):** nếu file settings cũ lưu 45 thì app tự chuyển về mức gần nhất còn lại (30 hoặc 60) khi mở. `FramePacer` giữ nguyên (vẫn giúp nhịp đều khi timer lệch nhẹ), chỉ bỏ phần mô tả riêng cho 45 fps.
 
+### Lượt 18 (2026-11-14) — cảnh báo bớt phiền, Hide Pet ở chuột phải, khung tin nhắn
+- **Lý do:** RAM máy user thường ở ~93% (Chrome, WSL, WebView2, phần mềm Dell, VNPT Threat Protection…; pet chỉ ~0,3 GB). Click tắt cảnh báo thì 45 giây sau pet báo lại, nên báo liên tục.
+- **User chốt:** click tắt cảnh báo → pet **im 10 phút** rồi mới báo lại nếu vẫn quá ngưỡng (`system_status.snooze_minutes: 10`, áp cho cả CPU / RAM / pin).
+- **User chốt:** đang cảnh báo mà chọn `Idle` → tắt cảnh báo (cũng im 10 phút) và pet đi ngủ luôn.
+- **User chốt:** thêm **`Hide Pet`** vào menu chuột phải của pet (không cần vào icon khay); hiện lại bằng icon khay → `Show Pet`.
+- **User chốt:** trong bong bóng chat, **mỗi tin nhắn có khung bo tròn riêng**. **Claude tự quyết (user có thể đổi):** tin của user bên phải, nền cam nhạt viền cam; tin của pet bên trái, nền trắng viền đỏ nâu; khung ôm vừa chữ.
+- **Claude tự quyết (user có thể đổi):** hết 10 phút mà pet đang ngủ (Idle) và máy vẫn quá ngưỡng thì cảnh báo vẫn đánh thức pet như trước.
+
 ## Còn bàn
 
 - Đo lại 60 phút ở 30 fps + lửa nhẹ (`src/perf_check.py`, cần thoát pet đang chạy).

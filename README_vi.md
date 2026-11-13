@@ -60,16 +60,16 @@ Mục tiêu: nét vẽ phẳng, viền mực như sticker vẽ tay, nhưng *chuy
 - **Ngủ**: chọn `Idle` thì pet nằm ngủ (thở chậm, bay chữ "z"); sau 10 phút không đụng chuột/bàn phím pet tự ngủ gật, dùng máy lại thì tỉnh.
 - **Ban đêm**: từ 20h đến 5h sáng lửa dịu và trầm màu hơn, pet cử động chậm hơn.
 - **Luôn nổi trên cùng, trong suốt, click xuyên qua**: chỉ phần có hình nhân vật mới nhận chuột, vùng xung quanh vẫn bấm được vào app bên dưới.
-- **Tương tác chuột**: click trái → một hoạt ảnh ngẫu nhiên (không lặp lại hai lần liền); giữ và kéo → mang nhân vật đi; chuột phải → menu nhỏ `Chat` và `Idle` / `Wander`.
+- **Tương tác chuột**: click trái → một hoạt ảnh ngẫu nhiên (không lặp lại hai lần liền); giữ và kéo → mang nhân vật đi; chuột phải → menu nhỏ `Chat`, `Idle` / `Wander` và `Hide Pet`.
 - **Bong bóng thoại đi theo pet** khi nó di chuyển.
 - **Chat với AI agent** (LangGraph + Google Gemini `gemini-flash-lite-latest`), trả lời theo ngôn ngữ bạn gõ, chữ hiện dần trong bong bóng ngay khi model bắt đầu trả lời, tự chọn cảm xúc cho mỗi câu trả lời (pet làm mặt đó ngay khi câu trả lời bắt đầu), có 3 công cụ:
   - `weather` — thời tiết theo địa danh (Open-Meteo, không cần key)
   - `web_search` — tìm kiếm web (Tavily)
   - `system_status` — CPU / RAM / pin hiện tại
   - (hẹn giờ nhắc việc tạm tắt)
-- **Bong bóng chat** tông màu lửa, gắn cạnh pet (pet đứng yên khi bong bóng mở), hiển thị Markdown, Esc để đóng, tự đóng sau 30 giây không chat (không tính lúc đang gõ hoặc AI đang trả lời).
+- **Bong bóng chat** tông màu lửa, gắn cạnh pet (pet đứng yên khi bong bóng mở), mỗi tin nhắn nằm trong một khung bo tròn riêng (của bạn bên phải, của pet bên trái), hiển thị Markdown, Esc để đóng, tự đóng sau 30 giây không chat (không tính lúc đang gõ hoặc AI đang trả lời).
 - **Báo lỗi dễ hiểu**: thiếu/sai key, hết quota, mất mạng… đều được pet giải thích trong chat thay vì im lặng hay crash.
-- **Theo dõi máy nền**: tự cảnh báo khi pin < 30%, CPU > 90% hoặc RAM > 90%; cảnh báo giữ nguyên đến khi bạn click vào pet.
+- **Theo dõi máy nền**: tự cảnh báo khi pin < 30%, CPU > 90% hoặc RAM > 90%; cảnh báo giữ nguyên đến khi bạn click vào pet (hoặc chọn `Idle`), sau đó pet im 10 phút mới báo lại (`system_status.snooze_minutes`).
 - **Câu nói ngẫu nhiên**: sau 15 phút không tương tác, pet tự nói một fact/câu đùa (tiếng Anh).
 - **Lịch sử chat chỉ nằm trong RAM**, tự xóa sau 15 phút không chat — không lưu gì xuống ổ đĩa.
 - **Icon ở khay hệ thống** (vẽ chính hình pet): `Hide Pet` / `Show Pet`, `Settings` (chọn 30 / 60 fps, có hiệu lực ngay), `Quit App`.
@@ -116,7 +116,7 @@ Có lỗi gì thì xem file log: `%LOCALAPPDATA%\Lavenzure\logs\lavenzure.log`.
 |---|---|
 | Click trái vào pet | Một hoạt ảnh ngẫu nhiên; nếu đang cảnh báo thì chỉ tắt cảnh báo |
 | Giữ chuột trái và kéo | Mang pet đi chỗ khác |
-| Chuột phải vào pet | Menu: `Chat` (mở bong bóng chat), `Idle` (đi ngủ) / `Wander` (đi lại tiếp) |
+| Chuột phải vào pet | Menu: `Chat` (mở bong bóng chat), `Idle` (đi ngủ; đang cảnh báo thì tắt luôn cảnh báo) / `Wander` (đi lại tiếp), `Hide Pet` (ẩn pet, bật lại ở icon khay) |
 | Esc trong bong bóng chat | Đóng chat (lịch sử vẫn giữ trong 15 phút) |
 | Icon ở khay hệ thống | Ẩn/hiện pet, Settings, thoát app |
 
@@ -133,7 +133,7 @@ Các cài đặt không bí mật nằm trong [`config.yaml`](./config.yaml):
 | `character.flame_renderer` | Cách vẽ thân lửa: `shader` (mặc định, GPU) / `metaball` / `baked` |
 | `performance.lite_flame` | Lửa nhẹ: lửa vẽ ở độ phân giải `lite_flame_supersample` (1.5) thay vì 2.0 (bật sẵn) |
 | `behavior.state_weights` | Tỉ lệ chọn đứng yên / đi / bay / nhảy |
-| `system_status.*` | Chu kỳ kiểm tra máy và ngưỡng cảnh báo |
+| `system_status.*` | Chu kỳ kiểm tra máy, ngưỡng cảnh báo và thời gian im sau khi tắt cảnh báo |
 | `ambient.random_fact_or_joke.idle_minutes` | Bao lâu không tương tác thì pet tự nói |
 | `chat.reply_bubble_max_chars` | Câu trả lời ngắn hơn số ký tự này hiện cả trong bong bóng (0 = tắt) |
 | `memory.idle_timeout_minutes` | Bao lâu không chat thì xóa lịch sử |

@@ -60,16 +60,16 @@ The goal was a flat, hand-inked "sticker" look that *moves* like real fire and *
 - **Sleeps**: lies down and sleeps (slow breathing, floating "z"s) when you choose `Idle`, and dozes off by itself after 10 minutes without mouse/keyboard input, waking up when you come back.
 - **Night look**: from 20:00 to 05:00 the fire is calmer and dimmer and the pet moves slower.
 - **Always on top, transparent, click-through**: only the visible flame catches the mouse; the empty area around it passes clicks to the app underneath.
-- **Mouse interaction**: left-click → a random animation (never the same twice in a row); press and drag → carry the pet; right-click → a small menu with `Chat` and `Idle` / `Wander`.
+- **Mouse interaction**: left-click → a random animation (never the same twice in a row); press and drag → carry the pet; right-click → a small menu with `Chat`, `Idle` / `Wander` and `Hide Pet`.
 - **Speech bubbles follow the pet** as it moves.
 - **Chat with an AI agent** (LangGraph + Google Gemini `gemini-flash-lite-latest`) that answers in your language, streams its reply into the bubble word by word, picks an emotion for each reply (the pet shows that face as soon as the reply starts) and has 3 tools:
   - `weather` — current weather for a place name (Open-Meteo, no key needed)
   - `web_search` — web search (Tavily)
   - `system_status` — current CPU / RAM / battery
   - (reminders are switched off for now)
-- **Chat bubble** in warm flame colours, attached to the pet (it stands still while the bubble is open), renders Markdown, closes with Esc or by itself after 30 seconds without chatting (not while you type or the AI answers).
+- **Chat bubble** in warm flame colours, attached to the pet (it stands still while the bubble is open), shows every message in its own rounded box (yours on the right, the pet's on the left), renders Markdown, closes with Esc or by itself after 30 seconds without chatting (not while you type or the AI answers).
 - **Clear error messages**: a missing/invalid key, exhausted quota, no internet… the pet explains it in the chat instead of failing silently or crashing.
-- **Background monitoring**: alerts when battery < 30%, CPU > 90% or RAM > 90%; the alert stays until you click the pet.
+- **Background monitoring**: alerts when battery < 30%, CPU > 90% or RAM > 90%; the alert stays until you click the pet (or pick `Idle`), then the pet stays quiet for 10 minutes (`system_status.snooze_minutes`).
 - **Ambient lines**: after 15 minutes without interaction the pet says a random fact or joke.
 - **Chat history lives in RAM only** and is wiped after 15 minutes without chatting — nothing is written to disk.
 - **System tray icon** (a portrait of the pet): `Hide Pet` / `Show Pet`, `Settings` (frame rate 30 / 60 fps, applied live), `Quit App`.
@@ -116,7 +116,7 @@ If something goes wrong, check the log file: `%LOCALAPPDATA%\Lavenzure\logs\lave
 |---|---|
 | Left-click the pet | A random animation; during an alert it only clears the alert |
 | Press and drag | Carry the pet somewhere else |
-| Right-click the pet | Menu: `Chat` (open the chat bubble), `Idle` (sleep) / `Wander` (roam again) |
+| Right-click the pet | Menu: `Chat` (open the chat bubble), `Idle` (sleep; also dismisses an alert) / `Wander` (roam again), `Hide Pet` (the tray icon shows it again) |
 | Esc in the chat bubble | Close the chat (history is kept for 15 minutes) |
 | System tray icon | Hide/show the pet, Settings, quit |
 
@@ -133,7 +133,7 @@ Non-secret settings live in [`config.yaml`](./config.yaml):
 | `character.flame_renderer` | Flame body renderer: `shader` (default, GPU) / `metaball` / `baked` |
 | `performance.lite_flame` | Lite flame: the flame is rendered at `lite_flame_supersample` (1.5) instead of 2.0 (on by default) |
 | `behavior.state_weights` | How often the pet idles / walks / floats / jumps |
-| `system_status.*` | Polling interval and alert thresholds |
+| `system_status.*` | Polling interval, alert thresholds and the quiet time after an alert is dismissed |
 | `ambient.random_fact_or_joke.idle_minutes` | Idle time before the pet says something on its own |
 | `chat.reply_bubble_max_chars` | Replies up to this length also appear in the bubble (0 = off) |
 | `memory.idle_timeout_minutes` | Idle time before the chat history is wiped |

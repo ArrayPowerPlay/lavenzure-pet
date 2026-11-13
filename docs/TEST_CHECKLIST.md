@@ -33,10 +33,13 @@ Script chỉ đọc thông tin cửa sổ, không click hay di chuyển gì. Nó
 - [ ] Click trái → một hoạt ảnh ngẫu nhiên, hai lần liên tiếp không trùng nhau
 - [ ] Giữ chuột trái và kéo → pet đi theo chuột, mặt giật mình; thả ra → rơi xuống và tiếp đất mượt
 - [ ] Kéo pet ra sát mép trái/phải/trên của màn hình rồi thả → pet không bị kẹt ngoài màn hình
-- [ ] Chuột phải → menu `Chat` / `Idle`; chọn `Idle` → pet nằm ngủ; mở lại menu thấy `Wander`
+- [ ] Chuột phải → menu `Chat` / `Idle` / `Hide Pet`; chọn `Idle` → pet nằm ngủ; mở lại menu thấy `Wander`
+- [ ] Chuột phải → `Hide Pet` → pet ẩn; icon khay → `Show Pet` → pet hiện lại
+- [ ] Đang cảnh báo (vd RAM > 90%) → click pet → cảnh báo tắt và **10 phút** sau mới báo lại; đang cảnh báo mà chọn `Idle` → cảnh báo tắt, pet đi ngủ luôn
 
 ### Chat
 - [ ] Chuột phải → `Chat` → gõ câu hỏi → pet làm mặt "đang nghĩ", rồi trả lời kèm biểu cảm vài giây
+- [ ] Mỗi tin nhắn trong bong bóng chat có khung riêng: của mình bên phải (cam nhạt), của pet bên trái (trắng viền đỏ nâu)
 - [ ] Hỏi thời tiết, nhờ tìm web, hỏi CPU/RAM → cả 3 công cụ trả lời được
 - [ ] Tắt Wi-Fi rồi chat → pet báo lỗi mất mạng dễ hiểu, không treo, không crash
 - [ ] Để bong bóng chat yên 30 giây → tự đóng
