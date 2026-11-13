@@ -102,7 +102,7 @@ class LavenzureApp(QObject):
         self.user_settings = UserSettings()
         self.sprite.set_max_fps(int(self.user_settings.get("max_fps")))
         self.sprite.set_adaptive_fps(bool(self.user_settings.get("adaptive_fps")))
-        self.sprite.character.set_lite_flame(bool(self.user_settings.get("lite_flame")))
+        self.sprite.character.set_lite_flame(bool(config.get("performance.lite_flame", True)))
         self.memory = SessionMemory(
             ttl_seconds=config.get("memory.idle_timeout_minutes", 15) * 60
         )
@@ -164,12 +164,10 @@ class LavenzureApp(QObject):
         if self.settings is None:
             self.settings = SettingsWindow(
                 adaptive_fps=bool(self.user_settings.get("adaptive_fps")),
-                lite_flame=bool(self.user_settings.get("lite_flame")),
                 max_fps=self.sprite.max_fps,
             )
             self.settings.max_fps_changed.connect(self._set_max_fps)
             self.settings.adaptive_fps_toggled.connect(self._set_adaptive_fps)
-            self.settings.lite_flame_toggled.connect(self._set_lite_flame)
             self.sprite.frame_rate_changed.connect(self.settings.show_frame_rate)
         self.settings.open()
 
@@ -184,12 +182,6 @@ class LavenzureApp(QObject):
         self.sprite.set_adaptive_fps(enabled)
         self.user_settings.set("adaptive_fps", enabled)
         log.info("Adaptive frame rate %s", "on" if enabled else "off")
-
-    def _set_lite_flame(self, enabled: bool) -> None:
-        """Settings: switch the lite flame and remember the choice."""
-        self.sprite.character.set_lite_flame(enabled)
-        self.user_settings.set("lite_flame", enabled)
-        log.info("Lite flame %s", "on" if enabled else "off")
 
     # ------------------------------------------------------------------ bubble / pet reactions
 

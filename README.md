@@ -72,7 +72,7 @@ The goal was a flat, hand-inked "sticker" look that *moves* like real fire and *
 - **Background monitoring**: alerts when battery < 30%, CPU > 90% or RAM > 90%; the alert stays until you click the pet.
 - **Ambient lines**: after 15 minutes without interaction the pet says a random fact or joke.
 - **Chat history lives in RAM only** and is wiped after 15 minutes without chatting — nothing is written to disk.
-- **System tray icon** (a portrait of the pet): `Hide Pet` / `Show Pet`, `Settings` (performance: frame-rate cap 60 / 45 / 30, adaptive frame rate, lite flame; applied live), `Quit App`.
+- **System tray icon** (a portrait of the pet): `Hide Pet` / `Show Pet`, `Settings` (performance: frame-rate cap 60 / 45 / 30, adaptive frame rate; applied live), `Quit App`.
 - **Single instance**: starting the app again just opens the running pet's chat bubble.
 
 ## Requirements

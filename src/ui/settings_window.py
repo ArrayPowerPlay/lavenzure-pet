@@ -6,13 +6,15 @@ compared (any combination works):
 - **Frame rate** - 60 / 45 / 30 fps for every animation (the most frames drawn per second).
 - **Adaptive frame rate** - full frame rate only while the pet moves or reacts, fewer frames when
   it stands still or sleeps.
-- **Lite flame** - the flame is rendered at a lower internal resolution (less GPU work).
+
+(The lite flame is no longer a switch here: the user chose it, so it is always on - see
+``performance.lite_flame`` in config.yaml.)
 
 A small live readout shows how many frames per second the pet is drawing right now and why
 (moving / standing still / asleep), so the effect of each mode is visible at once.
 
-The window only *reports* changes (``max_fps_changed`` / ``adaptive_fps_toggled`` /
-``lite_flame_toggled``); the app applies them to the pet and remembers them (``user_settings``).
+The window only *reports* changes (``max_fps_changed`` / ``adaptive_fps_toggled``); the app
+applies them to the pet and remembers them (``user_settings``).
 """
 from __future__ import annotations
 
@@ -59,10 +61,8 @@ class SettingsWindow(QWidget):
 
     max_fps_changed = Signal(int)
     adaptive_fps_toggled = Signal(bool)
-    lite_flame_toggled = Signal(bool)
 
-    def __init__(self, adaptive_fps: bool = False, lite_flame: bool = False,
-                 max_fps: int = 60) -> None:
+    def __init__(self, adaptive_fps: bool = False, max_fps: int = 60) -> None:
         """Build the window; the check boxes start at the given current values."""
         super().__init__(None, Qt.WindowType.Window | Qt.WindowType.WindowStaysOnTopHint)
         self.setObjectName("settings")
@@ -103,12 +103,6 @@ class SettingsWindow(QWidget):
             f"{config.get('performance.calm_fps', 30)} fps when standing still, "
             f"{config.get('performance.sleep_fps', 15)} fps asleep. Saves CPU and GPU.")
 
-        self.lite_box = QCheckBox("Lite flame")
-        self.lite_box.setChecked(lite_flame)
-        self.lite_box.toggled.connect(self.lite_flame_toggled)
-        lite_note = self._note("Draws the fire at a lower resolution: much less GPU work, "
-                               "slightly softer flame edges.")
-
         self.live = QLabel("Drawing: -")
         self.live.setObjectName("live")
 
@@ -118,7 +112,7 @@ class SettingsWindow(QWidget):
         for widget in (title, section, fps_label):
             layout.addWidget(widget)
         layout.addLayout(fps_row)
-        for widget in (fps_note, self.adaptive_box, adaptive_note, self.lite_box, lite_note):
+        for widget in (fps_note, self.adaptive_box, adaptive_note):
             layout.addWidget(widget)
         layout.addSpacing(6)
         layout.addWidget(self.live)

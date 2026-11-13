@@ -132,16 +132,15 @@ def test_lite_flame_switch_is_safe_on_every_renderer(qapp):
 
 def test_settings_window_reports_switches(qapp):
     """Ticking the boxes emits the matching signals; the live readout shows the frame rate."""
-    window = SettingsWindow(adaptive_fps=False, lite_flame=True, max_fps=60)
+    window = SettingsWindow(adaptive_fps=False, max_fps=60)
     seen = []
     window.max_fps_changed.connect(lambda fps: seen.append(("fps", fps)))
     assert window.fps_buttons[60].isChecked()
     window.adaptive_fps_toggled.connect(lambda on: seen.append(("adaptive", on)))
-    window.lite_flame_toggled.connect(lambda on: seen.append(("lite", on)))
-    assert window.lite_box.isChecked() and not window.adaptive_box.isChecked()
+    assert not window.adaptive_box.isChecked()
+    assert not hasattr(window, "lite_box")  # lite flame is always on, no switch any more
     window.adaptive_box.setChecked(True)
-    window.lite_box.setChecked(False)
-    assert seen == [("adaptive", True), ("lite", False)]
+    assert seen == [("adaptive", True)]
     window.fps_buttons[45].setChecked(True)
     assert seen[-1] == ("fps", 45)
     window.show_frame_rate(29.6, "calm")
@@ -156,7 +155,6 @@ def test_user_settings_default_save_and_reload(tmp_path):
     settings.set("adaptive_fps", True)
     assert json.loads(path.read_text(encoding="utf-8")) == {"adaptive_fps": True}
     assert UserSettings(path).get("adaptive_fps") is True
-    assert UserSettings(path).get("lite_flame") is True     # chosen as the default
     assert UserSettings(path).get("max_fps") == 60
 
 
@@ -165,8 +163,8 @@ def test_user_settings_survive_a_broken_file(tmp_path):
     path = tmp_path / "settings.json"
     path.write_text("{not json", encoding="utf-8")
     settings = UserSettings(path)
-    assert settings.get("lite_flame") is True
-    settings.set("lite_flame", False)
-    assert UserSettings(path).get("lite_flame") is False
+    assert settings.get("max_fps") == 60
+    settings.set("max_fps", 45)
+    assert UserSettings(path).get("max_fps") == 45
     with pytest.raises(KeyError):
         settings.set("no_such_setting", 1)
