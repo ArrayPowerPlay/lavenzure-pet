@@ -133,6 +133,7 @@ class LavenzureApp(QObject):
         self.sprite.right_clicked.connect(self._show_pet_menu)
         self.pet_menu.chat_requested.connect(self._open_chat)
         self.pet_menu.rest_requested.connect(self._set_resting)
+        self.pet_menu.hide_requested.connect(self._hide_pet)
         self.behavior.speak_requested.connect(self._say_random_line)
         self.chat.message_sent.connect(self._on_chat_message)
         self.chat.closed.connect(lambda: self.behavior.set_chatting(False))
@@ -213,7 +214,7 @@ class LavenzureApp(QObject):
             self._say(random.choice(self._click_lines), auto_hide_ms=3000)
 
     def _show_pet_menu(self) -> None:
-        """Right-click on the pet: the small Chat / Idle (Wander) menu at the cursor."""
+        """Right-click on the pet: the small Chat / Idle (Wander) / Hide Pet menu at the cursor."""
         self.monitor.notify_activity()
         self.pet_menu.popup(QCursor.pos(), self.behavior.resting)
 
@@ -248,6 +249,11 @@ class LavenzureApp(QObject):
         else:
             self.sprite.show()
             self.toggle_action.setText("Hide Pet")
+
+    def _hide_pet(self) -> None:
+        """Right-click menu ``Hide Pet``: hide it (the tray icon's ``Show Pet`` brings it back)."""
+        if self.sprite.isVisible():
+            self._toggle_visibility()
 
     # ------------------------------------------------------------------ chat
 

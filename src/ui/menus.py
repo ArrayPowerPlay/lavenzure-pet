@@ -1,7 +1,8 @@
 """Small pop-up menus in the pet's own style (cream paper, dark maroon ink, rounded corners).
 
 - ``themed_menu()`` builds an empty styled ``QMenu`` (also used by the tray icon).
-- ``PetMenu`` is the right-click menu of the pet itself: ``Chat`` and ``Idle`` / ``Wander``.
+- ``PetMenu`` is the right-click menu of the pet itself: ``Chat``, ``Idle`` / ``Wander`` and
+  ``Hide Pet``.
 """
 from __future__ import annotations
 
@@ -49,10 +50,12 @@ def themed_menu(parent=None) -> QMenu:
 
 class PetMenu(QObject):
     """Right-click menu of the pet: ``Chat`` opens the chat bubble; ``Idle`` makes the pet lie
-    down and sleep, and while it rests the same item reads ``Wander`` (roam again)."""
+    down and sleep, and while it rests the same item reads ``Wander`` (roam again); ``Hide Pet``
+    hides the pet (the tray icon shows it again)."""
 
     chat_requested = Signal()
     rest_requested = Signal(bool)   # True = Idle (rest), False = Wander
+    hide_requested = Signal()
 
     def __init__(self) -> None:
         """Build the menu once; ``popup`` updates the Idle / Wander label each time."""
@@ -62,6 +65,9 @@ class PetMenu(QObject):
         self._chat.triggered.connect(self.chat_requested.emit)
         self._rest = self._menu.addAction("Idle")
         self._rest.triggered.connect(self._on_rest)
+        self._menu.addSeparator()
+        self._hide = self._menu.addAction("Hide Pet")
+        self._hide.triggered.connect(self.hide_requested.emit)
         self._resting = False
 
     def popup(self, pos: QPoint, resting: bool) -> None:
