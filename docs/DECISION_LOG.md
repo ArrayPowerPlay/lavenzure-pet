@@ -168,7 +168,12 @@
 - **Claude tự quyết (user có thể đổi):** hai chế độ nằm trong **cửa sổ Settings** (khay → `Settings`), bật/tắt có hiệu lực ngay, kèm dòng hiển thị số khung/giây đang vẽ và lý do (đang di chuyển / đứng yên / ngủ). Lựa chọn được nhớ trong `%LOCALAPPDATA%\Lavenzure\settings.json`; mặc định (cả hai tắt) nằm ở `config.yaml` mục `performance`. "Tốc độ tự đổi": 60 fps khi đi / bay / nhảy / bị kéo / đang phản ứng (click, cảm xúc AI) / đang nói; 30 fps khi đứng yên; 15 fps khi ngủ (số chỉnh trong `config.yaml`). "Lửa nhẹ": độ phân giải lửa 1,5 thay vì 2,0 (~56% số điểm ảnh).
 - **Đo nhanh trên app thật** (mỗi tổ hợp 60 giây, pet chủ yếu đứng yên; máy 16 luồng): tắt cả hai 3,2% CPU / GPU 12%; tốc độ tự đổi 2,0%; lửa nhẹ 2,9%; cả hai 1,7%.
 
+### Lượt 15 (2026-11-13) — user chốt lửa nhẹ, thử 45 / 30 fps
+- **User chốt "lửa nhẹ"** → `performance.lite_flame: true` (bật sẵn; ô bật/tắt vẫn còn trong Settings).
+- **User muốn thử 30 fps và 45 fps cho mọi hoạt ảnh** → Settings có thêm mục **Frame rate: 60 / 45 / 30 fps** (giới hạn số khung/giây cho mọi hoạt ảnh, bật ngay, được nhớ; mặc định = `character.fps` 60).
+- **Claude tự quyết (user có thể đổi):** chế độ "tốc độ tự đổi" vẫn giữ để thử kèm, mức đứng yên / ngủ không bao giờ vượt giới hạn đã chọn. Màn hình 60 Hz chỉ hiện được khung ở mỗi lần làm mới (16,7 ms), nên 45 fps = vẽ 3 lần trong mỗi 4 lần làm mới → nhịp không đều tuyệt đối (16,7 / 16,7 / 33,3 ms), có thể thấy hơi lắc nhẹ khi pet di chuyển; 30 fps thì đều.
+
 ## Còn bàn
 
-- **User thử và duyệt** hai chế độ hiệu năng (từng tổ hợp) → chốt bật mặc định chế độ nào. Sau đó đo lại 60 phút (`src/perf_check.py` đo theo chế độ đang chọn).
+- **User thử và duyệt** giới hạn 60 / 45 / 30 fps (và có dùng "tốc độ tự đổi" không) → chốt mặc định. Sau đó đo lại 60 phút (`src/perf_check.py` đo theo chế độ đang chọn).
 - Cách 3 (tạm dừng khi có app toàn màn hình) và cách 5 (lửa 30 khung/giây) — user để lại, chưa làm.

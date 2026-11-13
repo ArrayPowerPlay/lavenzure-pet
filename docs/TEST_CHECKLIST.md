@@ -83,6 +83,7 @@ Khay → `Settings` → mục **Performance**. Bật/tắt có hiệu lực ngay
 
 - [ ] **Adaptive frame rate** bật: lúc pet đứng yên, dòng hiển thị ~30 fps (`standing still`); lúc đi / bay / nhảy / bị kéo / click / đang nói → ~60 fps (`moving or reacting`); lúc ngủ (menu `Idle`) → ~15 fps (`asleep`). Ghi lại có chỗ nào thấy giật hoặc kém mượt không.
 - [ ] **Lite flame** bật: so viền lửa với lúc tắt, ghi lại có thấy mờ / răng cưa hơn không.
+- [ ] **Frame rate** (lượt 15): chọn 60 → 45 → 30 fps, mỗi mức xem pet đi / bay / nhảy / bị kéo / click một lúc; dòng `Drawing` phải hiện đúng ~60 / ~45 / ~30. Ghi lại mức nào bắt đầu thấy giật hoặc lắc (45 fps trên màn 60 Hz có nhịp không đều tuyệt đối).
 - [ ] Thử đủ 4 tổ hợp (tắt cả hai / chỉ 1 / chỉ 2 / cả hai) và chọn tổ hợp muốn dùng mặc định. Lựa chọn được nhớ sau khi thoát app.
 - [ ] (Tùy chọn) Để tổ hợp đã chọn, thoát pet rồi chạy `perf_check.py --minutes 60` để đo lại.
 
