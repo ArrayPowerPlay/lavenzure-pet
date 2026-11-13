@@ -313,8 +313,38 @@
 - **T6 "ngày lễ":** vào các ngày đặc biệt pet **đeo thêm đồ** và có **câu chúc riêng** trong ngày đó, ví dụ: Tết âm lịch → khăn đỏ / cầm bao lì xì, "Chúc mừng năm mới!"; Giáng sinh → mũ Noel; Halloween → đèn bí ngô; **sinh nhật user** (user tự ghi ngày trong `config.yaml`) → mũ tiệc + "Happy birthday!" và pháo giấy. Ngày khác thì pet như bình thường.
 - T1-T6 vẫn **chờ user chọn**.
 
+### Lượt 22 (2026-11-14) — user chốt phần lớn lượt 21 (CHƯA CODE)
+
+#### Ngôn ngữ + câu nói
+- **User chốt:** chọn `Tiếng Việt` trong Settings thì **đổi hết** mọi câu pet nói (câu click, câu quan tâm, fact/joke, cảnh báo máy, chữ "Reminder:"). Chat với AI vẫn theo ngôn ngữ user gõ.
+- **User chốt:** mỗi ngôn ngữ có **25 câu quan tâm + 50 câu fact/joke = 75 câu**. Fact/joke giảm từ 100 xuống 50 (Claude chọn 50 câu hay nhất của bản Anh, viết bản Việt tương ứng cho tự nhiên).
+- **User chốt:** click vào pet mà ra hoạt ảnh "nói" thì câu nói **bốc ngẫu nhiên trong 75 câu đó** → bỏ danh sách 20 câu click riêng (`data/click_reactions.json`, kiểu "Ow, that tickles!"). Câu quan tâm có khung giờ thì lúc click cũng chỉ bốc câu hợp giờ.
+- Nhịp tự nói: 5 phút một câu, xen kẽ câu quan tâm / fact/joke (lượt 21).
+- **Thêm 5 câu quan tâm** (nối tiếp bảng lượt 20; khung *chiều* = 13-17h):
+
+| # | English | Tiếng Việt | Khung giờ |
+|---|---|---|---|
+| 21 | Afternoon slump? A glass of water helps more than you think. | Buồn ngủ buổi chiều hả? Một cốc nước giúp nhiều hơn bạn nghĩ đó. | chiều |
+| 22 | Remember to eat some fruit today! | Hôm nay nhớ ăn chút trái cây nha! | |
+| 23 | Don't forget to message someone you love today. | Hôm nay nhớ nhắn hỏi thăm người thân nhé. | |
+| 24 | A short break now will make you faster later. | Nghỉ một chút bây giờ, lát làm sẽ nhanh hơn đó. | |
+| 25 | Thank you for keeping me company today. | Cảm ơn bạn đã cho mình ở bên hôm nay. | |
+
+#### Nhắc việc
+- **User chốt:** bong bóng nhắc việc **chỉ tắt khi user click vào pet**. **Không** làm lệnh liệt kê / huỷ nhắc.
+- **User hỏi:** chat tự xoá sau 15 phút không nói chuyện (`memory.idle_timeout_minutes: 15`) thì nhắc việc có mất không?
+  - **Trả lời:** **không mất.** Lịch sử chat và danh sách nhắc việc là **hai chỗ riêng**. Khi user chat "nhắc tôi lúc 11 giờ…", AI gọi công cụ, công cụ đưa lời nhắc vào danh sách của `BackgroundMonitor` (bộ đếm giờ chạy suốt khi app mở). Sau đó lịch sử chat bị xoá cũng không ảnh hưởng: tới giờ thì `BackgroundMonitor` tự bật nhắc, không cần AI nhớ gì nữa.
+  - Thứ duy nhất làm mất lời nhắc là **tắt app / tắt máy** khi nhắc chỉ lưu trong RAM → câu hỏi lưu RAM hay ra file vẫn **chờ chốt**.
+- **Còn chờ chốt:** lưu RAM hay file (Claude đề xuất file); có phát âm thanh không; nhắc lặp lại để sau (Claude đề xuất).
+
+#### Biểu cảm `cool`
+- **User đồng ý** đề xuất lượt 21 (Claude tự thiết kế; có trong nhóm click ngẫu nhiên và trong cảm xúc AI).
+
+#### T1, T6
+- **User:** T1 (chào khi quay lại máy) và T6 (đồ + câu chúc ngày lễ, sinh nhật) là tính năng hay nhưng tốn nhiều công thiết kế → **pending**, chưa làm. T2-T5 chưa được chọn.
+
 ## Còn bàn
 
 - Đo lại 60 phút ở 30 fps + lửa nhẹ (`src/perf_check.py`, cần thoát pet đang chạy).
 - Cách 3 (tạm dừng khi có app toàn màn hình) và cách 5 (lửa 30 khung/giây) — user để lại, chưa làm.
-- Lượt 21: xác nhận Language đổi cả 5 loại câu pet nói; nhắc việc (lưu RAM hay file, lặp lại, âm thanh); chọn tính năng T1-T6; chọn hướng agent (lượt 20 mục 5).
+- Lượt 22: nhắc việc lưu RAM hay file, có âm thanh không; hướng agent (lượt 20 mục 5); T1, T6 pending.
