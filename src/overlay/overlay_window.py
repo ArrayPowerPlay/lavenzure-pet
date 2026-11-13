@@ -18,6 +18,11 @@ is drawn only while the pet moves, is dragged or reacts; standing still it draws
 GPU most of the time. Any movement of the window switches back to full speed on the very next
 frame. ``frame_rate_changed`` reports the real frame rate once a second.
 
+Frame-rate cap (``set_max_fps``; Settings window: 60 / 45 / 30): the most frames per second drawn
+for *every* animation (the adaptive levels are capped by it too). Frames are paced against a
+schedule (``FramePacer``), not just "time since the last frame", so a rate that does not divide
+the screen refresh still averages out: 45 fps on a 60 Hz screen draws 3 refreshes out of 4.
+
 Frame statistics (how many frames were drawn and how long each took) are written to the log every
 ``diagnostics.frame_stats_seconds`` (config.yaml; the ``LAVENZURE_FRAME_STATS_SECONDS`` environment
 variable overrides it, which ``perf_check.py`` uses for short runs). 0 turns them off.
@@ -103,6 +108,40 @@ class FrameStats:
         self._reset(time.monotonic())
 
 
+class FramePacer:
+    """Decides on which animation-timer passes a frame is drawn, for a given frames-per-second.
+
+    Each frame has a scheduled time; a pass draws once it reaches the next scheduled time (minus
+    a little slack, because the timer can fire a hair early), and the schedule then moves on by
+    exactly one frame period. Keeping the schedule, instead of measuring from the last drawn
+    frame, lets rates that don't divide the screen refresh come out right on average (45 fps on a
+    60 Hz timer = 3 passes drawn out of 4) while 60 and 30 fps stay perfectly even. After a long
+    stall the schedule restarts from "now" instead of drawing a burst of catch-up frames.
+    """
+
+    SLACK_NS = 3_000_000
+
+    def __init__(self) -> None:
+        """Start with no frame drawn yet (the first pass always draws)."""
+        self._last_due: int | None = None
+
+    def reset(self) -> None:
+        """Forget the schedule (e.g. when the window is shown again)."""
+        self._last_due = None
+
+    def due(self, now_ns: int, fps: float) -> bool:
+        """True if a frame should be drawn at ``now_ns`` for a rate of ``fps``."""
+        if self._last_due is None:
+            return True
+        return now_ns >= self._last_due + int(1e9 / fps) - self.SLACK_NS
+
+    def drawn(self, now_ns: int, fps: float) -> None:
+        """Record that a frame was drawn at ``now_ns``; move the schedule on by one period."""
+        period = int(1e9 / fps)
+        target = now_ns if self._last_due is None else self._last_due + period
+        self._last_due = target if now_ns - target < period else now_ns
+
+
 class _FrameClock(QAbstractAnimation):
     """Endless animation used only as a frame clock.
 
@@ -153,15 +192,9 @@ class OverlaySprite(QWidget):
         )
         self.resize(self.character.width, self.character.height)
 
-        fps = max(10, int(config.get("character.fps", 60)))
-        # Skip animation-timer passes that come sooner than this (allows fps below ~60). The
-        # 3 ms of slack keeps a frame from being skipped when the timer fires a little early.
-        self._min_frame_ns = {
-            level: int(1e9 / max(5, min(fps, int(rate)))) - 3_000_000
-            for level, rate in (("active", fps),
-                                ("calm", config.get("performance.calm_fps", 30)),
-                                ("asleep", config.get("performance.sleep_fps", 15)))
-        }
+        self._level_fps: dict[str, float] = {}
+        self.set_max_fps(int(config.get("character.fps", 60)))
+        self._pacer = FramePacer()
         self._adaptive = False
         self._level = "active"
         self._drawn_exact = QPointF()      # position the last drawn frame was at
@@ -223,6 +256,22 @@ class OverlaySprite(QWidget):
 
     # ------------------------------------------------------------------ animation loop
 
+    def set_max_fps(self, fps: int) -> None:
+        """Cap the frame rate of every animation at ``fps`` (at least 10). The adaptive
+        "standing still" / "asleep" rates (config.yaml ``performance``) never exceed it."""
+        self._max_fps = max(10, int(fps))
+        self._level_fps = {
+            level: float(max(5, min(self._max_fps, int(rate))))
+            for level, rate in (("active", self._max_fps),
+                                ("calm", config.get("performance.calm_fps", 30)),
+                                ("asleep", config.get("performance.sleep_fps", 15)))
+        }
+
+    @property
+    def max_fps(self) -> int:
+        """The current frame-rate cap."""
+        return self._max_fps
+
     def set_adaptive_fps(self, enabled: bool) -> None:
         """Turn the adaptive frame rate on (fewer frames while calm / asleep) or off (always
         the full ``character.fps``)."""
@@ -247,6 +296,7 @@ class OverlaySprite(QWidget):
         self._exact = QPointF(self.pos())  # the system may have placed the window itself
         self._frac = QPointF()
         self._clock.restart()
+        self._pacer.reset()
         self._stats.pause()
         self._rate_frames, self._rate_since = 0, time.monotonic()
         self._frame_clock.start()
@@ -260,8 +310,11 @@ class OverlaySprite(QWidget):
         """Advance the character by the real elapsed time, move the window, and repaint (unless
         the frame rate for the current activity level says it is too early)."""
         self._level = self._frame_level()
-        if self._clock.nsecsElapsed() < self._min_frame_ns[self._level]:
+        fps = self._level_fps[self._level]
+        now = time.perf_counter_ns()
+        if not self._pacer.due(now, fps):
             return
+        self._pacer.drawn(now, fps)
         dt = self._clock.nsecsElapsed() / 1e9
         self._clock.restart()
         started = time.perf_counter()

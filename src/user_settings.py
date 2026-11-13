@@ -11,7 +11,9 @@ Current settings (performance modes, roadmap Phase 12):
 
 - ``adaptive_fps`` - draw 60 fps only while the pet moves or reacts, fewer frames when it stands
   still or sleeps.
-- ``lite_flame`` - render the flame at a lower internal resolution (less GPU work).
+- ``lite_flame`` - render the flame at a lower internal resolution (less GPU work; on by default
+  since 2026-11-13).
+- ``max_fps`` - frame-rate cap for every animation (60 / 45 / 30).
 """
 from __future__ import annotations
 
@@ -28,7 +30,8 @@ log = logging.getLogger(__name__)
 # setting name -> (config.yaml path of its default, value if config.yaml has none)
 DEFAULTS: dict[str, tuple[str, Any]] = {
     "adaptive_fps": ("performance.adaptive_fps", False),
-    "lite_flame": ("performance.lite_flame", False),
+    "lite_flame": ("performance.lite_flame", True),
+    "max_fps": ("character.fps", 60),
 }
 
 

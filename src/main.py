@@ -100,6 +100,7 @@ class LavenzureApp(QObject):
         self.settings: SettingsWindow | None = None
         # Performance modes chosen in the Settings window (remembered between runs).
         self.user_settings = UserSettings()
+        self.sprite.set_max_fps(int(self.user_settings.get("max_fps")))
         self.sprite.set_adaptive_fps(bool(self.user_settings.get("adaptive_fps")))
         self.sprite.character.set_lite_flame(bool(self.user_settings.get("lite_flame")))
         self.memory = SessionMemory(
@@ -164,11 +165,19 @@ class LavenzureApp(QObject):
             self.settings = SettingsWindow(
                 adaptive_fps=bool(self.user_settings.get("adaptive_fps")),
                 lite_flame=bool(self.user_settings.get("lite_flame")),
+                max_fps=self.sprite.max_fps,
             )
+            self.settings.max_fps_changed.connect(self._set_max_fps)
             self.settings.adaptive_fps_toggled.connect(self._set_adaptive_fps)
             self.settings.lite_flame_toggled.connect(self._set_lite_flame)
             self.sprite.frame_rate_changed.connect(self.settings.show_frame_rate)
         self.settings.open()
+
+    def _set_max_fps(self, fps: int) -> None:
+        """Settings: change the frame-rate cap and remember the choice."""
+        self.sprite.set_max_fps(fps)
+        self.user_settings.set("max_fps", fps)
+        log.info("Frame rate cap %d fps", fps)
 
     def _set_adaptive_fps(self, enabled: bool) -> None:
         """Settings: switch the adaptive frame rate and remember the choice."""
