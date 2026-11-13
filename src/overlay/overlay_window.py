@@ -12,16 +12,11 @@ Click-through is handled by Windows itself: for per-pixel-alpha (layered) window
 transparent pixels let mouse events fall through to the app underneath, so only the visible flame
 catches clicks. (No ``setMask()`` — a mask would also clip the soft glow and the embers.)
 
-Adaptive frame rate (optional, ``set_adaptive_fps``; Settings window): the full ``character.fps``
-is drawn only while the pet moves, is dragged or reacts; standing still it draws
-``performance.calm_fps`` and asleep ``performance.sleep_fps`` (config.yaml), which saves CPU and
-GPU most of the time. Any movement of the window switches back to full speed on the very next
-frame. ``frame_rate_changed`` reports the real frame rate once a second.
-
-Frame-rate cap (``set_max_fps``; Settings window: 60 / 45 / 30): the most frames per second drawn
-for *every* animation (the adaptive levels are capped by it too). Frames are paced against a
-schedule (``FramePacer``), not just "time since the last frame", so a rate that does not divide
-the screen refresh still averages out: 45 fps on a 60 Hz screen draws 3 refreshes out of 4.
+Frame rate (``set_max_fps``; Settings window: 30 / 45 / 60, default ``character.fps`` = 30): the
+frames per second drawn for every animation. ``frame_rate_changed`` reports the real frame rate
+once a second. Frames are paced against a schedule (``FramePacer``), not just "time since the
+last frame", so a rate that does not divide the screen refresh still averages out: 45 fps on a
+60 Hz screen draws 3 refreshes out of 4.
 
 Frame statistics (how many frames were drawn and how long each took) are written to the log every
 ``diagnostics.frame_stats_seconds`` (config.yaml; the ``LAVENZURE_FRAME_STATS_SECONDS`` environment
@@ -171,7 +166,7 @@ class OverlaySprite(QWidget):
     right_clicked = Signal()
     drag_started = Signal()
     drag_ended = Signal()
-    frame_rate_changed = Signal(float, str)  # frames drawn in the last second, activity level
+    frame_rate_changed = Signal(float)  # frames drawn per second, measured over the last second
 
     DRAG_THRESHOLD_PX = 6
 
@@ -192,12 +187,8 @@ class OverlaySprite(QWidget):
         )
         self.resize(self.character.width, self.character.height)
 
-        self._level_fps: dict[str, float] = {}
-        self.set_max_fps(int(config.get("character.fps", 60)))
+        self.set_max_fps(int(config.get("character.fps", 30)))
         self._pacer = FramePacer()
-        self._adaptive = False
-        self._level = "active"
-        self._drawn_exact = QPointF()      # position the last drawn frame was at
         self._rate_frames = 0
         self._rate_since = time.monotonic()
         self._frame_clock = _FrameClock(self, self._tick)
@@ -257,38 +248,13 @@ class OverlaySprite(QWidget):
     # ------------------------------------------------------------------ animation loop
 
     def set_max_fps(self, fps: int) -> None:
-        """Cap the frame rate of every animation at ``fps`` (at least 10). The adaptive
-        "standing still" / "asleep" rates (config.yaml ``performance``) never exceed it."""
+        """Draw every animation at ``fps`` frames per second (at least 10)."""
         self._max_fps = max(10, int(fps))
-        self._level_fps = {
-            level: float(max(5, min(self._max_fps, int(rate))))
-            for level, rate in (("active", self._max_fps),
-                                ("calm", config.get("performance.calm_fps", 30)),
-                                ("asleep", config.get("performance.sleep_fps", 15)))
-        }
 
     @property
     def max_fps(self) -> int:
-        """The current frame-rate cap."""
+        """The current frame rate."""
         return self._max_fps
-
-    def set_adaptive_fps(self, enabled: bool) -> None:
-        """Turn the adaptive frame rate on (fewer frames while calm / asleep) or off (always
-        the full ``character.fps``)."""
-        self._adaptive = bool(enabled)
-        if not self._adaptive:
-            self._level = "active"
-
-    @property
-    def adaptive_fps(self) -> bool:
-        """True while the adaptive frame rate is on."""
-        return self._adaptive
-
-    def _frame_level(self) -> str:
-        """Activity level that sets the frame rate for the next frame."""
-        if not self._adaptive or self._pressed or self._exact != self._drawn_exact:
-            return "active"
-        return self.character.activity()
 
     def showEvent(self, event) -> None:  # noqa: N802 - Qt override
         """Start the frame loop whenever the pet becomes visible."""
@@ -308,9 +274,8 @@ class OverlaySprite(QWidget):
 
     def _tick(self) -> None:
         """Advance the character by the real elapsed time, move the window, and repaint (unless
-        the frame rate for the current activity level says it is too early)."""
-        self._level = self._frame_level()
-        fps = self._level_fps[self._level]
+        the frame rate says it is too early for the next frame)."""
+        fps = self._max_fps
         now = time.perf_counter_ns()
         if not self._pacer.due(now, fps):
             return
@@ -318,7 +283,6 @@ class OverlaySprite(QWidget):
         dt = self._clock.nsecsElapsed() / 1e9
         self._clock.restart()
         started = time.perf_counter()
-        self._drawn_exact = QPointF(self._exact)
         self._apply_position()
         cursor = QPointF(self.mapFromGlobal(QCursor.pos())) - self._frac
         self.character.update(dt, self.exact_pos(), cursor)
@@ -333,7 +297,7 @@ class OverlaySprite(QWidget):
         self._rate_frames += 1
         now = time.monotonic()
         if now - self._rate_since >= 1.0:
-            self.frame_rate_changed.emit(self._rate_frames / (now - self._rate_since), self._level)
+            self.frame_rate_changed.emit(self._rate_frames / (now - self._rate_since))
             self._rate_frames = 0
             self._rate_since = now
 

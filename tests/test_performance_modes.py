@@ -1,6 +1,5 @@
-"""Tests for the performance modes (roadmap Phase 12): the frame-rate cap and its pacing, the
-adaptive frame rate, the character's activity levels and fixed-step physics, the Settings window
-switches and remembered settings."""
+"""Tests for the performance options (roadmap Phase 12): the frame rate and its pacing, fixed-step
+physics, the lite flame, the Settings window and remembered settings."""
 from __future__ import annotations
 
 import json
@@ -21,39 +20,6 @@ def _settle(ch: FlameCharacter, seconds: float, pos: QPointF | None = None) -> N
         ch.update(1 / 60, pos, None)
 
 
-def test_standing_pet_is_calm_and_moving_pet_is_active(qapp):
-    """A pet standing still is "calm"; moving the window makes it "active"."""
-    ch = FlameCharacter(scale=0.75, seed=5)
-    _settle(ch, 3.0)
-    assert ch.activity() == "calm"
-    pos = QPointF(300.0, 300.0)
-    for _ in range(10):
-        pos = QPointF(pos.x() + 4.0, pos.y())
-        ch.update(1 / 60, pos, None)
-    assert ch.activity() == "active"
-
-
-def test_reactions_and_talking_are_active(qapp):
-    """A transient mood (click reaction / AI emotion) and talking need the full frame rate."""
-    ch = FlameCharacter(scale=0.75, seed=5)
-    _settle(ch, 3.0)
-    ch.play(Mood.HAPPY, 1.0)
-    ch.update(1 / 60, QPointF(300.0, 300.0), None)
-    assert ch.activity() == "active"
-    _settle(ch, 3.0)
-    ch.talk(1.0)
-    ch.update(1 / 60, QPointF(300.0, 300.0), None)
-    assert ch.activity() == "active"
-
-
-def test_sleeping_pet_is_asleep_after_the_yawn(qapp):
-    """Once the yawn has finished and the body has sunk, a sleeping pet reports "asleep"."""
-    ch = FlameCharacter(scale=0.75, seed=5)
-    ch.set_sleeping(True)
-    _settle(ch, 6.0)
-    assert ch.activity() == "asleep"
-
-
 def test_long_frames_are_simulated_in_short_steps(qapp):
     """One 1/15 s frame gives (almost) the same result as four 1/60 s frames: the springs and
     the face do not run slow or jump at a low frame rate."""
@@ -71,29 +37,14 @@ def test_long_frames_are_simulated_in_short_steps(qapp):
     assert a._sy == pytest.approx(b._sy, abs=0.02)
 
 
-def test_window_frame_level_follows_mode_and_movement(qapp):
-    """Adaptive off: always full speed. Adaptive on: the character's level, but any pending
-    window movement means full speed right away."""
+def test_window_frame_rate_defaults_to_30_and_can_change(qapp):
+    """The pet draws 30 fps by default (config.yaml); Settings can switch it to 45 or 60."""
     sprite = OverlaySprite()
-    _settle(sprite.character, 3.0, sprite.exact_pos())
-    sprite._drawn_exact = sprite.exact_pos()
-    assert sprite._frame_level() == "active"           # mode off
-    sprite.set_adaptive_fps(True)
-    assert sprite._frame_level() == "calm"
-    sprite._exact = sprite._exact + QPointF(2.0, 0.0)  # a movement animation moved the pet
-    assert sprite._frame_level() == "active"
-    assert sprite._level_fps == {"active": 60, "calm": 30, "asleep": 15}
-    sprite.deleteLater()
-
-
-def test_frame_cap_limits_every_level(qapp):
-    """The cap applies to every animation; the calm / asleep rates never exceed it."""
-    sprite = OverlaySprite()
+    assert sprite.max_fps == 30
     sprite.set_max_fps(45)
     assert sprite.max_fps == 45
-    assert sprite._level_fps == {"active": 45, "calm": 30, "asleep": 15}
-    sprite.set_max_fps(30)
-    assert sprite._level_fps == {"active": 30, "calm": 30, "asleep": 15}
+    sprite.set_max_fps(1)
+    assert sprite.max_fps == 10  # never absurdly low
     sprite.deleteLater()
 
 
@@ -130,41 +81,40 @@ def test_lite_flame_switch_is_safe_on_every_renderer(qapp):
     _settle(ch, 0.2)
 
 
-def test_settings_window_reports_switches(qapp):
-    """Ticking the boxes emits the matching signals; the live readout shows the frame rate."""
-    window = SettingsWindow(adaptive_fps=False, max_fps=60)
+def test_settings_window_reports_frame_rate(qapp):
+    """Picking a frame rate emits it; the live readout shows the measured frame rate. Only the
+    frame-rate choice is left (adaptive fps and the lite-flame switch were removed)."""
+    window = SettingsWindow(max_fps=30)
     seen = []
-    window.max_fps_changed.connect(lambda fps: seen.append(("fps", fps)))
-    assert window.fps_buttons[60].isChecked()
-    window.adaptive_fps_toggled.connect(lambda on: seen.append(("adaptive", on)))
-    assert not window.adaptive_box.isChecked()
-    assert not hasattr(window, "lite_box")  # lite flame is always on, no switch any more
-    window.adaptive_box.setChecked(True)
-    assert seen == [("adaptive", True)]
+    window.max_fps_changed.connect(seen.append)
+    assert list(window.fps_buttons) == [30, 45, 60]
+    assert window.fps_buttons[30].isChecked()
     window.fps_buttons[45].setChecked(True)
-    assert seen[-1] == ("fps", 45)
-    window.show_frame_rate(29.6, "calm")
-    assert window.live.text() == "Drawing: 30 fps (standing still)"
+    window.fps_buttons[60].setChecked(True)
+    assert seen == [45, 60]
+    assert not hasattr(window, "adaptive_box") and not hasattr(window, "lite_box")
+    window.show_frame_rate(29.6)
+    assert window.live.text() == "Drawing: 30 fps"
 
 
 def test_user_settings_default_save_and_reload(tmp_path):
     """Unset settings come from config.yaml; a change is saved and read back next time."""
     path = tmp_path / "settings.json"
     settings = UserSettings(path)
-    assert settings.get("adaptive_fps") is False
-    settings.set("adaptive_fps", True)
-    assert json.loads(path.read_text(encoding="utf-8")) == {"adaptive_fps": True}
-    assert UserSettings(path).get("adaptive_fps") is True
+    assert settings.get("max_fps") == 30
+    settings.set("max_fps", 60)
+    assert json.loads(path.read_text(encoding="utf-8")) == {"max_fps": 60}
     assert UserSettings(path).get("max_fps") == 60
 
 
 def test_user_settings_survive_a_broken_file(tmp_path):
-    """A corrupt settings file falls back to the defaults instead of crashing the app."""
+    """A corrupt settings file falls back to the defaults instead of crashing the app; old
+    entries for removed settings are simply ignored."""
     path = tmp_path / "settings.json"
     path.write_text("{not json", encoding="utf-8")
     settings = UserSettings(path)
-    assert settings.get("max_fps") == 60
+    assert settings.get("max_fps") == 30
     settings.set("max_fps", 45)
     assert UserSettings(path).get("max_fps") == 45
     with pytest.raises(KeyError):
-        settings.set("no_such_setting", 1)
+        settings.set("adaptive_fps", True)

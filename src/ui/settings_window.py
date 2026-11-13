@@ -1,27 +1,22 @@
 """The Settings window opened from the tray menu.
 
-For now it holds the performance options of roadmap Phase 12, so they can be tried out live and
-compared (any combination works):
+For now it holds one performance option (roadmap Phase 12):
 
-- **Frame rate** - 60 / 45 / 30 fps for every animation (the most frames drawn per second).
-- **Adaptive frame rate** - full frame rate only while the pet moves or reacts, fewer frames when
-  it stands still or sleeps.
+- **Frame rate** - 30 / 45 / 60 fps for every animation. 30 is the default the user chose
+  (``character.fps`` in config.yaml); a choice made here is remembered (``user_settings``).
 
-(The lite flame is no longer a switch here: the user chose it, so it is always on - see
-``performance.lite_flame`` in config.yaml.)
+A small live readout shows how many frames per second the pet is really drawing, so the effect of
+the choice is visible at once. (The lite flame is not a switch here: the user chose it, so it is
+always on - see ``performance.lite_flame`` in config.yaml.)
 
-A small live readout shows how many frames per second the pet is drawing right now and why
-(moving / standing still / asleep), so the effect of each mode is visible at once.
-
-The window only *reports* changes (``max_fps_changed`` / ``adaptive_fps_toggled``); the app
-applies them to the pet and remembers them (``user_settings``).
+The window only *reports* changes (``max_fps_changed``); the app applies them to the pet and
+remembers them.
 """
 from __future__ import annotations
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QButtonGroup,
-    QCheckBox,
     QHBoxLayout,
     QLabel,
     QPushButton,
@@ -29,8 +24,6 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-
-import config
 
 STYLE = """
 QWidget#settings { background: #fff8ea; }
@@ -40,8 +33,7 @@ QLabel#section { font-size: 11pt; font-weight: 600; margin-top: 4px; }
 QLabel#note { font-size: 9pt; color: #8a4a14; margin-left: 26px; }
 QLabel#live { font-size: 9pt; color: #8a4a14; background: #fdecc8; border-radius: 8px;
               padding: 6px 10px; }
-QCheckBox, QRadioButton { color: #6c0e16; font-family: "Segoe UI", "Arial"; font-size: 10pt;
-                          spacing: 8px; }
+QRadioButton { color: #6c0e16; font-family: "Segoe UI", "Arial"; font-size: 10pt; spacing: 8px; }
 QPushButton {
     background: #f6a23a; color: white; border: none; border-radius: 12px;
     padding: 6px 22px; font-family: "Segoe UI", "Arial"; font-size: 10pt; font-weight: 600;
@@ -49,21 +41,17 @@ QPushButton {
 QPushButton:hover { background: #f08a1c; }
 """
 
-# Frame-rate caps offered in the window.
-FPS_CHOICES = (60, 45, 30)
-
-# Activity level reported by the pet window -> words for the live readout.
-LEVEL_TEXT = {"active": "moving or reacting", "calm": "standing still", "asleep": "asleep"}
+# Frame rates offered in the window (30 = the default the user chose).
+FPS_CHOICES = (30, 45, 60)
 
 
 class SettingsWindow(QWidget):
-    """Small always-on-top window with the performance switches and a live frame-rate readout."""
+    """Small always-on-top window with the frame-rate choice and a live frame-rate readout."""
 
     max_fps_changed = Signal(int)
-    adaptive_fps_toggled = Signal(bool)
 
-    def __init__(self, adaptive_fps: bool = False, max_fps: int = 60) -> None:
-        """Build the window; the check boxes start at the given current values."""
+    def __init__(self, max_fps: int = 30) -> None:
+        """Build the window; the button matching the current frame rate starts selected."""
         super().__init__(None, Qt.WindowType.Window | Qt.WindowType.WindowStaysOnTopHint)
         self.setObjectName("settings")
         self.setWindowTitle("Lavenzure - Settings")
@@ -91,17 +79,9 @@ class SettingsWindow(QWidget):
             fps_row.addWidget(button)
         fps_row.addStretch(1)
         self.fps_group.idToggled.connect(self._on_fps_toggled)
-        fps_note = self._note("The most frames drawn per second, for every animation. Lower = "
-                              "less CPU and GPU, less smooth motion. 45 fps on a 60 Hz screen "
-                              "draws 3 refreshes out of 4, so motion can look a bit uneven.")
-
-        self.adaptive_box = QCheckBox("Adaptive frame rate")
-        self.adaptive_box.setChecked(adaptive_fps)
-        self.adaptive_box.toggled.connect(self.adaptive_fps_toggled)
-        adaptive_note = self._note(
-            "Full frame rate only while Lavenzure moves or reacts; "
-            f"{config.get('performance.calm_fps', 30)} fps when standing still, "
-            f"{config.get('performance.sleep_fps', 15)} fps asleep. Saves CPU and GPU.")
+        fps_note = self._note("Frames drawn per second, for every animation. Higher = smoother "
+                              "motion, more CPU and GPU. 45 fps on a 60 Hz screen draws 3 "
+                              "refreshes out of 4, so motion can look a bit uneven.")
 
         self.live = QLabel("Drawing: -")
         self.live.setObjectName("live")
@@ -112,29 +92,28 @@ class SettingsWindow(QWidget):
         for widget in (title, section, fps_label):
             layout.addWidget(widget)
         layout.addLayout(fps_row)
-        for widget in (fps_note, self.adaptive_box, adaptive_note):
-            layout.addWidget(widget)
+        layout.addWidget(fps_note)
         layout.addSpacing(6)
         layout.addWidget(self.live)
         layout.addSpacing(8)
         layout.addWidget(close, alignment=Qt.AlignmentFlag.AlignRight)
 
     def _on_fps_toggled(self, fps: int, checked: bool) -> None:
-        """A frame-rate button was picked: report the new cap (ignore the one switched off)."""
+        """A frame-rate button was picked: report the new rate (ignore the one switched off)."""
         if checked:
             self.max_fps_changed.emit(fps)
 
     @staticmethod
     def _note(text: str) -> QLabel:
-        """A small explanatory line under a check box."""
+        """A small explanatory line under an option."""
         note = QLabel(text)
         note.setObjectName("note")
         note.setWordWrap(True)
         return note
 
-    def show_frame_rate(self, fps: float, level: str) -> None:
+    def show_frame_rate(self, fps: float) -> None:
         """Update the live readout (connected to the pet window's ``frame_rate_changed``)."""
-        self.live.setText(f"Drawing: {fps:.0f} fps ({LEVEL_TEXT.get(level, level)})")
+        self.live.setText(f"Drawing: {fps:.0f} fps")
 
     def open(self) -> None:
         """Show the window (or bring it to the front if it is already open)."""

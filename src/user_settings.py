@@ -7,11 +7,9 @@ config path and a last-resort value), so ``config.yaml`` keeps describing the ou
 behaviour and the file only holds the user's own choices. Delete the file to go back to the
 defaults.
 
-Current settings (performance modes, roadmap Phase 12):
+Current settings (roadmap Phase 12):
 
-- ``adaptive_fps`` - draw 60 fps only while the pet moves or reacts, fewer frames when it stands
-  still or sleeps.
-- ``max_fps`` - frame-rate cap for every animation (60 / 45 / 30).
+- ``max_fps`` - frame rate of every animation (30 / 45 / 60; default 30, chosen by the user).
 """
 from __future__ import annotations
 
@@ -27,8 +25,7 @@ log = logging.getLogger(__name__)
 
 # setting name -> (config.yaml path of its default, value if config.yaml has none)
 DEFAULTS: dict[str, tuple[str, Any]] = {
-    "adaptive_fps": ("performance.adaptive_fps", False),
-    "max_fps": ("character.fps", 60),
+    "max_fps": ("character.fps", 30),
 }
 
 

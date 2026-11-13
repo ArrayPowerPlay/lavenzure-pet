@@ -30,10 +30,9 @@ Pieces:
 Mood layering (highest wins): a transient mood from ``play()`` > alert > sleeping > thinking >
 riding the log > normal.
 
-Saving work: ``activity()`` tells the hosting window how lively the pet is right now (moving or
-reacting / just standing / asleep), so it can draw fewer frames when little happens (the
-"adaptive fps" mode); ``update()`` splits a long frame into short steps so the physics behave
-the same at any frame rate. ``set_lite_flame()`` lowers the flame's internal resolution.
+Saving work: ``update()`` splits a long frame into short steps so the physics behave the same at
+any frame rate (the pet draws 30 fps by default). ``set_lite_flame()`` lowers the flame's
+internal resolution.
 """
 from __future__ import annotations
 
@@ -215,27 +214,6 @@ class FlameCharacter:
         """Turn the "lite flame" mode on or off (lower internal flame resolution; only the
         shader renderer has it)."""
         self.flame.set_lite(lite)
-
-    def activity(self) -> str:
-        """How lively the pet is right now, for choosing the frame rate:
-
-        - ``"active"`` - moving, hopping, wobbling, reacting (a transient mood), talking, or a
-          prop / poof animation is running: needs every frame to look smooth;
-        - ``"asleep"`` - sleeping (after the yawn) and nothing else going on;
-        - ``"calm"`` - everything else: standing or floating in place, only the fire flickers.
-        """
-        lively = (
-            abs(self._vx) > 6.0 or abs(self._vy) > 6.0
-            or self._hop_y < -0.01 or self._hop_v != 0.0
-            or abs(self._squash.velocity) > 0.05 or abs(self._lean.velocity) > 0.05
-            or self._transient is not None
-            or self.face.talking
-            or bool(self._poofs) or self.log.crumbling
-            or (self.log.visible and abs(self.log.amount - 1.0) > 0.02)
-        )
-        if lively:
-            return "active"
-        return "asleep" if self._sleeping else "calm"
 
     def set_alert(self, active: bool) -> None:
         """Turn the persistent alert look (red-hot, cross eyes, shaking) on or off."""
