@@ -7,7 +7,7 @@ import pytest
 
 from conftest import pump
 from monitor import background_monitor as bm
-from monitor.reminders import ReminderStore
+from monitor.reminders import Reminder, ReminderStore
 
 
 @pytest.fixture
@@ -21,7 +21,8 @@ def monitor(qapp, monkeypatch, tmp_path):
     mon.readings = readings
     mon.alerts, mon.reminders, mon.ambient = [], [], []
     mon.alert_triggered.connect(mon.alerts.append)
-    mon.reminder_triggered.connect(lambda msg, late: mon.reminders.append((msg, late)))
+    mon.reminder_triggered.connect(
+        lambda msg, line, late: mon.reminders.append((msg, line, late)))
     mon.ambient_due.connect(lambda: mon.ambient.append(1))
     yield mon
     for timer in (mon._status_timer, mon._reminder_timer, mon._idle_timer):
@@ -65,12 +66,13 @@ def test_battery_alert_only_when_unplugged(monitor):
 
 def test_reminder_from_worker_thread_fires(qapp, monitor):
     """schedule_reminder may be called from another thread; it fires on the UI thread."""
-    thread = threading.Thread(target=monitor.schedule_reminder, args=(time.time(), "stretch"))
+    thread = threading.Thread(target=monitor.schedule_reminder,
+                              args=(time.time(), "stretch", "Stretch time!"))
     thread.start()
     thread.join()
     pump(qapp, 0.05)  # deliver the queued signal
     monitor._check_reminders()
-    assert monitor.reminders == [("stretch", 0)]
+    assert monitor.reminders == [("stretch", "Stretch time!", 0)]
 
 
 def test_reminder_waits_for_its_time(qapp, monitor):
@@ -84,13 +86,13 @@ def test_reminder_waits_for_its_time(qapp, monitor):
 def test_reminders_survive_a_restart(qapp, monitor, tmp_path):
     """Reminders are saved to the file: a new monitor (app restarted) still has them, and one
     that fell due while the app was closed fires saying how late it is."""
-    monitor.schedule_reminder(time.time() - 30 * 60, "drink water")
+    monitor.schedule_reminder(time.time() - 30 * 60, "drink water", "Sip, sip!")
     pump(qapp, 0.05)
     again = bm.BackgroundMonitor(reminders_path=tmp_path / "reminders.json")
     fired = []
-    again.reminder_triggered.connect(lambda msg, late: fired.append((msg, late)))
+    again.reminder_triggered.connect(lambda msg, line, late: fired.append((msg, line, late)))
     again._check_reminders()
-    assert fired == [("drink water", 30)]
+    assert fired == [("drink water", "Sip, sip!", 30)]
     assert len(ReminderStore(tmp_path / "reminders.json")) == 0     # gone once it went off
     for timer in (again._status_timer, again._reminder_timer, again._idle_timer):
         timer.stop()
@@ -191,3 +193,15 @@ def test_alerts_follow_the_language(monitor):
     monitor.readings.ram = 95
     monitor._check_system_status()
     assert monitor.alerts == ["RAM đã dùng tới 95%! Máy sắp chậm rồi đó."]
+
+
+def test_reminder_line_is_saved_and_old_files_still_load(tmp_path):
+    """The pet's own sentence is saved with the reminder; a file written before it existed
+    (no "line") loads with an empty line instead of being thrown away."""
+    path = tmp_path / "reminders.json"
+    store = ReminderStore(path)
+    store.add(Reminder(1, 100.0, "học bài", "Hết giờ rồi nha! Học bài thôi:3"))
+    assert ReminderStore(path).items()[0].line == "Hết giờ rồi nha! Học bài thôi:3"
+    path.write_text('[{"id": 4, "due": 50.0, "message": "tea"}]', encoding="utf-8")
+    loaded = ReminderStore(path).items()
+    assert [(r.id, r.message, r.line) for r in loaded] == [(4, "tea", "")]

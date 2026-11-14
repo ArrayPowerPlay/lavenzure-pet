@@ -19,6 +19,10 @@ Khi một mục được chốt: ghi quyết định vào `DECISION_LOG.md`, chu
 - **Cách làm:** cửa sổ pet nhận drag & drop của Qt (`setAcceptDrops`); gửi nội dung file cho Gemini (Gemini đọc được ảnh và PDF trực tiếp); câu trả lời hiện trong khung chat như bình thường.
 - **Cần chốt trước khi làm:** loại file nào, giới hạn dung lượng; thả file xong thì tự tóm tắt luôn hay chờ user hỏi; có hoạt ảnh "ăn" riêng không. Lưu ý: nội dung file được gửi lên Google.
 
+### P5. Biểu cảm riêng khi nhắc lịch
+- **Ý tưởng:** khi một lời nhắc đến giờ, pet có một biểu cảm / hoạt ảnh riêng (không dùng chung mặt vui / giật mình của click). Hiện lời nhắc chỉ có câu nói giọng pet (lượt 28) và pet nhảy lên báo (`trigger_notice`).
+- **Cần chốt trước khi làm:** biểu cảm trông thế nào (user gửi hình tham khảo hoặc để Claude thiết kế), có kèm hoạt ảnh (rung chuông, vẫy tay…) hay chỉ đổi mặt.
+
 ### P3. T1 — chào khi quay lại máy
 - **Ý tưởng:** rời máy đủ lâu (pet đã ngủ gật) rồi quay lại → pet thức dậy và chào "Welcome back! You were away 25 minutes." (`DECISION_LOG.md` lượt 21-22).
 

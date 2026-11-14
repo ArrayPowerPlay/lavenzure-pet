@@ -1,6 +1,10 @@
 """Reminder tools: set ("remind me in 30 minutes to ..." / "at 11:00"), list and cancel reminders,
 and hide reminders that already went off.
 
+Every reminder carries two texts the model writes: ``message`` (the plain task, shown in the
+Reminders tab) and ``line`` (what the pet itself says when it goes off, in the pet's own voice and
+the user's language - round 28, so a reminder sounds like the pet and not like a system notice).
+
 The model only passes what the user said (``minutes`` from now, or a clock time ``at``); this code
 works out the actual due time, because language models are unreliable at clock arithmetic
 (decision of round 21). A clock time that has already passed today means tomorrow.
@@ -39,8 +43,9 @@ class ReminderService(Protocol):
     """What the tools need from whoever keeps the reminders (the ``BackgroundMonitor``). Every
     method must be safe to call from the agent's worker thread."""
 
-    def schedule_reminder(self, due: float, message: str) -> int:
-        """Schedule a reminder at unix time ``due``; returns its id."""
+    def schedule_reminder(self, due: float, message: str, line: str) -> int:
+        """Schedule a reminder at unix time ``due`` (``line`` = what the pet says); returns its
+        id."""
 
     def pending_reminders(self) -> Sequence[PendingReminder]:
         """The reminders still waiting, soonest first."""
@@ -118,11 +123,17 @@ def describe_due(due: datetime, now: datetime) -> str:
 
 
 @tool
-def set_timer_reminder(message: str, minutes: float | None = None,
+def set_timer_reminder(message: str, line: str, minutes: float | None = None,
                        at: str | None = None) -> str:
     """Set a reminder that pops up on the pet at the right time and stays until the user clicks
     the pet. Only call it once the time is clear (if the user gave no time or a vague one, ask
-    first). Pass the reminder text in the user's language as ``message``, and EITHER ``minutes``
+    first). Pass the plain task in the user's language as ``message`` (e.g. 'học bài', 'call
+    mom'), and ``line``: the sentence the pet itself will say when the time comes, in the user's
+    language and in your own voice (playful, warm, a little fiery, with a light 'Lavenzure'
+    personality), mentioning the task and what to do now, e.g. 'Time is up! Books open, mind
+    on: học bài. You got this :3'. It is said at the moment the reminder goes off, so write it
+    as happening NOW (not 'I will remind you'), under 100 characters, without the time. Then
+    pass EITHER ``minutes``
     (from now; convert hours/seconds to minutes, e.g. 'in 2 hours' -> 120) OR ``at`` (a clock
     time, 24-hour 'HH:MM' such as '23:00'; add the date as 'YYYY-MM-DD HH:MM' for another day,
     e.g. tomorrow afternoon). Never work out the time yourself from minutes: pass what the user
@@ -131,12 +142,16 @@ def set_timer_reminder(message: str, minutes: float | None = None,
         return UNAVAILABLE
     if not message.strip():
         return "Error: the reminder needs a message. Ask the user what to remind them about."
+    if not line.strip():
+        return ("Error: the reminder needs a 'line': the sentence the pet will say when the time "
+                "comes (in the user's language, in your own playful voice, mentioning the task). "
+                "Call set_timer_reminder again with it.")
     now = datetime.now()
     try:
         due = resolve_due(minutes, at, now)
     except ValueError as exc:
         return f"Error: {exc}."
-    reminder_id = _service.schedule_reminder(due.timestamp(), message.strip())
+    reminder_id = _service.schedule_reminder(due.timestamp(), message.strip(), line.strip())
     return (f'Okay! Reminder #{reminder_id} set for {describe_due(due, now)}: '
             f'"{message.strip()}". Tell the user the time in their language.')
 

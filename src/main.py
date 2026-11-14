@@ -295,11 +295,16 @@ class LavenzureApp(QObject):
         self.sprite.character.talk(min(3.0, 0.05 * len(text)))
         self.bubble.show_text(text, auto_hide_ms=reading_ms(text))
 
-    def _on_reminder(self, message: str, minutes_late: int) -> None:
-        """A reminder is due: the pet comes out if hidden (wakes up if asleep), hops, and shows
-        it in a bubble that stays until the pet is clicked (together with any other reminder or
-        alert still waiting)."""
-        if minutes_late > 0:
+    def _on_reminder(self, message: str, line: str, minutes_late: int) -> None:
+        """A reminder is due: the pet comes out if hidden (wakes up if asleep), hops, and says
+        its own line (written by the AI when the reminder was set) in a bubble that stays until
+        the pet is clicked (together with any other reminder or alert still waiting). Only a
+        reminder saved before round 28 has no line; it falls back to "Reminder: <task>"."""
+        if line and minutes_late > 0:
+            text = self.lines.phrase("reminder_line_late", line=line, minutes=minutes_late)
+        elif line:
+            text = line
+        elif minutes_late > 0:
             text = self.lines.phrase("reminder_late", message=message, minutes=minutes_late)
         else:
             text = self.lines.phrase("reminder", message=message)

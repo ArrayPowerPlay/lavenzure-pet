@@ -4,6 +4,7 @@ from types import SimpleNamespace
 
 import pytest
 import requests
+from pydantic import ValidationError
 
 from agent.tools import set_timer_reminder as reminder_module
 from agent.tools import weather, web_search
@@ -85,15 +86,16 @@ def test_web_search_without_key(monkeypatch):
 
 @pytest.mark.parametrize(
     ("args", "accepted"),
-    [({"minutes": 10, "message": "drink water"}, True),
-     ({"at": "23:59", "message": "sleep"}, True),
-     ({"minutes": 0, "message": "x"}, False),
-     ({"minutes": -5, "message": "x"}, False),
-     ({"minutes": 7 * 24 * 60 + 1, "message": "x"}, False),
-     ({"minutes": 5, "message": "   "}, False),
-     ({"message": "x"}, False),
-     ({"minutes": 5, "at": "11:00", "message": "x"}, False),
-     ({"at": "half past ten", "message": "x"}, False)],
+    [({"minutes": 10, "message": "drink water", "line": "Go!"}, True),
+     ({"at": "23:59", "message": "sleep", "line": "Go!"}, True),
+     ({"minutes": 0, "message": "x", "line": "Go!"}, False),
+     ({"minutes": -5, "message": "x", "line": "Go!"}, False),
+     ({"minutes": 7 * 24 * 60 + 1, "message": "x", "line": "Go!"}, False),
+     ({"minutes": 5, "message": "   ", "line": "Go!"}, False),
+     ({"message": "x", "line": "Go!"}, False),
+     ({"minutes": 5, "at": "11:00", "message": "x", "line": "Go!"}, False),
+     ({"at": "half past ten", "message": "x", "line": "Go!"}, False),
+     ({"minutes": 10, "message": "x", "line": "  "}, False)],
 )
 def test_reminder_validation(monkeypatch, args, accepted):
     """Only sensible reminders reach the service (as a due timestamp + message)."""
@@ -104,6 +106,20 @@ def test_reminder_validation(monkeypatch, args, accepted):
     assert reply.startswith("Okay") is accepted
     if accepted:
         assert "#1" in reply
+        assert service.items[0].line == "Go!"
+
+
+def test_reminder_needs_the_pets_own_line(monkeypatch):
+    """The pet's own sentence is required: a call without it (or with a blank one) schedules
+    nothing, so the model is told to call again with the line."""
+    service = FakeReminderService()
+    monkeypatch.setattr(reminder_module, "_service", service)
+    with pytest.raises(ValidationError):        # missing: refused by the tool's schema
+        reminder_module.set_timer_reminder.invoke({"minutes": 10, "message": "x"})
+    reply = reminder_module.set_timer_reminder.invoke(
+        {"minutes": 10, "message": "x", "line": "  "})
+    assert reply.startswith("Error") and "line" in reply
+    assert service.items == []
 
 
 class FakeReminderService:
@@ -114,9 +130,10 @@ class FakeReminderService:
         self.items: list[SimpleNamespace] = []
         self.dismissed = 0
 
-    def schedule_reminder(self, due: float, message: str) -> int:
+    def schedule_reminder(self, due: float, message: str, line: str) -> int:
         """Keep the reminder; ids count from 1."""
-        self.items.append(SimpleNamespace(id=len(self.items) + 1, due=due, message=message))
+        self.items.append(SimpleNamespace(id=len(self.items) + 1, due=due, message=message,
+                                          line=line))
         return self.items[-1].id
 
     def pending_reminders(self) -> list:
@@ -142,8 +159,10 @@ def test_list_and_cancel_reminders(monkeypatch):
     service = FakeReminderService()
     monkeypatch.setattr(reminder_module, "_service", service)
     assert "no pending" in reminder_module.list_reminders.invoke({})
-    reminder_module.set_timer_reminder.invoke({"minutes": 30, "message": "call mom"})
-    reminder_module.set_timer_reminder.invoke({"minutes": 10, "message": "tea"})
+    reminder_module.set_timer_reminder.invoke(
+        {"minutes": 30, "message": "call mom", "line": "Ring ring!"})
+    reminder_module.set_timer_reminder.invoke(
+        {"minutes": 10, "message": "tea", "line": "Tea time!"})
     listing = reminder_module.list_reminders.invoke({})
     assert listing.index('#2') < listing.index('#1')            # soonest first
     assert '"call mom"' in listing and ("today" in listing or "tomorrow" in listing)

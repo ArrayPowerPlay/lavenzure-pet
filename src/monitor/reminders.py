@@ -2,14 +2,18 @@
 
 The file is ``%LOCALAPPDATA%\\Lavenzure\\reminders.json``, next to ``settings.json`` (decision of
 round 24: saved to a file rather than kept in RAM only). It holds a list of
-``{"id": <number>, "due": <unix time>, "message": "..."}``; a reminder is removed from it as soon
-as it goes off or is cancelled (round 25: from the chat or the bubble's Reminders tab), so the
-file is empty most of the time. Reminders are independent of the chat history: wiping the chat
-after 15 idle minutes does not touch them.
+``{"id": <number>, "due": <unix time>, "message": "...", "line": "..."}``; a reminder is removed
+from it as soon as it goes off or is cancelled (round 25: from the chat or the bubble's Reminders
+tab), so the file is empty most of the time. Reminders are independent of the chat history:
+wiping the chat after 15 idle minutes does not touch them.
 
 The ``id`` is a small number that names a reminder while it is pending, so the AI and the
 Reminders tab can say which one to cancel. Files written before ids existed get numbers when
 they are loaded.
+
+``message`` is the plain task ("học bài", shown in the Reminders tab); ``line`` is what the pet says
+when it goes off, written in the pet's own voice by the AI when it set the reminder (round 28).
+Reminders saved before that have no ``line`` (empty).
 
 Only the UI thread uses a ``ReminderStore`` (the agent's tools hand requests over through queued
 Qt signals, see ``BackgroundMonitor``).
@@ -33,11 +37,13 @@ def default_path() -> Path:
 
 @dataclass(frozen=True)
 class Reminder:
-    """One reminder: its number, when it is due (unix time) and what to say."""
+    """One reminder: its number, when it is due (unix time), the plain task (``message``) and
+    what the pet says when it goes off (``line``; empty for reminders saved before round 28)."""
 
     id: int
     due: float
     message: str
+    line: str = ""
 
 
 class ReminderStore:
@@ -56,11 +62,12 @@ class ReminderStore:
                 if not isinstance(rid, int) or rid <= 0 or rid in used:
                     rid = 0     # numbered below, after every valid id is known
                 used.add(rid)
-                self._items.append(Reminder(rid, float(entry["due"]), str(entry["message"])))
+                self._items.append(Reminder(rid, float(entry["due"]), str(entry["message"]),
+                                            str(entry.get("line", ""))))
             next_id = max(used, default=0) + 1
             for index, item in enumerate(self._items):
                 if item.id == 0:
-                    self._items[index] = Reminder(next_id, item.due, item.message)
+                    self._items[index] = Reminder(next_id, item.due, item.message, item.line)
                     next_id += 1
             self._items.sort(key=lambda r: r.due)
         except FileNotFoundError:
@@ -108,7 +115,8 @@ class ReminderStore:
 
     def _save(self) -> None:
         """Write the list to disk (a failure is logged; the reminders still work this run)."""
-        data = [{"id": r.id, "due": r.due, "message": r.message} for r in self._items]
+        data = [{"id": r.id, "due": r.due, "message": r.message, "line": r.line}
+                for r in self._items]
         try:
             self.path.parent.mkdir(parents=True, exist_ok=True)
             self.path.write_text(json.dumps(data, ensure_ascii=False, indent=2),

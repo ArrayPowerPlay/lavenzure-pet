@@ -16,7 +16,7 @@ Two pools per language live in ``data/`` (decisions of rounds 20-22):
 - ``random_line(now)`` - the line for the "speak" click reaction: any of the 75 lines (care lines
   only at their hours), never the one said just before.
 - ``phrase(key, **values)`` - short fixed texts outside the pools (system alerts, the
-  "Reminder:" prefix), from ``PHRASES``.
+  "Reminder:" prefix, used only for reminders saved without a pet line), from ``PHRASES``.
 
 Chat replies are not covered here: the AI answers in whatever language the user writes in.
 """
@@ -39,6 +39,7 @@ PHRASES: dict[str, dict[str, str]] = {
         "battery_alert": "Battery is down to {value:.0f}%. Better plug in!",
         "reminder": "Reminder: {message}",
         "reminder_late": "Reminder ({minutes} min late): {message}",
+        "reminder_line_late": "{line} ({minutes} min late)",
         "reminder_set_note": "⏰ Reminder set: {when} · {message}",
         "reminder_cancelled_note": "⏰ Reminder cancelled: {when} · {message}",
         "today": "Today {clock}",
@@ -51,6 +52,7 @@ PHRASES: dict[str, dict[str, str]] = {
         "battery_alert": "Pin chỉ còn {value:.0f}%. Cắm sạc đi bạn ơi!",
         "reminder": "Nhắc nhở: {message}",
         "reminder_late": "Nhắc nhở (trễ {minutes} phút): {message}",
+        "reminder_line_late": "{line} (trễ {minutes} phút)",
         "reminder_set_note": "⏰ Đã đặt nhắc: {when} · {message}",
         "reminder_cancelled_note": "⏰ Đã huỷ nhắc: {when} · {message}",
         "today": "{clock} hôm nay",

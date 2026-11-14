@@ -5,7 +5,9 @@ minute or two. Every case runs in a fresh chat against a real ``BackgroundMonito
 its reminders in a temporary file (the user's own reminders are never touched), and checks what
 really happened to the reminder list, not what the reply claims:
 
-- ``set``    - a clear time or delay: exactly one new reminder must exist afterwards.
+- ``set``    - a clear time or delay: exactly one new reminder must exist afterwards, with a
+               ``line`` (the sentence the pet says when it goes off, round 28); the lines are
+               printed so you can judge whether they sound like the pet.
 - ``ask``    - no time or a vague one: nothing may be set, and the reply must ask (contain "?").
 - ``cancel`` - reminders are prepared first; the message must cancel exactly the named one.
 
@@ -81,7 +83,7 @@ def run_case(app: QApplication, case: Case) -> tuple[bool, str]:
     for timer in (monitor._status_timer, monitor._reminder_timer, monitor._idle_timer):
         timer.stop()
     for message, minutes in case.prepare:
-        monitor.schedule_reminder(time.time() + minutes * 60, message)
+        monitor.schedule_reminder(time.time() + minutes * 60, message, "Time to go!")
     pump(app)
     before = monitor.pending_reminders()
     history: list[dict] = []
@@ -93,7 +95,11 @@ def run_case(app: QApplication, case: Case) -> tuple[bool, str]:
         pump(app)
     after = monitor.pending_reminders()
     if case.expect == "set":
-        passed = len(after) == len(before) + 1
+        added = [r for r in after if r not in before]
+        # The pet's own sentence must be there, and must name the task (here: any word of it).
+        passed = (len(added) == 1 and len(added[0].line.strip()) > 8
+                  and added[0].line.strip() != added[0].message.strip())
+        reply = f"{reply}  | line: {added[0].line!r}" if added else reply
     elif case.expect == "ask":
         passed = len(after) == len(before) and "?" in reply
     else:
@@ -124,8 +130,8 @@ def main() -> int:
         said = " / ".join(case.turns)
         print(f"{status} {passed}/{args.repeat}  [{case.expect}] {said}")
         for ok, reply in results:
-            if not ok:
-                print(f"       reply: {reply[:150]!r}")
+            if not ok or case.expect == "set":
+                print(f"       reply: {reply[:260]!r}")
     print("all passed" if failures == 0 else f"{failures} run(s) failed")
     return 0 if failures == 0 else 1
 

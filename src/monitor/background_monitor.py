@@ -29,9 +29,10 @@ LATE_GRACE_SECONDS = 60   # a reminder going off later than this says how late i
 class BackgroundMonitor(QObject):
     """Emits ``alert_triggered`` (CPU/RAM/battery over threshold, once until cleared, then quiet
     for ``system_status.snooze_minutes`` after the user dismisses it), ``reminder_triggered``
-    (message, minutes late - 0 when on time; late when the PC slept or the app was closed at the
-    due time) and ``ambient_due`` (``ambient.interval_minutes`` since the last line or
-    interaction: time for the pet to say something on its own). For the reminders list it also
+    (message, line, minutes late - 0 when on time; late when the PC slept or the app was closed
+    at the due time; ``line`` is what the pet says, "" for reminders saved before round 28) and
+    ``ambient_due`` (``ambient.interval_minutes`` since the last line or interaction: time for
+    the pet to say something on its own). For the reminders list it also
     emits ``reminders_changed(list[Reminder])`` after every add / cancel / reminder going off,
     ``reminder_added(Reminder)`` / ``reminder_cancelled(Reminder)`` when one is set or cancelled
     through the AI's tools (the chat shows a note written by the app, so a reply that only
@@ -44,13 +45,13 @@ class BackgroundMonitor(QObject):
 
     alert_triggered = Signal(str)
     ambient_due = Signal()
-    reminder_triggered = Signal(str, int)
+    reminder_triggered = Signal(str, str, int)
     reminders_changed = Signal(list)
     reminder_added = Signal(object)
     reminder_cancelled = Signal(object)
     reminders_dismissed = Signal()
     # Internal worker thread -> UI thread hand-offs.
-    _reminder_requested = Signal(int, float, str)
+    _reminder_requested = Signal(int, float, str, str)
     _cancel_requested = Signal(int)
     _dismiss_requested = Signal()
 
@@ -107,12 +108,13 @@ class BackgroundMonitor(QObject):
         self._alert_active = False
         self._snoozed_until = time.time() + self._snooze_seconds
 
-    def schedule_reminder(self, due: float, message: str) -> int:
-        """Schedule a reminder at unix time ``due`` and return its id. Safe to call from any
-        thread (the list itself is updated on the UI thread a moment later)."""
+    def schedule_reminder(self, due: float, message: str, line: str = "") -> int:
+        """Schedule a reminder at unix time ``due`` (``message`` = the task, ``line`` = what the
+        pet says when it goes off) and return its id. Safe to call from any thread (the list
+        itself is updated on the UI thread a moment later)."""
         with self._ids_lock:
             reminder_id = next(self._ids)
-        self._reminder_requested.emit(reminder_id, float(due), message)
+        self._reminder_requested.emit(reminder_id, float(due), message, line)
         return reminder_id
 
     def pending_reminders(self) -> list[Reminder]:
@@ -138,9 +140,9 @@ class BackgroundMonitor(QObject):
         if self._reminders.remove(reminder_id) is not None:
             self._publish()
 
-    def _add_reminder(self, reminder_id: int, due: float, message: str) -> None:
+    def _add_reminder(self, reminder_id: int, due: float, message: str, line: str) -> None:
         """Store (and save) a reminder set by the AI and announce it (UI thread only)."""
-        reminder = Reminder(reminder_id, due, message)
+        reminder = Reminder(reminder_id, due, message, line)
         self._reminders.add(reminder)
         self._publish()
         self.reminder_added.emit(reminder)
@@ -197,7 +199,7 @@ class BackgroundMonitor(QObject):
         for reminder in due:
             late = now - reminder.due
             minutes_late = int(round(late / 60)) if late > LATE_GRACE_SECONDS else 0
-            self.reminder_triggered.emit(reminder.message, minutes_late)
+            self.reminder_triggered.emit(reminder.message, reminder.line, minutes_late)
 
     def _check_idle(self) -> None:
         """Once ``ambient.interval_minutes`` have passed since the last line or interaction,
