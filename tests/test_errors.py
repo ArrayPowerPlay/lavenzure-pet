@@ -56,3 +56,18 @@ def test_classify_looks_through_exception_chain():
 def test_friendly_error_is_english_text():
     """The reply shown in the chat mentions what the user should fix."""
     assert "Settings" in friendly_error(MissingApiKeyError())
+
+
+def test_friendly_error_follows_the_language():
+    """The explanation comes in the Settings language; an unknown language falls back to English."""
+    vi = friendly_error(MissingApiKeyError(), "vi")
+    assert "Settings" in vi and "khóa API" in vi
+    assert friendly_error(MissingApiKeyError(), "xx") == friendly_error(MissingApiKeyError(), "en")
+
+
+def test_every_error_has_a_message_in_every_language():
+    """No failure category is left without a reply in either language."""
+    from agent.errors import FRIENDLY_MESSAGES
+
+    for language, messages in FRIENDLY_MESSAGES.items():
+        assert set(messages) == set(ErrorKind), language

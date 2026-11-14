@@ -65,13 +65,15 @@ class AgentWorker(QObject):
 
     partial = Signal(str)   # the reply so far while it streams in (with its emotion tag)
     finished = Signal(str)  # the reply text (still starting with its emotion tag)
-    failed = Signal(str)    # a friendly, in-character explanation of what went wrong
+    failed = Signal(str)    # a friendly, in-character explanation (in the Settings language)
 
-    def __init__(self, history: list[dict], message: str) -> None:
-        """Store the conversation so far and the new user message for ``run``."""
+    def __init__(self, history: list[dict], message: str, language: str = "en") -> None:
+        """Store the conversation so far, the new user message and the language (Settings) in
+        which a failure is explained, for ``run``."""
         super().__init__()
         self._history = history
         self._message = message
+        self._language = language
 
     def run(self) -> None:
         """Call the agent (in the worker thread) and emit ``finished`` or ``failed``."""
@@ -80,7 +82,7 @@ class AgentWorker(QObject):
             self.finished.emit(reply)
         except Exception as exc:  # noqa: BLE001 - surface any failure to the chat UI
             log.exception("Agent call failed")
-            self.failed.emit(friendly_error(exc))
+            self.failed.emit(friendly_error(exc, self._language))
 
 
 class LavenzureApp(QObject):
@@ -421,7 +423,7 @@ class LavenzureApp(QObject):
 
         self._reply_emotion_shown = False
         self._agent_thread = QThread()
-        self._agent_worker = AgentWorker(history, message)
+        self._agent_worker = AgentWorker(history, message, self.lines.language)
         self._agent_worker.moveToThread(self._agent_thread)
         self._agent_thread.started.connect(self._agent_worker.run)
         # Explicitly queued: the handlers touch widgets, so they must run in the UI thread.

@@ -1,4 +1,4 @@
-"""Turn agent failures into short, friendly (English) chat replies.
+"""Turn agent failures into short, friendly chat replies, in the Settings language (en / vi).
 
 The Gemini / OpenAI / LangChain / HTTP libraries raise many different exception types, and
 their class hierarchy changes between versions. Instead of importing them, ``classify_error``
@@ -27,28 +27,52 @@ class ErrorKind(enum.Enum):
     UNKNOWN = "unknown"
 
 
-FRIENDLY_MESSAGES: dict[ErrorKind, str] = {
-    ErrorKind.MISSING_KEY: (
-        "I can't think without an API key! Right-click my tray icon, open Settings and "
-        "paste your Gemini or OpenAI key in."
-    ),
-    ErrorKind.BAD_KEY: (
-        "My AI service didn't accept my API key. Could you check it in Settings (tray icon)?"
-    ),
-    ErrorKind.QUOTA: (
-        "Phew, I've used up my AI quota for now. Give me a little while and try again!"
-    ),
-    ErrorKind.MODEL_GONE: (
-        "The AI model I'm set to use isn't available anymore. "
-        "A newer version of me should fix that."
-    ),
-    ErrorKind.NETWORK: (
-        "I can't reach the internet right now. Check your connection and try again?"
-    ),
-    ErrorKind.SERVER: (
-        "The AI servers are having a rough moment. Try again in a minute?"
-    ),
-    ErrorKind.UNKNOWN: "Oops, my flame flickered out for a second. Try again?",
+DEFAULT_LANGUAGE = "en"
+
+# language code -> failure category -> in-character reply (same languages as Settings > Language)
+FRIENDLY_MESSAGES: dict[str, dict[ErrorKind, str]] = {
+    "en": {
+        ErrorKind.MISSING_KEY: (
+            "I can't think without an API key! Right-click my tray icon, open Settings and "
+            "paste your Gemini or OpenAI key in."
+        ),
+        ErrorKind.BAD_KEY: (
+            "My AI service didn't accept my API key. Could you check it in Settings (tray icon)?"
+        ),
+        ErrorKind.QUOTA: (
+            "Phew, I've used up my AI quota for now. Give me a little while and try again!"
+        ),
+        ErrorKind.MODEL_GONE: (
+            "The AI model I'm set to use isn't available anymore. "
+            "A newer version of me should fix that."
+        ),
+        ErrorKind.NETWORK: (
+            "I can't reach the internet right now. Check your connection and try again?"
+        ),
+        ErrorKind.SERVER: "The AI servers are having a rough moment. Try again in a minute?",
+        ErrorKind.UNKNOWN: "Oops, my flame flickered out for a second. Try again?",
+    },
+    "vi": {
+        ErrorKind.MISSING_KEY: (
+            "Mình chưa có khóa API nên chưa nghĩ được gì cả! Bạn bấm chuột phải vào biểu tượng "
+            "ở khay hệ thống, mở Settings rồi dán khóa Gemini hoặc OpenAI vào nhé."
+        ),
+        ErrorKind.BAD_KEY: (
+            "Dịch vụ AI không nhận khóa API của mình. Bạn kiểm tra lại khóa trong Settings "
+            "(biểu tượng ở khay) giúp mình nhé?"
+        ),
+        ErrorKind.QUOTA: (
+            "Hức, mình tạm hết lượt dùng AI rồi. Chờ một lát rồi thử lại nhé!"
+        ),
+        ErrorKind.MODEL_GONE: (
+            "Mô hình AI mình đang dùng không còn nữa. Bản Lavenzure mới hơn sẽ sửa được chuyện này."
+        ),
+        ErrorKind.NETWORK: (
+            "Mình không kết nối được internet. Bạn kiểm tra mạng rồi thử lại nhé?"
+        ),
+        ErrorKind.SERVER: "Máy chủ AI đang trục trặc một chút. Một phút nữa thử lại nhé?",
+        ErrorKind.UNKNOWN: "Ôi, ngọn lửa của mình vừa chập chờn. Bạn thử lại nhé?",
+    },
 }
 
 _NETWORK_NAME_HINTS = ("ConnectError", "ConnectionError", "Timeout", "NetworkError", "ProxyError")
@@ -99,6 +123,8 @@ def classify_error(exc: BaseException) -> ErrorKind:
     return ErrorKind.UNKNOWN
 
 
-def friendly_error(exc: BaseException) -> str:
-    """Return the in-character chat reply for ``exc``."""
-    return FRIENDLY_MESSAGES[classify_error(exc)]
+def friendly_error(exc: BaseException, language: str = DEFAULT_LANGUAGE) -> str:
+    """Return the in-character chat reply for ``exc`` in ``language`` (``en`` / ``vi``; English
+    for an unknown language)."""
+    messages = FRIENDLY_MESSAGES.get(language, FRIENDLY_MESSAGES[DEFAULT_LANGUAGE])
+    return messages[classify_error(exc)]
