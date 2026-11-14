@@ -1,13 +1,13 @@
 """Build the Windows release: ``dist/Lavenzure-<version>-win-x64.zip`` plus its ``.sha256`` file.
 
-Usage (Windows venv, from the project folder)::
+Usage (Windows, from the project folder)::
 
-    .venv-win/Scripts/python.exe scripts/build.py            # version from the latest git tag
-    .venv-win/Scripts/python.exe scripts/build.py 0.1.0      # explicit version (used by CI)
+    uv run python scripts/build.py            # version from the latest git tag
+    uv run python scripts/build.py 0.1.0      # explicit version (used by CI)
 
 Steps: write ``src/_version.py`` -> PyInstaller (``lavenzure.spec``) -> zip the ``Lavenzure``
 folder (with ``LICENSE`` when the repo has one) -> SHA-256 of the zip. Needs ``pyinstaller``
-(``requirements-dev.txt``). Build on Windows, not in WSL's Linux Python.
+(the ``dev`` group of ``pyproject.toml``, installed by ``uv sync``). Build on Windows, not in WSL's Linux Python.
 """
 from __future__ import annotations
 

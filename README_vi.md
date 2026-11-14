@@ -55,21 +55,20 @@ File log ở `%LOCALAPPDATA%\Lavenzure\logs\lavenzure.log`.
 
 ## Chạy từ mã nguồn
 
-Cần Python 3.13 trên Windows.
+Cần [uv](https://docs.astral.sh/uv/) trên Windows (uv cũng tự cài Python 3.13 cho bạn).
 
 ```powershell
-py -3.13 -m venv .venv-win
-.venv-win\Scripts\python.exe -m pip install -r requirements.txt
-.venv-win\Scripts\python.exe src\main.py
+uv sync                    # tạo .venv với đúng phiên bản thư viện ghi trong uv.lock
+uv run python src\main.py
 ```
 
 Khi phát triển có thể để khóa trong file `.env` thay vì Settings (`copy .env.example .env`); khóa trong `.env` hoặc biến môi trường sẽ đè lên khóa đã lưu.
 
 ```powershell
-.venv-win\Scripts\python.exe -m pip install -r requirements-dev.txt   # pytest, ruff, pyinstaller
-.venv-win\Scripts\python.exe -m pytest                                 # chạy test (không cần màn hình)
-.venv-win\Scripts\python.exe -m ruff check .                           # kiểm tra lint
-.venv-win\Scripts\python.exe scripts\build.py                          # tạo dist\Lavenzure-<phiên bản>-win-x64.zip
+uv run pytest                           # chạy test (không cần màn hình)
+uv run ruff check .                     # kiểm tra lint
+uv run python scripts\build.py          # tạo dist\Lavenzure-<phiên bản>-win-x64.zip
+uv add <gói>                            # thêm thư viện (cập nhật pyproject.toml và uv.lock)
 ```
 
 Những thứ hay chỉnh nằm trong [`config.yaml`](./config.yaml) (cỡ nhân vật, tốc độ khung hình, kiểu vẽ lửa, ngưỡng cảnh báo, model AI, tần suất pet nói). Lựa chọn của bạn trong cửa sổ Settings được lưu ở `%LOCALAPPDATA%\Lavenzure\settings.json`.

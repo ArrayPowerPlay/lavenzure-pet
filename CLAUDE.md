@@ -39,7 +39,7 @@ The repo is on the Windows drive: `D:\workspace\Repo\pet` (WSL: `/mnt/d/workspac
 
 ```bash
 .venv-win/Scripts/python.exe src/main.py                              # run the app
-.venv-win/Scripts/python.exe -m pip install -r requirements.txt       # deps (requirements-dev.txt: pytest, ruff, pyinstaller)
+UV_PROJECT_ENVIRONMENT=.venv-win WSLENV=UV_PROJECT_ENVIRONMENT uv.exe sync --frozen   # install exactly what uv.lock says into .venv-win
 QT_QPA_PLATFORM=offscreen .venv-win/Scripts/python.exe src/main.py    # headless smoke test
 .venv-win/Scripts/python.exe -m pytest                                # headless test suite
 .venv-win/Scripts/python.exe -m ruff check .                          # lint (config in pyproject.toml)
@@ -51,6 +51,7 @@ QT_QPA_PLATFORM=offscreen .venv-win/Scripts/python.exe src/main.py    # headless
 .venv-win/Scripts/python.exe scripts/build.py [version]                # build dist/Lavenzure-<ver>-win-x64.zip (takes minutes; run in the background)
 ```
 
+- **Dependencies are managed by uv**: they are declared in `pyproject.toml` (`dependencies`, and the `dev` group with pytest, ruff, pyinstaller) and locked in `uv.lock`; there is no `requirements.txt`. Add one with `uv.exe add <pkg>` (same env vars as above) and commit both files; never `pip install` into the venv. A fresh clone just runs `uv sync` (default venv `.venv`); on this machine the venv is `.venv-win` via `UV_PROJECT_ENVIRONMENT`. Python is pinned by `.python-version` (3.13) / `requires-python`. Do not `uv sync` while the pet runs from that venv (Windows locks the loaded `.pyd` files). CI uses `uv sync --frozen`.
 - `.venv-win/Scripts/*.exe` giving "Permission denied" from WSL after recreating the venv: `chmod +x .venv-win/Scripts/*.exe`.
 - `src/` is the import root (`import config`, `from overlay.x import ...`, no `src.` prefix). Run scripts as `src/main.py`; in scratch scripts `sys.path.insert` the `src` dir (`PYTHONPATH` is not forwarded to Windows Python). Env vars only reach it through `WSLENV`, e.g. `QT_QPA_PLATFORM=offscreen WSLENV=QT_QPA_PLATFORM ...`.
 - Tests are headless (`tests/conftest.py` sets `QT_QPA_PLATFORM=offscreen` and fakes network/psutil). The release build is `scripts/build.py`.

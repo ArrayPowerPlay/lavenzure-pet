@@ -55,21 +55,20 @@ Logs are in `%LOCALAPPDATA%\Lavenzure\logs\lavenzure.log`.
 
 ## Run from source
 
-Needs Python 3.13 on Windows.
+Needs [uv](https://docs.astral.sh/uv/) on Windows (it also installs Python 3.13 for you).
 
 ```powershell
-py -3.13 -m venv .venv-win
-.venv-win\Scripts\python.exe -m pip install -r requirements.txt
-.venv-win\Scripts\python.exe src\main.py
+uv sync                    # creates .venv with the exact versions from uv.lock
+uv run python src\main.py
 ```
 
 For development you can put the keys in a `.env` file instead of Settings (`copy .env.example .env`); keys from `.env` or the environment override the saved ones.
 
 ```powershell
-.venv-win\Scripts\python.exe -m pip install -r requirements-dev.txt   # pytest, ruff, pyinstaller
-.venv-win\Scripts\python.exe -m pytest                                 # tests (no display needed)
-.venv-win\Scripts\python.exe -m ruff check .                           # lint
-.venv-win\Scripts\python.exe scripts\build.py                          # build dist\Lavenzure-<version>-win-x64.zip
+uv run pytest                           # tests (no display needed)
+uv run ruff check .                     # lint
+uv run python scripts\build.py          # build dist\Lavenzure-<version>-win-x64.zip
+uv add <package>                        # add a dependency (updates pyproject.toml and uv.lock)
 ```
 
 Settings you may want to change live in [`config.yaml`](./config.yaml) (character size, frame rate, flame renderer, alert thresholds, AI models, how often the pet talks). Your own choices from the Settings window are saved in `%LOCALAPPDATA%\Lavenzure\settings.json`.

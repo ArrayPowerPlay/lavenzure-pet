@@ -1,4 +1,40 @@
-# Tool configuration only (the app is run as scripts from src/, it is not an installable package).
+# Project metadata, dependencies (locked in uv.lock) and tool configuration.
+# The app is run as scripts from src/ and is not an installable package (`package = false`), so
+# `version` below is only a placeholder: the real version always comes from the git tag
+# (see src/version.py).
+
+[project]
+name = "lavenzure"
+version = "0.0.0"
+description = "Lavenzure: a flame desktop pet with an AI chat (Windows)."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.13"
+dependencies = [
+    "PySide6>=6.6",
+    "numpy>=1.26",
+    "langgraph>=0.2",
+    "langchain-core>=0.3",
+    "langchain-google-genai>=2.0",
+    "langchain-openai>=0.2",
+    "keyring>=25.0",
+    "tavily-python>=0.5",
+    "python-dotenv>=1.0",
+    "PyYAML>=6.0",
+    "requests>=2.31",
+    "psutil>=5.9",
+]
+
+[dependency-groups]
+# Installed by default with `uv sync`.
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+    "pyinstaller>=6.6",
+]
+
+[tool.uv]
+package = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -7,7 +43,7 @@ addopts = "-q"
 
 [tool.ruff]
 line-length = 100
-target-version = "py312"
+target-version = "py313"
 src = ["src", "tests"]
 extend-exclude = [".scratch", ".venv", ".venv-win"]
 

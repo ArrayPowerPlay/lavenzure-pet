@@ -1,6 +1,0 @@
-# Development-only tools (tests + linting). Install on top of requirements.txt:
-#   .venv-win/Scripts/python.exe -m pip install -r requirements-dev.txt
--r requirements.txt
-pytest>=8.0
-ruff>=0.6
-pyinstaller>=6.6

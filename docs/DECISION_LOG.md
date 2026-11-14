@@ -497,6 +497,12 @@
 - **Sửa lỗi bong bóng (user báo "to quá"):** nguyên nhân là `SpeechBubble` dùng lại một cửa sổ cho mọi câu; sau một câu dài (4 dòng) thì câu ngắn kế tiếp vẫn giữ chiều cao cũ → bong bóng to, trống. Đã sửa (`_fit` bỏ giới hạn kích thước cũ trước khi đo), có test; câu 71 ký tự giờ cao 46 px thay vì 78 px.
 - **Chưa làm (cần user):** đẩy tag `v0.1.0-rc.1` rồi `v0.1.0` (tạo bản phát hành công khai), đổi repo sang public (F9), thử bản đóng gói trên desktop thật (xem `TEST_CHECKLIST.md`).
 
+### Lượt 36 (2026-11-15) — chuyển quản lý thư viện sang `uv` (`uv.lock`), bỏ `requirements.txt`
+- **User:** CI chạy `pip install -r requirements...` là chưa chuẩn, nên dùng `uv sync` với `uv.lock` và bỏ `requirements.txt`; việc ghim Python 3.13 để Claude tự chọn; user đã cài `uv` trên Windows.
+- **Đã làm:** `pyproject.toml` có `[project]` (thư viện + nhóm `dev` gồm pytest, ruff, pyinstaller), `requires-python = ">=3.13"`, `.python-version` = 3.13, `uv.lock` (84 gói, ghim đúng phiên bản), `[tool.uv] package = false` (app không phải gói cài đặt; số `version` trong file chỉ là chỗ giữ chỗ, số thật vẫn lấy từ git tag). Xóa hai file `requirements*.txt`. `release.yml` dùng `astral-sh/setup-uv` + `uv sync --frozen` + `uv run --frozen ...`; thêm `ci.yml` chạy ruff + pytest mỗi lần push lên `main` / pull request. README, README_vi, CLAUDE.md đã sửa lệnh.
+- **Đã kiểm:** tạo môi trường mới tinh từ `uv.lock` → ruff sạch, 245 test qua. **Chưa đụng `.venv-win` đang chạy** (pet của user dùng nó; Windows khóa file `.pyd` đang mở): khi user tắt pet thì chạy `UV_PROJECT_ENVIRONMENT=.venv-win uv sync` (hoặc `uv sync` để có `.venv` mới).
+- **Ghi chú:** `uv add <gói>` để thêm thư viện, rồi commit cả `pyproject.toml` và `uv.lock`. Python 3.13 vì build và bản phát hành đều dùng 3.13.
+
 ## Còn bàn
 
 - **Đóng gói v0.1.0** (lượt 34-35): đã code xong F1-F7. Còn: user xem lại giấy phép MIT (lượt 35), thử bản đóng gói trên desktop thật, rồi tag `v0.1.0-rc.1` → `v0.1.0` và chuyển repo sang public.

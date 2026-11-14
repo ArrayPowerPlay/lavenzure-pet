@@ -1,0 +1,26 @@
+# Lint + tests on every push to main and on pull requests (the release workflow does the same
+# before building, but only when a tag is pushed).
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6   # installs uv; it fetches the Python in .python-version
+        with:
+          enable-cache: true
+
+      - name: Install dependencies (exact versions from uv.lock)
+        run: uv sync --frozen
+
+      - name: Lint and test
+        run: |
+          uv run --frozen ruff check .
+          uv run --frozen pytest
