@@ -66,7 +66,7 @@ Mục tiêu: nét vẽ phẳng, viền mực như sticker vẽ tay, nhưng *chuy
   - `weather` — thời tiết theo địa danh (Open-Meteo, không cần key)
   - `web_search` — tìm kiếm web (Tavily)
   - `system_status` — CPU / RAM / pin hiện tại
-  - `set_timer_reminder` — "nhắc tôi sau 30 phút…" / "nhắc tôi lúc 11 giờ…": app tự tính giờ, tới giờ pet hiện ra nhắc và bong bóng giữ tới khi bạn click vào pet. Lời nhắc được lưu ở `%LOCALAPPDATA%\Lavenzure\reminders.json` nên chat bị xoá hay tắt app mở lại vẫn còn (nếu lỡ giờ vì máy ngủ / app tắt thì nhắc ngay khi có thể, kèm số phút trễ)
+  - `set_timer_reminder` — "nhắc tôi sau 30 phút…" / "nhắc tôi lúc 11 giờ…": app tự tính giờ, tới giờ pet hiện ra nhắc và bong bóng giữ tới khi bạn click vào pet. Không nói giờ hoặc giờ mơ hồ ("tối nay") thì pet hỏi lại kèm giờ gợi ý. Chat "thôi khỏi nhắc nữa" / "đổi sang 22h" cũng được, và tab **Reminders** trong bong bóng chat liệt kê mọi lời nhắc đang chờ, bấm × để gỡ. Lời nhắc được lưu ở `%LOCALAPPDATA%\Lavenzure\reminders.json` nên chat bị xoá hay tắt app mở lại vẫn còn (nếu lỡ giờ vì máy ngủ / app tắt thì nhắc ngay khi có thể, kèm số phút trễ)
 - **Bong bóng chat** tông màu lửa, gắn cạnh pet (pet đứng yên khi bong bóng mở), mỗi tin nhắn nằm trong một khung bo tròn riêng (của bạn bên phải, của pet bên trái), hiển thị Markdown, Esc để đóng, tự đóng sau 30 giây không chat (không tính lúc đang gõ hoặc AI đang trả lời).
 - **Báo lỗi dễ hiểu**: thiếu/sai key, hết quota, mất mạng… đều được pet giải thích trong chat thay vì im lặng hay crash.
 - **Theo dõi máy nền**: tự cảnh báo khi pin < 30%, CPU > 90% hoặc RAM > 90%; cảnh báo giữ nguyên đến khi bạn click vào pet (hoặc chọn `Idle`), sau đó pet im 10 phút mới báo lại (`system_status.snooze_minutes`).

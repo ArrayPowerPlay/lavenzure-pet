@@ -379,6 +379,21 @@
   - Cửa sổ Settings vẫn ghi bằng tiếng Anh (chỉ câu pet nói đổi theo Language).
 - **Kiểm tra:** 140+ test tự động đều qua; chạy thử app thật ở chế độ không màn hình với Gemini thật: đổi sang tiếng Việt → câu tự nói / câu click ra tiếng Việt; chat "nhắc tôi uống nước sau 1 phút nhé" → file nhắc có lời nhắc, pet đang ẩn tự hiện ra, bong bóng "Nhắc nhở: Uống nước" vẫn còn sau 10 giây, click thì tắt và file rỗng; "nhắc tôi lúc 11 giờ gọi cho mẹ" (lúc 2 giờ sáng) → 11:00 hôm nay; "remind me tomorrow at 7:30…" → 7:30 ngày mai. **Chưa thử trên desktop thật** (pet của user đang chạy; cần tắt và mở lại pet để có tính năng mới).
 
+### Lượt 25 (2026-11-14) — nhắc việc: hỏi giờ, huỷ nhắc, tab Reminders (ĐÃ CODE)
+- **User chốt:**
+  - Hẹn mà **không có giờ hoặc giờ mơ hồ** ("tối nay", "lát nữa") → gộp làm một: pet **hỏi lại kèm giờ gợi ý** ("Mấy giờ nhắc bạn? Mình đề xuất 20:00 nhé?"), user "ok" hoặc nói giờ khác thì mới đặt. Giờ gợi ý: sáng 08:00, trưa 12:00, chiều 15:00, tối 20:00, khuya 22:00, không nói gì thì 30 phút nữa (`config.yaml` `reminders.*`).
+  - "Nhắc mình / nhắc tớ / nhớ báo mình…": **tin Gemini tự hiểu**, không làm bộ câu kiểm tra (chỉ thêm vài ví dụ vào hướng dẫn cho AI).
+  - **Huỷ nhắc làm cả hai cách:** qua chat ("thôi khỏi nhắc nữa", "đổi sang 22h") và **tab "Reminders"** trong bong bóng chat (tên tiếng Anh), mỗi dòng có nút ✕ để gỡ. Thay quyết định lượt 22 "không làm lệnh liệt kê / huỷ".
+- **Đã làm:**
+  - Công cụ mới cho AI: `list_reminders`, `cancel_reminder` (theo số), `dismiss_reminder_bubble` (tắt nhắc đang hiện trên pet, giống click). Đổi giờ = huỷ cái cũ + đặt cái mới. Một nhắc duy nhất / vừa nói tới thì huỷ luôn; nhiều cái mà không rõ thì hỏi lại kèm danh sách.
+  - Mỗi lời nhắc có **số** (lưu trong `reminders.json`; file cũ chưa có số tự được đánh số).
+  - Bong bóng chat có 2 tab **Chat | Reminders (N)**; mở bong bóng luôn vào tab Chat; danh sách tự cập nhật khi đặt / huỷ / tới giờ.
+- **Claude tự quyết (user có thể đổi):** bấm ✕ là gỡ ngay, không hỏi xác nhận; không thêm dòng xác nhận do code viết trong chat (tab Reminders đã cho thấy giờ đã đặt).
+- **Kiểm tra:** test tự động đều qua; thử với Gemini thật: "nhắc mình gọi mẹ nhé" → hỏi lại, gợi ý 30 phút, "ok" → đặt; "tối nay nhắc tớ đi đổ rác" → gợi ý 20:00, "9h đi" → 21:00; "nhớ báo mình lúc 7h sáng mai…", "đừng để mình quên uống thuốc sau 45 phút" → đặt đúng; "thôi khỏi nhắc vụ đổ rác nữa" → huỷ đúng cái; "đổi giờ gọi mẹ sang 22h" → huỷ + đặt lại 22:00; chat mới "thôi không cần nhắc nữa" (3 nhắc) → hỏi cái nào. **Chưa thử trên desktop thật.**
+
+#### Biểu cảm `chill` khi click (user hỏi)
+- **Kết quả kiểm tra:** `chill` **có** trong bộ phản ứng click (10 phản ứng: happy, surprised, scared, angry, thinking, chill, yuck, cool, speak, fly; bốc thử 400 lần: chill ra 42 lần ≈ 1/10). Nhưng theo quyết định lượt 10, **khi pet đang bay trên khúc củi thì click không bao giờ ra `chill`** (chảo không đi với khúc củi). Pet bay khá nhiều (25% thời gian đi lang thang + phản ứng `fly`), nên dễ có cảm giác chill không bao giờ hiện. **Chờ user chọn** có đổi không.
+
 ## Còn bàn
 
 - Đo lại 60 phút ở 30 fps + lửa nhẹ (`src/perf_check.py`, cần thoát pet đang chạy).
