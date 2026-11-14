@@ -17,6 +17,8 @@ Two pools per language live in ``data/`` (decisions of rounds 20-22):
   only at their hours), never the one said just before.
 - ``phrase(key, **values)`` - short fixed texts outside the pools (system alerts, the
   "Reminder:" prefix, used only for reminders saved without a pet line), from ``PHRASES``.
+- ``welcome_back(seconds)`` - the greeting when the user comes back after the pet dozed off
+  (task T1), e.g. "Welcome back! You were away 25 minutes." (one of a few wordings).
 
 Chat replies are not covered here: the AI answers in whatever language the user writes in.
 """
@@ -61,6 +63,20 @@ PHRASES: dict[str, dict[str, str]] = {
     },
 }
 
+# Greetings when the user comes back to the computer (task T1); ``{away}`` = ``away_text()``.
+WELCOME_BACK: dict[str, list[str]] = {
+    "en": [
+        "Welcome back! You were away {away}.",
+        "Hey, you're back! You were gone {away}.",
+        "There you are! I waited {away} for you :3",
+    ],
+    "vi": [
+        "Mừng bạn quay lại! Bạn đi vắng {away} đó.",
+        "A, bạn về rồi! Bạn đi {away} luôn đó.",
+        "Bạn đây rồi! Mình chờ bạn {away} rồi đó :3",
+    ],
+}
+
 # Short weekday names (Monday first), for ``when()``.
 WEEKDAYS: dict[str, list[str]] = {
     "en": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
@@ -89,6 +105,19 @@ def when(language: str, due: datetime, now: datetime) -> str:
     weekdays = WEEKDAYS.get(language, WEEKDAYS[DEFAULT_LANGUAGE])
     return phrase(language, "other_day", clock=clock, weekday=weekdays[due.weekday()],
                   day=due.day, month=due.month)
+
+
+def away_text(language: str, seconds: float) -> str:
+    """A time away in words, rounded to whole minutes: ``"25 minutes"``, ``"1 hour 5 minutes"``,
+    ``"2 hours"`` / ``"25 phút"``, ``"1 tiếng 5 phút"``."""
+    total = max(1, round(seconds / 60.0))
+    hours, minutes = divmod(total, 60)
+    if language == "vi":
+        parts = ([f"{hours} tiếng"] if hours else []) + ([f"{minutes} phút"] if minutes else [])
+    else:
+        parts = (([f"{hours} hour" + ("s" if hours != 1 else "")] if hours else [])
+                 + ([f"{minutes} minute" + ("s" if minutes != 1 else "")] if minutes else []))
+    return " ".join(parts)
 
 
 def fits_hour(entry: dict, hour: int) -> bool:
@@ -134,6 +163,11 @@ class PetLines:
     def phrase(self, key: str, **values) -> str:
         """A fixed text (alert, reminder prefix) in the current language."""
         return phrase(self.language, key, **values)
+
+    def welcome_back(self, seconds: float) -> str:
+        """The "welcome back" greeting for a user who was away ``seconds`` (random wording)."""
+        templates = WELCOME_BACK.get(self.language, WELCOME_BACK[DEFAULT_LANGUAGE])
+        return self._rng.choice(templates).format(away=away_text(self.language, seconds))
 
     def pool(self, kind: str) -> list[dict]:
         """All entries of one pool (``CARE`` or ``FACTS``) in the current language."""

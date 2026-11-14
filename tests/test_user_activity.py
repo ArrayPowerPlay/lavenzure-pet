@@ -46,3 +46,19 @@ def test_night_signal(qapp):
     watcher.check()
     watcher.check()
     assert seen == [True]
+
+
+def test_coming_back_reports_time_away(qapp):
+    """Waking from a doze reports how long the user was away (the last idle time seen)."""
+    idle = {"s": 0.0}
+    watcher = UserActivityWatcher(idle_source=lambda: idle["s"],
+                                  clock=lambda: datetime(2026, 1, 1, 12))
+    away = []
+    watcher.user_returned.connect(away.append)
+    watcher.check()
+    idle["s"] = 1499.0
+    watcher.check()
+    idle["s"] = 0.3
+    watcher.check()
+    watcher.check()
+    assert away == [1499.0]

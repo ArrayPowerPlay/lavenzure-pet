@@ -5,7 +5,16 @@ from pathlib import Path
 
 import pytest
 
-from pet_lines import CARE, FACTS, LANGUAGES, PHRASES, PetLines, fits_hour, phrase
+from pet_lines import (
+    CARE,
+    FACTS,
+    LANGUAGES,
+    PHRASES,
+    PetLines,
+    away_text,
+    fits_hour,
+    phrase,
+)
 
 DATA = Path(__file__).resolve().parent.parent / "data"
 
@@ -99,3 +108,19 @@ def test_when_in_both_languages():
     assert pet_lines.when("vi", datetime(2026, 11, 15, 8, 0), now) == "08:00 ngày mai"
     assert pet_lines.when("en", datetime(2026, 11, 17, 9, 5), now) == "Tue 17/11, 09:05"
     assert pet_lines.when("vi", datetime(2026, 11, 17, 9, 5), now) == "09:05 T3 17/11"
+
+
+@pytest.mark.parametrize(("language", "seconds", "text"), [
+    ("en", 1500, "25 minutes"), ("en", 60, "1 minute"), ("en", 3900, "1 hour 5 minutes"),
+    ("en", 7200, "2 hours"), ("vi", 1500, "25 phút"), ("vi", 3900, "1 tiếng 5 phút"),
+])
+def test_away_text(language, seconds, text):
+    """Time away in words, rounded to minutes, in both languages."""
+    assert away_text(language, seconds) == text
+
+
+@pytest.mark.parametrize("language", list(LANGUAGES))
+def test_welcome_back_mentions_the_time(lines, language):
+    """The greeting is filled in with the time away."""
+    lines.set_language(language)
+    assert away_text(language, 1500) in lines.welcome_back(1500)

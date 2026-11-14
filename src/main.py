@@ -50,6 +50,7 @@ EMOTION_MOODS = {"happy": Mood.HAPPY, "scared": Mood.SCARED, "angry": Mood.ANGRY
                  "chill": Mood.CHILL, "surprised": Mood.SURPRISED, "thinking": Mood.THINKING,
                  "yuck": Mood.YUCK, "cool": Mood.COOL}
 EMOTION_SECONDS = 5.0
+WELCOME_DELAY_MS = 1000   # greet after the wake-up stretch (``Mood.WAKE``, 0.9 s) has played
 
 
 def reading_ms(text: str) -> int:
@@ -126,6 +127,10 @@ class LavenzureApp(QObject):
         self._reply_emotion_shown = False   # the streaming reply already played its face
         self._agent_thread: QThread | None = None
         self._agent_worker: AgentWorker | None = None
+        # "Welcome back" (T1) waits for the wake-up stretch to finish; restartable single shot.
+        self._welcome_timer = QTimer(self)
+        self._welcome_timer.setSingleShot(True)
+        self._away_seconds = 0.0
 
         self._wire_signals()
         self._build_tray_icon()
@@ -147,6 +152,8 @@ class LavenzureApp(QObject):
 
         self.activity.dozing_changed.connect(self.behavior.set_dozing)
         self.activity.night_changed.connect(self.behavior.set_night)
+        self.activity.user_returned.connect(self._on_user_returned)
+        self._welcome_timer.timeout.connect(self._greet_return)
 
         self.monitor.alert_triggered.connect(self._on_alert)
         self.monitor.ambient_due.connect(self._on_ambient_due)
@@ -300,6 +307,25 @@ class LavenzureApp(QObject):
         self.sprite.character.play(Mood.HAPPY, 1.6)
         self.sprite.character.talk(min(3.0, 0.05 * len(text)))
         self.bubble.show_text(text, auto_hide_ms=reading_ms(text))
+
+    def _on_user_returned(self, seconds: float) -> None:
+        """The user came back after the pet dozed off: greet them once the pet has woken up."""
+        self._away_seconds = seconds
+        self._welcome_timer.start(WELCOME_DELAY_MS)
+
+    def _greet_return(self) -> None:
+        """Say "Welcome back! You were away 25 minutes." with a happy face (task T1). Skipped
+        while the pet is hidden or still asleep (``Idle`` chosen), the chat is open, or a
+        sticky bubble (reminder, alert) is waiting - those matter more than a greeting."""
+        if (not self.sprite.isVisible() or self.behavior.sleeping or self.chat.isVisible()
+                or self.bubble.is_sticky() or self.behavior.reminding
+                or self.behavior.state == PetState.ALERT):
+            return
+        text = self.lines.welcome_back(self._away_seconds)
+        self.sprite.character.play(Mood.HAPPY, 1.6)
+        self.sprite.character.talk(min(3.0, 0.05 * len(text)))
+        self.bubble.show_text(text, auto_hide_ms=reading_ms(text))
+        log.info("Welcome back after %.0f s away", self._away_seconds)
 
     def _on_reminder(self, message: str, line: str, minutes_late: int) -> None:
         """A reminder is due: the pet comes out if hidden (wakes up if asleep), stops, shows the
