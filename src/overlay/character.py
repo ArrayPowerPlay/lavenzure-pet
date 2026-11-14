@@ -23,12 +23,13 @@ Pieces:
 - **Face** - expressions, blinking, gaze, head turn, idle micro-expressions (see ``face.py``).
 - **Props** (``overlay.props``) - the log it rides while flying (the face moves up while
   sitting on it, so the paws and the log never cover the mouth), the frying pan resting on the
-  head in the ``chill`` mood, and the "z"s of a sleeping pet.
+  head in the ``chill`` mood, the sunglasses of ``cool``, the alarm clock ringing beside the pet
+  while a reminder is due (``set_reminding``), and the "z"s of a sleeping pet.
 - **Sparks** that drift upward in *screen* space, so they trail behind the pet as it moves, plus
   little "poof" rings when a prop appears or vanishes.
 
-Mood layering (highest wins): a transient mood from ``play()`` > alert > sleeping > thinking >
-riding the log > normal.
+Mood layering (highest wins): a transient mood from ``play()`` > alert > reminding > sleeping >
+thinking > riding the log > normal.
 
 Saving work: ``update()`` splits a long frame into short steps so the physics behave the same at
 any frame rate (the pet draws 30 fps by default). ``set_lite_flame()`` lowers the flame's
@@ -59,7 +60,15 @@ from overlay.flame_common import (
     noise1,
     smoothstep,
 )
-from overlay.props import LOG_CY, LOG_RADIUS, LogProp, PanProp, Snores, SunglassesProp
+from overlay.props import (
+    LOG_CY,
+    LOG_RADIUS,
+    AlarmClockProp,
+    LogProp,
+    PanProp,
+    Snores,
+    SunglassesProp,
+)
 
 __all__ = ["FlameCharacter", "Mood"]
 
@@ -121,7 +130,7 @@ _FLARE_RATE = 0.4                  # spontaneous flare-ups per second at wild = 
 EMBER_RATES = {Mood.ALERT: 8.0, Mood.HAPPY: 7.0, Mood.SURPRISED: 5.0, Mood.THINKING: 1.2,
                Mood.SCARED: 11.0, Mood.ANGRY: 10.0, Mood.CHILL: 1.5, Mood.SLEEP: 0.5,
                Mood.YAWN: 1.0, Mood.TAKEOFF: 9.0, Mood.FLY: 3.0, Mood.WAKE: 4.0,
-               Mood.YUCK: 4.0, Mood.COOL: 1.5}
+               Mood.YUCK: 4.0, Mood.COOL: 1.5, Mood.REMIND: 3.0, Mood.OK: 4.0}
 MAX_FRAME_DT = 0.1                 # a longer gap (a hitch) is treated as this long
 MAX_STEP_DT = 1 / 30               # longer frames are simulated in steps of at most this
 SEAT_SINK = 0.05                   # R: the body's flat bottom sits this far into the log
@@ -157,6 +166,7 @@ class FlameCharacter:
 
         # Mood layering
         self._alert = False
+        self._reminding = False
         self._thinking = False
         self._sleeping = False
         self._riding = False
@@ -193,6 +203,7 @@ class FlameCharacter:
         self.log = LogProp(self.R, self._rng, self._seed)
         self.pan = PanProp(self.R, self._rng, self._seed)
         self.shades = SunglassesProp(self.R)
+        self.clock = AlarmClockProp(self.R)
         self.snores = Snores(self.R, self._rng)
 
         self._embers: list[_Ember] = []
@@ -219,6 +230,27 @@ class FlameCharacter:
     def set_alert(self, active: bool) -> None:
         """Turn the persistent alert look (red-hot, cross eyes, shaking) on or off."""
         self._alert = active
+
+    def set_reminding(self, active: bool) -> None:
+        """A reminder is due (the ``remind`` face, the alarm clock pops in and rings) / it was
+        acknowledged (the clock is put away with a little poof). The clock keeps ringing under
+        any other face (e.g. while dragged) until this is turned off."""
+        if active == self._reminding:
+            return
+        self._reminding = active
+        if active:
+            self.clock.show()
+        else:
+            self.clock.hide()
+            spot = self.clock.anchor()
+            self._poofs.append(_Poof(self.feet.x() + spot.x(),
+                                     self.feet.y() + self._hop_y + self._float_y + spot.y(),
+                                     0.0, 0.35, 0.8 * self.R))
+
+    @property
+    def reminding(self) -> bool:
+        """True while the reminder look (and the ringing clock) is on."""
+        return self._reminding
 
     def set_thinking(self, active: bool) -> None:
         """Turn the persistent thinking look (calm, eyes up, small flame) on or off."""
@@ -333,6 +365,8 @@ class FlameCharacter:
             return self._transient
         if self._alert:
             return Mood.ALERT
+        if self._reminding:
+            return Mood.REMIND
         if self._sleeping:
             return Mood.SLEEP
         if self._thinking:
@@ -493,7 +527,8 @@ class FlameCharacter:
         ))
 
     def _update_props(self, dt: float) -> None:
-        """Log (and its crumbling embers), frying pan, sunglasses, snoring "z"s and poof rings."""
+        """Log (and its crumbling embers), frying pan, sunglasses, alarm clock, snoring "z"s and
+        poof rings."""
         self.log.update(dt)
         self.pan.update(dt)
         if self.pan.landing_impact():
@@ -501,6 +536,7 @@ class FlameCharacter:
         self.shades.update(dt)
         if self.shades.landing_impact():
             self._squash.velocity -= 0.6      # the sunglasses land on the nose: a small nod
+        self.clock.update(dt)
         if self.log.crumbling:
             self._crumble_debt += dt * 70.0
             n = int(self._crumble_debt)
@@ -621,6 +657,7 @@ class FlameCharacter:
 
         if not log_behind:
             self._paint_log(painter, paws=True)
+        self._paint_clock(painter)
         self._paint_poofs(painter)
         self.snores.paint(painter)
 
@@ -634,6 +671,16 @@ class FlameCharacter:
                           self.feet.y() + self._hop_y + self._float_y)
         colors = (self._palette_color("inner"), self._palette_color("mid")) if paws else None
         self.log.paint(painter, colors)
+        painter.restore()
+
+    def _paint_clock(self, painter: QPainter) -> None:
+        """Draw the alarm clock beside the pet: it hops and floats with the body but is not
+        squashed, sheared or shaken with it."""
+        if not self.clock.visible:
+            return
+        painter.save()
+        painter.translate(self.feet.x(), self.feet.y() + self._hop_y + self._float_y)
+        self.clock.paint(painter)
         painter.restore()
 
     def _palette_rgb(self, layer: str) -> tuple[int, int, int]:

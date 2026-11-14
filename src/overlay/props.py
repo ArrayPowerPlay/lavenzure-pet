@@ -1,4 +1,5 @@
-"""Props the flame character can use: the flying log, the frying pan and the sleepy "z"s.
+"""Props the flame character can use: the flying log, the frying pan, sunglasses, the alarm clock
+and the sleepy "z"s.
 
 Every prop is a small model + painter, like the character itself: ``update(dt, ...)`` once per
 frame, then ``paint(painter, ...)``. Props never move the window; the character decides when they
@@ -16,6 +17,8 @@ painting happens in the character's body coordinates (pixels, origin at the feet
 - ``SunglassesProp`` - black sunglasses for the ``cool`` mood (no reference figure; designed
   freely): they drop from above onto the eyes, a glint sweeps across the lenses once they land,
   and they slide back up and fade when the mood ends.
+- ``AlarmClockProp`` - the ⏰ alarm clock for a due reminder (``remind`` mood, round 31): pops
+  in beside the pet, rings until the user clicks the pet, then is put away.
 - ``Snores`` - "z" letters that float up from a sleeping pet, sway, grow and fade.
 """
 from __future__ import annotations
@@ -662,6 +665,214 @@ class SunglassesProp:
         painter.setBrush(glow)
         painter.drawPath(band)
         painter.restore()
+
+
+# ---------------------------------------------------------------------- alarm clock
+
+CLOCK_FACE = QColor(255, 247, 226)      # cream dial
+CLOCK_CASE = QColor(176, 44, 46)        # deep red-brown case ring (sticker style)
+CLOCK_CASE_LIGHT = QColor(214, 84, 76)
+CLOCK_METAL = QColor(52, 186, 172)      # teal bells and feet: they stand out on the orange fire
+CLOCK_METAL_LIGHT = QColor(150, 230, 218)
+CLOCK_SECOND = QColor(226, 60, 52)
+KRING_FILL = QColor(255, 246, 226)
+CLOCK_X = 1.58          # clock centre: beside the upper body, to the pet's right (R from feet)
+CLOCK_Y = -1.72
+CLOCK_RADIUS = 0.4      # outer radius of the case (R)
+RING_HZ = 6.0           # rattles per second (at 30 fps each rattle still gets ~5 frames)
+RING_DEG_START = 11.0   # rattle angle while it starts ringing ...
+RING_DEG_STEADY = 6.0   # ... easing down to this after a few seconds, gentle enough to run long
+RING_SETTLE_S = 4.0
+
+
+class AlarmClockProp:
+    """A little alarm clock (⏰) that rings beside the pet while a reminder is due.
+
+    ``show()`` pops it in with a springy overshoot; it then rattles without stopping (the bells
+    rock, the hammer hits left and right, "kring" strokes flash on both sides, the second hand
+    ticks once a second) until ``hide()``, when it shrinks away and fades ("put away"). The first
+    few seconds ring harder; then it calms to a smaller rattle that is fine to leave on screen.
+    Painted in body pixels (origin at the feet) but not squashed with the body.
+    """
+
+    def __init__(self, R: float) -> None:
+        """``R`` = character radius in pixels."""
+        self.R = R
+        self.visible = False
+        self._pop = Spring(0.0, stiffness=230.0, damping=12.0)   # 0 = gone, 1 = there
+        self._target = 0.0
+        self._alpha = 0.0
+        self._t = 0.0           # seconds since it started ringing
+
+    def show(self) -> None:
+        """Pop the clock in and start ringing (from the beginning if it was gone)."""
+        if not self.visible or self._target < 0.5:
+            self._t = 0.0
+        if not self.visible:
+            self._pop.value = 0.0
+            self._pop.velocity = 0.0
+            self._alpha = 0.0
+        self.visible = True
+        self._target = 1.0
+
+    def hide(self) -> None:
+        """Put the clock away: it shrinks and fades out."""
+        self._target = 0.0
+
+    @property
+    def ringing(self) -> bool:
+        """True while the clock is out (not on its way away)."""
+        return self.visible and self._target > 0.5
+
+    def anchor(self) -> QPointF:
+        """Centre of the clock in body pixels (e.g. for the poof when it is put away)."""
+        return QPointF(CLOCK_X * self.R, CLOCK_Y * self.R)
+
+    def update(self, dt: float) -> None:
+        """Pop / put-away spring, fade and the ringing clock."""
+        if not self.visible:
+            return
+        self._t += dt
+        self._pop.step(self._target, dt)
+        leaving = self._target < 0.5
+        self._alpha = approach_linear(self._alpha, 0.0 if leaving else 1.0,
+                                      dt / (0.22 if leaving else 0.1))
+        if leaving and self._alpha <= 0.01:
+            self.visible = False
+
+    def _rattle(self) -> float:
+        """Current rattle (-1..1) times its amplitude in degrees; zero while being put away."""
+        if self._target < 0.5:
+            return 0.0
+        amp = lerp(RING_DEG_START, RING_DEG_STEADY, smoothstep(0.0, RING_SETTLE_S, self._t))
+        return amp * math.sin(self._t * math.tau * RING_HZ)
+
+    def paint(self, painter: QPainter) -> None:
+        """Draw the clock (bells, hammer, feet, case, dial, hands) and the "kring" strokes."""
+        if not self.visible or self._alpha <= 0.01:
+            return
+        R = self.R
+        size = max(0.0, self._pop.value)
+        painter.save()
+        painter.setOpacity(painter.opacity() * self._alpha)
+        painter.translate(CLOCK_X * R, CLOCK_Y * R)
+        if self._target > 0.5:
+            self._paint_kring(painter)
+        # Rocks about a point near its feet, like a real clock dancing on a table.
+        angle = self._rattle()
+        pivot = 0.4 * R
+        painter.translate(0.0, pivot)
+        painter.rotate(angle)
+        painter.scale(size, size)
+        painter.translate(0.0, -pivot)
+        self._paint_clock(painter, angle)
+        painter.restore()
+
+    def _ink(self, width: float) -> QPen:
+        """Round-capped dark outline pen ``width`` R wide."""
+        return QPen(INK, width * self.R, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap,
+                    Qt.PenJoinStyle.RoundJoin)
+
+    def _paint_clock(self, painter: QPainter, angle: float) -> None:
+        """The clock itself, centred on its dial (``angle`` = current rattle, for the hammer)."""
+        R = self.R
+        r = CLOCK_RADIUS * R
+        # Feet: two stubby teal legs splayed out under the case (outline first, then fill).
+        for side in (-1, 1):
+            a = math.radians(90 + side * 38)
+            start = QPointF(math.cos(a) * r * 0.8, math.sin(a) * r * 0.8)
+            end = QPointF(math.cos(a) * r * 1.28, math.sin(a) * r * 1.22)
+            painter.setPen(self._ink(0.17))
+            painter.drawLine(start, end)
+            painter.setPen(QPen(CLOCK_METAL, 0.09 * R, Qt.PenStyle.SolidLine,
+                                Qt.PenCapStyle.RoundCap))
+            painter.drawLine(start, end)
+        # Hammer: a short stem on top with a ball that swings with the rattle, hitting the bells.
+        swing = clamp(angle / RING_DEG_START, -1.0, 1.0)
+        base = QPointF(0.0, -r * 0.98)
+        tip = QPointF(-swing * 0.2 * R, -r * 1.42)
+        painter.setPen(self._ink(0.06))
+        painter.drawLine(base, tip)
+        painter.setBrush(CLOCK_METAL)
+        painter.drawEllipse(tip, 0.07 * R, 0.07 * R)
+        # Bells: two domes on top, tipped outward, each with a little knob.
+        for side in (-1, 1):
+            painter.save()
+            a = math.radians(-90 + side * 42)
+            painter.translate(math.cos(a) * r * 1.02, math.sin(a) * r * 1.02)
+            painter.rotate(side * 42)
+            bw, bh = 0.27 * R, 0.21 * R
+            dome = QPainterPath(QPointF(-bw, 0.0))
+            dome.cubicTo(QPointF(-bw, -bh * 1.35), QPointF(bw, -bh * 1.35), QPointF(bw, 0.0))
+            dome.quadTo(QPointF(0.0, bh * 0.28), QPointF(-bw, 0.0))
+            dome.closeSubpath()
+            painter.setPen(self._ink(0.055))
+            painter.setBrush(CLOCK_METAL)
+            painter.drawPath(dome)
+            painter.drawEllipse(QPointF(0.0, -bh * 1.05), 0.05 * R, 0.05 * R)
+            painter.setPen(QPen(CLOCK_METAL_LIGHT, 0.035 * R, Qt.PenStyle.SolidLine,
+                                Qt.PenCapStyle.RoundCap))
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            shine = QPainterPath(QPointF(-bw * 0.55, -bh * 0.25))
+            shine.quadTo(QPointF(-bw * 0.45, -bh * 0.8), QPointF(-bw * 0.05, -bh * 0.92))
+            painter.drawPath(shine)
+            painter.restore()
+        # Case and dial.
+        painter.setPen(self._ink(0.06))
+        painter.setBrush(CLOCK_CASE)
+        painter.drawEllipse(QPointF(0.0, 0.0), r, r)
+        painter.setPen(QPen(CLOCK_CASE_LIGHT, 0.04 * R, Qt.PenStyle.SolidLine,
+                            Qt.PenCapStyle.RoundCap))
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawArc(QRectF(-r * 0.86, -r * 0.86, r * 1.72, r * 1.72), 100 * 16, 60 * 16)
+        dial = r * 0.74
+        painter.setPen(self._ink(0.04))
+        painter.setBrush(CLOCK_FACE)
+        painter.drawEllipse(QPointF(0.0, 0.0), dial, dial)
+        # Four hour marks, then the hands (short hour hand, long minute hand, ticking seconds).
+        painter.setPen(self._ink(0.04))
+        for i in range(4):
+            a = i * math.pi / 2
+            painter.drawLine(QPointF(math.cos(a) * dial * 0.7, math.sin(a) * dial * 0.7),
+                             QPointF(math.cos(a) * dial * 0.86, math.sin(a) * dial * 0.86))
+        painter.setPen(self._ink(0.055))
+        painter.drawLine(QPointF(0.0, 0.0), QPointF(dial * 0.36, -dial * 0.2))
+        painter.drawLine(QPointF(0.0, 0.0), QPointF(-dial * 0.08, -dial * 0.66))
+        tick = math.floor(self._t) * math.tau / 60.0 + math.radians(20)
+        painter.setPen(QPen(CLOCK_SECOND, 0.025 * R, Qt.PenStyle.SolidLine,
+                            Qt.PenCapStyle.RoundCap))
+        painter.drawLine(QPointF(0.0, 0.0),
+                         QPointF(math.sin(tick) * dial * 0.72, -math.cos(tick) * dial * 0.72))
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(INK)
+        painter.drawEllipse(QPointF(0.0, 0.0), 0.045 * R, 0.045 * R)
+
+    def _paint_kring(self, painter: QPainter) -> None:
+        """Three short "kring" strokes fanning out on each side of the clock; the two sides
+        flash in turn with the rattle (cream with the dark outline, readable on any wallpaper)."""
+        R = self.R
+        r = CLOCK_RADIUS * R
+        phase = self._t * math.tau * RING_HZ
+        for side in (-1, 1):
+            flash = 0.5 + 0.5 * math.sin(phase + (0.0 if side > 0 else math.pi))
+            alpha = smoothstep(0.15, 0.85, flash)
+            if alpha <= 0.02:
+                continue
+            painter.save()
+            painter.setOpacity(painter.opacity() * alpha)
+            reach = 0.02 * R * flash
+            for k, deg in enumerate((-32.0, 0.0, 32.0)):
+                a = math.radians(deg - 18.0)
+                inner = r * 1.45 + reach
+                outer = inner + (0.2 if k == 1 else 0.15) * R
+                p0 = QPointF(side * math.cos(a) * inner, math.sin(a) * inner)
+                p1 = QPointF(side * math.cos(a) * outer, math.sin(a) * outer)
+                painter.setPen(self._ink(0.1))
+                painter.drawLine(p0, p1)
+                painter.setPen(QPen(KRING_FILL, 0.05 * R, Qt.PenStyle.SolidLine,
+                                    Qt.PenCapStyle.RoundCap))
+                painter.drawLine(p0, p1)
+            painter.restore()
 
 
 def approach_linear(current: float, target: float, step: float) -> float:

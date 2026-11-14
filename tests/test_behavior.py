@@ -99,3 +99,36 @@ def test_night_slows_movement(pet):
     pet.set_night(True)
     assert pet._speed(100.0) < day
     assert pet.character._night_target == 1.0
+
+
+def test_reminder_rings_until_cleared_then_ok_blink(pet):
+    """A due reminder stops the pet with the remind face and the ringing clock; clearing it
+    puts the clock away and plays the short "okay!" blink, then the pet roams again."""
+    pet.trigger_reminder()
+    assert pet.state == PetState.REMIND and pet.reminding
+    assert pet.character.mood == Mood.REMIND and pet.character.clock.ringing
+    pet.clear_reminder()
+    assert not pet.reminding and not pet.character.clock.ringing
+    assert pet.state == PetState.REACT and pet.character.mood == Mood.OK
+    pet._end_reaction()
+    assert pet.state == PetState.IDLE
+
+
+def test_reminder_wakes_a_sleeping_pet_and_it_sleeps_again(pet):
+    """Idle + reminder: awake while the clock rings, back to sleep after the "okay!"."""
+    pet.set_resting(True)
+    pet.trigger_reminder()
+    assert pet.state == PetState.REMIND and not pet.character.sleeping
+    pet.clear_reminder()
+    pet._end_reaction()
+    assert pet.state == PetState.SLEEP
+
+
+def test_alert_face_wins_over_a_reminder(pet):
+    """Alert + reminder: the alert face shows, the clock still rings."""
+    pet.trigger_reminder()
+    pet.trigger_alert()
+    assert pet.state == PetState.ALERT and pet.character.mood == Mood.ALERT
+    assert pet.character.clock.ringing
+    pet.clear_alert()
+    assert pet.state == PetState.REMIND

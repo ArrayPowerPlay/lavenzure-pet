@@ -5,11 +5,13 @@ unless something more important is going on. Priorities, highest first:
 
 1. **DRAGGED** - the user is holding the pet.
 2. **ALERT** - a system alert is waiting to be acknowledged (left-click clears it).
-3. **REACT** - a short reaction to a left-click is playing (random pick from the reaction pool).
-4. **CHAT** - the chat bubble is open: stand still beside it.
-5. **SLEEP** - the user chose ``Idle`` in the right-click menu, or nobody has touched the
+3. **REMIND** - a reminder is due: the pet stops where it is, the alarm clock rings beside it
+   and it looks at the user until the pet is clicked (then a smiling "okay!" blink).
+4. **REACT** - a short reaction to a left-click is playing (random pick from the reaction pool).
+5. **CHAT** - the chat bubble is open: stand still beside it.
+6. **SLEEP** - the user chose ``Idle`` in the right-click menu, or nobody has touched the
    computer for a while ("dozing"). The pet glides down to the ground and sleeps there.
-6. Wandering.
+7. Wandering.
 
 Whenever one of these ends, ``_resume()`` picks the next thing from the same list, so e.g. a
 sleeping pet woken up by a chat goes back to sleep once the chat closes.
@@ -43,7 +45,7 @@ SETTLE_MAX_MS = 3200          # ...but never longer than this, even from the top
 TAKEOFF_DELAY_MS = 480        # the log appears and the pet gets excited before lifting off
 NIGHT_SPEED = 0.7             # movement speed multiplier at night
 NIGHT_IDLE = 1.5              # idle pauses get this much longer at night
-NOTICE_SECONDS = 1.4
+OK_SECONDS = 1.0              # the smiling "okay!" blink after a reminder is acknowledged
 
 # name -> unbound method returning the reaction length in seconds (None = it ends by itself).
 REACTIONS: dict[str, Callable[[BehaviorController], float | None]] = {}
@@ -68,6 +70,7 @@ class PetState(Enum):
     DRAGGED = auto()
     REACT = auto()
     ALERT = auto()
+    REMIND = auto()   # a reminder is due: standing still, the alarm clock ringing
     CHAT = auto()
     SETTLE = auto()   # gliding down to the ground before falling asleep
     SLEEP = auto()
@@ -97,6 +100,7 @@ class BehaviorController(QObject):
         # What is going on (see the priority list in the module docstring).
         self._dragging = False
         self._alert_active = False
+        self._reminding = False
         self._reacting = False
         self._chatting = False
         self._resting = False     # user picked "Idle"
@@ -206,12 +210,33 @@ class BehaviorController(QObject):
         self.character.set_alert(False)
         self._resume()
 
-    def trigger_notice(self) -> None:
-        """A surprised hop to catch the user's eye (kept for reminders; never during an alert
-        or a drag)."""
-        if self._alert_active or self._dragging:
+    @property
+    def reminding(self) -> bool:
+        """True while a due reminder is waiting for the user to click the pet."""
+        return self._reminding
+
+    def trigger_reminder(self) -> None:
+        """A reminder is due: stop (waking up if asleep), the ``remind`` face and the ringing
+        alarm clock, until ``clear_reminder()``. During an alert the alert face stays on top,
+        but the clock still rings."""
+        self._reminding = True
+        self._react_timer.stop()
+        self._reacting = False
+        if not self._dragging:
+            self.character.stop_transient()   # the remind face wins over e.g. a reaction
+        self.character.set_reminding(True)
+        self._resume()
+
+    def clear_reminder(self) -> None:
+        """The user acknowledged the reminder(s): the clock is put away and the pet gives a
+        smiling "okay!" blink for about a second before carrying on."""
+        if not self._reminding:
             return
-        self._start_reaction_with(lambda: self._play(Mood.SURPRISED, NOTICE_SECONDS, hop=1.0))
+        self._reminding = False
+        self.character.set_reminding(False)
+        self._start_reaction_with(lambda: self._play(Mood.OK, OK_SECONDS))
+        if self.state != PetState.REACT:
+            self._resume()                 # no blink during an alert / drag: just carry on
 
     def play_random_reaction(self) -> str:
         """Left-click: play one reaction picked at random from the pool (not the same one twice
@@ -323,6 +348,11 @@ class BehaviorController(QObject):
             self.character.set_sleeping(False)
             self.character.set_alert(True)
             return
+        if self._reminding:
+            self._stop_motion()
+            self.state = PetState.REMIND
+            self.character.set_sleeping(False)
+            return
         if self._reacting:
             return                                   # ``_end_reaction`` calls back here
         if self._chatting:
@@ -335,8 +365,8 @@ class BehaviorController(QObject):
                 self._go_to_sleep()
             return
         self.character.set_sleeping(False)
-        if self.state in (PetState.ALERT, PetState.CHAT, PetState.SLEEP, PetState.SETTLE,
-                          PetState.REACT, PetState.DRAGGED):
+        if self.state in (PetState.ALERT, PetState.REMIND, PetState.CHAT, PetState.SLEEP,
+                          PetState.SETTLE, PetState.REACT, PetState.DRAGGED):
             self._stop_motion()
             self._enter_idle()
 
@@ -357,7 +387,8 @@ class BehaviorController(QObject):
     def _fall_asleep(self) -> None:
         """Yawn and settle into the sleeping pose (unless something else came up meanwhile)."""
         self._active_anim = None
-        if self._dragging or self._alert_active or self._reacting or self._chatting:
+        if (self._dragging or self._alert_active or self._reminding or self._reacting
+                or self._chatting):
             return
         if not (self._resting or self._dozing):
             self._resume()
@@ -380,8 +411,8 @@ class BehaviorController(QObject):
 
     def _wandering(self) -> bool:
         """True when nothing with a higher priority than wandering is going on."""
-        return not (self._dragging or self._alert_active or self._reacting or self._chatting
-                    or self._resting or self._dozing)
+        return not (self._dragging or self._alert_active or self._reminding or self._reacting
+                    or self._chatting or self._resting or self._dozing)
 
     def _pick_next_state(self) -> PetState:
         """Weighted random choice of the next autonomous state."""

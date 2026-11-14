@@ -131,6 +131,7 @@ def main() -> int:
         ch.set_thinking(False)
         ch.set_sleeping(False)
         ch.set_riding(False)
+        ch.set_reminding(False)
 
     button("Normal", 0, 0, each(reset))
     button("Happy", 0, 1, each(lambda ch: ch.play(Mood.HAPPY, 2.2)))
@@ -159,6 +160,17 @@ def main() -> int:
     button("Day / night", 3, 1, toggle_night)
     button("Yuck", 3, 3, each(lambda ch: ch.play(Mood.YUCK, 2.4)))
     button("Cool (shades)", 3, 4, each(lambda ch: ch.play(Mood.COOL, 3.0)))
+
+    def toggle_remind(ch: FlameCharacter) -> None:
+        """Reminder on (remind face + ringing clock) / off (clock put away, "okay!" blink)."""
+        if ch.reminding:
+            ch.set_reminding(False)
+            ch.play(Mood.OK, 1.0)
+        else:
+            ch.stop_transient()
+            ch.set_reminding(True)
+
+    button("Remind (clock) / OK", 4, 0, each(toggle_remind))
 
     def toggle_bg() -> None:
         """Switch the backdrop between dark and light."""

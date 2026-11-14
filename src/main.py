@@ -218,16 +218,23 @@ class LavenzureApp(QObject):
                                   auto_hide_ms or 10_000)
 
     def _on_pet_clicked(self) -> None:
-        """A click dismisses whatever is waiting on screen (reminders and / or an alert);
-        otherwise the pet plays a random reaction."""
+        """A click dismisses whatever is waiting on screen (reminders and / or an alert; the
+        alarm clock is put away with a smiling "okay!" blink); otherwise the pet plays a random
+        reaction."""
         self.monitor.notify_activity()
-        if self._reminder_texts or self.behavior.state == PetState.ALERT:
-            self._reminder_texts.clear()
-            if self.behavior.state == PetState.ALERT:
+        alert = self.behavior.state == PetState.ALERT
+        if self._reminder_texts or self.behavior.reminding or alert:
+            if alert:
                 self._dismiss_alert()
-            self._show_sticky()
+            self._clear_reminders()
             return
         self.behavior.play_random_reaction()
+
+    def _clear_reminders(self) -> None:
+        """Take the due reminders off the screen: the bubble text goes, the clock is put away."""
+        self._reminder_texts.clear()
+        self.behavior.clear_reminder()
+        self._show_sticky()
 
     def _note_reminder(self, key: str, reminder) -> None:
         """Add the app's own note about a reminder (``key`` = set / cancelled) to the chat."""
@@ -238,9 +245,8 @@ class LavenzureApp(QObject):
     def _dismiss_reminders(self) -> None:
         """The AI was asked to turn off the reminders showing on the pet: same as a click, but
         an alert (if any) stays."""
-        if self._reminder_texts:
-            self._reminder_texts.clear()
-            self._show_sticky()
+        if self._reminder_texts or self.behavior.reminding:
+            self._clear_reminders()
 
     def _dismiss_alert(self) -> None:
         """The user acknowledged the alert: calm face, the alert text gone, and the monitor stays
@@ -296,10 +302,11 @@ class LavenzureApp(QObject):
         self.bubble.show_text(text, auto_hide_ms=reading_ms(text))
 
     def _on_reminder(self, message: str, line: str, minutes_late: int) -> None:
-        """A reminder is due: the pet comes out if hidden (wakes up if asleep), hops, and says
-        its own line (written by the AI when the reminder was set) in a bubble that stays until
-        the pet is clicked (together with any other reminder or alert still waiting). Only a
-        reminder saved before round 28 has no line; it falls back to "Reminder: <task>"."""
+        """A reminder is due: the pet comes out if hidden (wakes up if asleep), stops, shows the
+        ``remind`` face with the alarm clock ringing beside it, and says its own line (written
+        by the AI when the reminder was set) in a bubble. Bubble and clock stay until the pet is
+        clicked (together with any other reminder or alert still waiting). Only a reminder saved
+        before round 28 has no line; it falls back to "Reminder: <task>"."""
         if line and minutes_late > 0:
             text = self.lines.phrase("reminder_line_late", line=line, minutes=minutes_late)
         elif line:
@@ -311,8 +318,7 @@ class LavenzureApp(QObject):
         self._reminder_texts.append(text)
         if not self.sprite.isVisible():
             self._toggle_visibility()
-        if self.behavior.state != PetState.ALERT:
-            self.behavior.trigger_notice()
+        self.behavior.trigger_reminder()
         self._show_sticky()
 
     def _toggle_visibility(self) -> None:

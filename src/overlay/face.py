@@ -80,6 +80,8 @@ class Mood(Enum):
     TAKEOFF = auto()     # the moment the log is summoned (excited)
     YUCK = auto()        # fig. 8: wonky, mismatched eyes, a wide grimace with the tongue out
     COOL = auto()        # sunglasses (a prop drawn over the eyes) and a one-sided smirk
+    REMIND = auto()      # a reminder is due: wide eyes at the user, an "oh, hey!" smile (+ clock)
+    OK = auto()          # reminder acknowledged: a smiling "^ ^" blink, "okay!"
 
 
 @dataclass
@@ -214,6 +216,19 @@ MOOD_TARGETS: dict[Mood, tuple[Expression, ...]] = {
     Mood.COOL: (Expression(eye_open=0.78, gaze_x=0.35, gaze_lock=1.0, smile=0.2, smirk=1.0,
                            mouth_width=1.2, mouth_curl=0.25, tilt=0.07, flame=1.02,
                            flicker=0.8, wild=0.75, body_w=1.03, body_h=1.01),),
+    # "remind" (round 31, designed freely): a reminder is due and the alarm clock rings beside
+    # the pet (``AlarmClockProp``). Round eyes opened wide, looking straight out at the user,
+    # brows lifted a little, a light smile with the mouth just open ("oh, hey!"). The fire keeps
+    # its normal colours and does not shake: this is a friendly nudge, not a system alert.
+    Mood.REMIND: (Expression(eye_scale=1.16, pupil=0.72, gaze_x=0.0, gaze_y=0.12, gaze_lock=1.0,
+                             brow=-0.3, mouth_open=0.42, smile=0.6, mouth_width=1.2,
+                             mouth_top=0.35, mouth_dip=0.3, flame=1.05, flicker=1.15, wild=1.05,
+                             body_h=1.03),),
+    # "ok" (round 31): the user clicked the reminding pet - the eyes close into smiling "^ ^"
+    # arcs for about a second (a happy blink, "okay, got it!") over a closed smile, then reopen.
+    Mood.OK: (Expression(happy_eyes=1.0, lower_lid=0.4, smile=0.95, mouth_width=1.15,
+                         mouth_curl=0.3, tilt=0.06, flame=1.0, flicker=1.15, wild=1.1,
+                         body_w=1.04, body_h=0.98),),
 }
 
 # Small expressions the idle face drifts through: name -> (weight, (min, max) seconds, values).
@@ -420,6 +435,12 @@ class Face:
             vel["eye_scale"] -= 1.5
         elif mood == Mood.COOL:
             vel["body_h"] += 0.7         # straightens up, chin high
+        elif mood == Mood.REMIND:
+            vel["eye_scale"] += 2.0      # eyes pop open: "oh, hey!"
+            vel["body_h"] += 0.9
+        elif mood == Mood.OK:
+            vel["body_h"] -= 1.0         # a little nod
+            vel["lower_lid"] += 2.0
 
     def update(self, dt: float, cursor: QPointF | None, body_vy: float) -> None:
         """Advance ``dt`` seconds. ``cursor`` is the mouse relative to the face centre (pixels,
