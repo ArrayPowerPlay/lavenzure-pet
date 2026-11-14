@@ -508,6 +508,13 @@
 - **Đã làm:** `agent/errors.py` có đủ 7 lời báo lỗi bằng cả **tiếng Anh và tiếng Việt**, chọn theo Settings > Language (`friendly_error(exc, language)`; ngôn ngữ lạ → tiếng Anh); `AgentWorker` nhận ngôn ngữ từ `PetLines`. Settings: cao tối đa 540 px (hoặc thấp hơn nếu màn hình nhỏ), phần tùy chọn nằm trong `QScrollArea`, tiêu đề ở trên và dòng "phiên bản + Close" ở dưới luôn hiện. Giao diện Settings vẫn chỉ có tiếng Anh (chưa ai yêu cầu dịch).
 - **Phát hành:** tag `v0.1.0` trên `main` (xem `implementation_plan.md` F4-F5). Repo đã ở chế độ public từ trước khi tag.
 
+### Lượt 38 (2026-11-15) — trang phục Giáng sinh: chốt mũ Noel kiểu (a), làm mặt `normal` trước để duyệt
+- **User hỏi (đầu lượt):** nghiên cứu cách làm trang phục Giáng sinh khả thi nhất, đồng bộ ở mọi biểu cảm và đủ đẹp. **Claude đề xuất:** mũ Noel **gắn theo vị trí mắt** (như kính `cool`, chảo `chill`), chóp mũ mềm đung đưa theo chuyển động, tuyết rơi, câu chúc EN/VI; bỏ khăn quàng / cầm đồ / đổi màu lửa. Ảnh thử thô ở `docs/references/_xmas_mock.png`.
+- **User chốt:** (a) **mũ to, che đỉnh, lửa chỉ liếm ra hai bên**; **câu chúc Giáng sinh để sau**; các đề xuất khác đồng ý; **`chill` (chảo) bỏ, không ghép mũ** → trong lúc `chill` pet cất mũ, hết `chill` thì đội lại; **chỉ làm biểu cảm `normal` trước để duyệt**; mũ phải **cách mắt một chút** (ảnh thử cũ sát mắt quá).
+- **Đã làm:** `src/overlay/outfits.py` `SantaHatProp` (vành lông trắng có gợn, thân mũ đỏ, chóp mềm gập sang phải, quả bông). Vành mũ cách đỉnh mắt `HAT_GAP` = 0,24 R. Chóp mũ đung đưa theo chuyển động của cửa sổ (đi sang phải thì chóp rủ xuống phía sau, đi sang trái thì bay ra; nhảy / tiếp đất thì nảy), quả bông lắc theo sau một nhịp. Đội mũ thì lửa thấp đi 15% (`HAT_FLAME_DIP`) để đỉnh lửa không thò lên khỏi mũ. Mũ rơi từ trên xuống khi đội, bay lên và mờ dần khi cất. Bật bằng `FlameCharacter.set_santa_hat(True)`; `character_preview.py` có nút **Santa hat on / off**. App **chưa** tự bật mũ (chưa có kiểm tra ngày, công tắc Settings, tuyết, câu chúc).
+- **Chi phí:** vẽ mũ ~0,5-0,8 ms/khung (mặt ~1 ms), cả khung ~3,5 ms ở scale 0.75, trong ngân sách. Phần đứng yên (thân mũ, vành, quả bông) vẽ sẵn thành ảnh một lần; chỉ phần chóp mũ vẽ lại mỗi khung.
+- **Chờ user:** duyệt mũ ở biểu cảm `normal`. Sau đó mới chỉnh các biểu cảm khác (`sleep`, `remind`, `scared`...), tuyết, kiểm tra ngày + công tắc, rồi câu chúc.
+
 ## Còn bàn
 
 - **Đóng gói v0.1.0** (lượt 34-37): đã code, user thử `rc.1` trên desktop thật (chạy được) và v0.1.0 đã phát hành. Còn: user xem lại giấy phép MIT và chuyện `README.txt` trong zip.
@@ -515,3 +522,4 @@
 - Đo lại 60 phút ở 30 fps + lửa nhẹ (`src/perf_check.py`, cần thoát pet đang chạy).
 - Cách 3 (tạm dừng khi có app toàn màn hình) và cách 5 (lửa 30 khung/giây) — user để lại, chưa làm.
 - Lượt 24: user thử các tính năng mới trên desktop thật và góp ý; T1, T6, P2 vẫn pending; âm thanh và hướng agent để sau.
+- Lượt 38: mũ Noel ở biểu cảm `normal` chờ user duyệt.
