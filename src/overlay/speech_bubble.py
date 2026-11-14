@@ -19,6 +19,7 @@ NORMAL_STYLE = ("background-color: rgba(255,250,230,235); border: 1px solid #d08
 STICKY_STYLE = ("background-color: rgba(255,250,230,242); border: 2px solid #d08a2e; "
                 "border-radius: 10px; padding: 10px 14px; color: #3a2410; font-size: 15px;")
 NORMAL_MAX_W, STICKY_MAX_W = 240, 320
+_NO_LIMIT = 16_777_215   # Qt's QWIDGETSIZE_MAX: "no size limit"
 
 
 class SpeechBubble(QLabel):
@@ -72,14 +73,18 @@ class SpeechBubble(QLabel):
         if auto_hide_ms is not None:
             self._auto_hide_timer.start(auto_hide_ms)
 
-    def _fit(self, max_width: int, frame: int) -> None:
+    def _fit(self, max_width: int, frame_w: int) -> None:
         """Size the bubble to its text: one line as wide as the text needs, wrapping only past
-        ``max_width`` (``frame`` = horizontal padding + border). A plain ``adjustSize`` on a
-        word-wrapped label wraps far too early."""
+        ``max_width`` (``frame_w`` = horizontal padding + border). A plain ``adjustSize`` on a
+        word-wrapped label wraps far too early. The size limits of the previous text are lifted
+        first: otherwise the label keeps the height of an earlier, longer line and a short line
+        gets a big empty bubble."""
         self.ensurePolished()   # apply the style sheet's font before measuring
+        self.setMinimumSize(0, 0)
+        self.setMaximumSize(_NO_LIMIT, _NO_LIMIT)
         metrics = self.fontMetrics()
         natural = max(metrics.horizontalAdvance(line) for line in self.text().split("\n"))
-        width = min(max_width, natural + frame + 2)
+        width = min(max_width, natural + frame_w + 2)
         self.setFixedWidth(width)
         self.setFixedHeight(self.heightForWidth(width))
 
