@@ -12,6 +12,14 @@ from PySide6.QtWidgets import QLabel
 
 FOLLOW_INTERVAL_MS = 16  # ~60 fps, same rate as the pet
 
+# Normal lines (click reactions, ambient lines) vs. sticky ones (reminders, alerts), which are
+# drawn a bit bigger so they are easy to notice and read (round 28).
+NORMAL_STYLE = ("background-color: rgba(255,250,230,235); border: 1px solid #d08a2e; "
+                "border-radius: 8px; padding: 6px 10px; color: #3a2410; font-size: 12px;")
+STICKY_STYLE = ("background-color: rgba(255,250,230,242); border: 2px solid #d08a2e; "
+                "border-radius: 10px; padding: 10px 14px; color: #3a2410; font-size: 15px;")
+NORMAL_MAX_W, STICKY_MAX_W = 240, 320
+
 
 class SpeechBubble(QLabel):
     """Word-wrapped label that follows a moving anchor point (the top of the pet's head).
@@ -29,12 +37,9 @@ class SpeechBubble(QLabel):
             | Qt.WindowType.WindowDoesNotAcceptFocus,
         )
         self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
-        self.setStyleSheet(
-            "background-color: rgba(255,250,230,235); border: 1px solid #d08a2e; "
-            "border-radius: 8px; padding: 6px 10px; color: #3a2410; font-size: 12px;"
-        )
+        self.setStyleSheet(NORMAL_STYLE)
         self.setWordWrap(True)
-        self.setMaximumWidth(240)
+        self.setMaximumWidth(NORMAL_MAX_W)
         self.hide()
         self._anchor_fn = anchor_fn
 
@@ -49,10 +54,16 @@ class SpeechBubble(QLabel):
     def show_text(self, text: str, auto_hide_ms: int | None = 4000) -> None:
         """Show ``text`` above the pet.
 
-        ``auto_hide_ms=None`` keeps the bubble visible until ``hide()`` is called (alerts).
+        ``auto_hide_ms=None`` keeps the bubble visible until ``hide()`` is called (alerts,
+        reminders) and uses the bigger sticky look.
         """
+        sticky = auto_hide_ms is None
+        self.setStyleSheet(STICKY_STYLE if sticky else NORMAL_STYLE)
         self.setText(text)
-        self.adjustSize()
+        if sticky:
+            self._fit(STICKY_MAX_W, 2 * (14 + 2))
+        else:
+            self._fit(NORMAL_MAX_W, 2 * (10 + 1))
         self._follow()
         self.show()
         self.raise_()
@@ -60,6 +71,17 @@ class SpeechBubble(QLabel):
         self._auto_hide_timer.stop()
         if auto_hide_ms is not None:
             self._auto_hide_timer.start(auto_hide_ms)
+
+    def _fit(self, max_width: int, frame: int) -> None:
+        """Size the bubble to its text: one line as wide as the text needs, wrapping only past
+        ``max_width`` (``frame`` = horizontal padding + border). A plain ``adjustSize`` on a
+        word-wrapped label wraps far too early."""
+        self.ensurePolished()   # apply the style sheet's font before measuring
+        metrics = self.fontMetrics()
+        natural = max(metrics.horizontalAdvance(line) for line in self.text().split("\n"))
+        width = min(max_width, natural + frame + 2)
+        self.setFixedWidth(width)
+        self.setFixedHeight(self.heightForWidth(width))
 
     def is_sticky(self) -> bool:
         """True while a bubble without auto-hide (an alert) is on screen."""
