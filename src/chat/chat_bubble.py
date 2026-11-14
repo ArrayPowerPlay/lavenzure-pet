@@ -17,10 +17,17 @@ What it looks like / how it behaves:
   does (the app calls it when the chat memory expires).
 - Replies can stream in: ``stream_message(text)`` shows Lavenzure's answer so far and redraws it as
   it grows; ``finish_stream(text)`` puts the final text in place.
+- Two tabs at the top (round 25): **Chat** and **Reminders**. The Reminders tab lists the
+  reminders still waiting (soonest first, each with its time, text and an x button to remove it);
+  the tab title shows how many there are. The app feeds the list with ``set_reminders`` whenever
+  it changes, and the bubble only asks for removals (``reminder_cancel_requested(id)``), so it
+  never owns reminder state. Opening the bubble always starts on the Chat tab.
 """
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
+from datetime import datetime
+from typing import Protocol
 
 from PySide6.QtCore import (
     QEasingCurve,
@@ -47,10 +54,14 @@ from PySide6.QtGui import (
     QTextDocumentFragment,
 )
 from PySide6.QtWidgets import (
+    QButtonGroup,
+    QFrame,
     QHBoxLayout,
     QLabel,
     QLineEdit,
     QPushButton,
+    QScrollArea,
+    QStackedWidget,
     QTextBrowser,
     QVBoxLayout,
     QWidget,
@@ -83,7 +94,6 @@ LIST_MARKER_W = 16                # room for a bullet / number left of a list it
 
 STYLE = """
 * { font-family: "Segoe UI", "Arial"; }
-QLabel#title { color: #6c0e16; font-weight: bold; font-size: 13px; }
 QPushButton#close {
     background: transparent; color: #a0522d; border: none; font-size: 16px; font-weight: bold;
     padding: 0px 4px;
@@ -112,7 +122,46 @@ QPushButton#send {
 QPushButton#send:hover { background: #ff9d33; }
 QPushButton#send:disabled { background: #d9b38f; border-color: #a07060; }
 QLabel#thinking { color: #c8641e; font-style: italic; font-size: 12px; }
+QPushButton#tab {
+    background: transparent; color: #a0522d; border: none; border-bottom: 2px solid transparent;
+    font-size: 13px; font-weight: bold; padding: 1px 6px 2px 6px;
+}
+QPushButton#tab:hover { color: #d2381e; }
+QPushButton#tab:checked { color: #6c0e16; border-bottom-color: #ef8a2e; }
+QScrollArea, QWidget#reminderList { background: transparent; border: none; }
+QFrame#reminderRow { background: #fffdf7; border: 1px solid #b05c46; border-radius: 11px; }
+QLabel#reminderTime { color: #c8641e; font-weight: bold; font-size: 12px; }
+QLabel#reminderText { color: #3a2410; font-size: 13px; }
+QLabel#reminderEmpty { color: #9a8470; font-style: italic; font-size: 12px; }
+QPushButton#removeReminder {
+    background: transparent; color: #a0522d; border: none; font-size: 15px; font-weight: bold;
+    padding: 0px 2px;
+}
+QPushButton#removeReminder:hover { color: #d2381e; }
 """
+
+EMPTY_REMINDERS = ("No reminders yet.\nAsk me in the Chat tab, e.g.\n"
+                   "\"remind me at 9 pm to call mom\".")
+
+
+class ReminderLike(Protocol):
+    """What the Reminders tab shows of a reminder (``monitor.reminders.Reminder``)."""
+
+    id: int
+    due: float
+    message: str
+
+
+def format_due(due: datetime, now: datetime) -> str:
+    """Short label for a reminder's time: ``Today 20:00``, ``Tomorrow 08:00`` or
+    ``Mon 17 Nov, 09:00``."""
+    days = (due.date() - now.date()).days
+    clock = due.strftime("%H:%M")
+    if days == 0:
+        return f"Today {clock}"
+    if days == 1:
+        return f"Tomorrow {clock}"
+    return f"{due:%a} {due.day} {due:%b}, {clock}"
 
 
 class MessageView(QTextBrowser):
@@ -209,6 +258,7 @@ class ChatBubble(QWidget):
 
     message_sent = Signal(str)
     closed = Signal()
+    reminder_cancel_requested = Signal(int)
 
     def __init__(self, anchor_fn: Callable[[], QRect]) -> None:
         """Build the (hidden) bubble window and its timers."""
@@ -230,8 +280,14 @@ class ChatBubble(QWidget):
         self._closing = False
         self._stream_start: int | None = None   # where the reply that is still arriving begins
 
-        title = QLabel("Lavenzure", self)
-        title.setObjectName("title")
+        self._chat_tab = self._make_tab("Chat")
+        self._reminders_tab = self._make_tab("Reminders")
+        self._tabs = QButtonGroup(self)
+        self._tabs.setExclusive(True)
+        self._tabs.addButton(self._chat_tab, 0)
+        self._tabs.addButton(self._reminders_tab, 1)
+        self._chat_tab.setChecked(True)
+        self._tabs.idClicked.connect(self._on_tab_clicked)
         close_button = QPushButton("×", self)
         close_button.setObjectName("close")
         close_button.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -262,21 +318,47 @@ class ChatBubble(QWidget):
         self._layout = QVBoxLayout(self)
         self._layout.setSpacing(4)
         header = QHBoxLayout()
-        header.addWidget(title)
+        header.setSpacing(2)
+        header.addWidget(self._chat_tab)
+        header.addWidget(self._reminders_tab)
         header.addStretch(1)
         header.addWidget(close_button)
         self._layout.addLayout(header)
-        self._layout.addWidget(self._history, 1)
-        self._layout.addWidget(self._thinking)
+
+        chat_page = QWidget(self)
+        chat_layout = QVBoxLayout(chat_page)
+        chat_layout.setContentsMargins(0, 0, 0, 0)
+        chat_layout.setSpacing(4)
+        chat_layout.addWidget(self._history, 1)
+        chat_layout.addWidget(self._thinking)
         row = QHBoxLayout()
         row.setSpacing(6)
         row.addWidget(self._input, 1)
         row.addWidget(self._send_button)
-        self._layout.addLayout(row)
+        chat_layout.addLayout(row)
+
+        self._reminder_scroll = QScrollArea(self)
+        self._reminder_scroll.setWidgetResizable(True)
+        self._reminder_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self._reminder_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self._reminder_scroll.viewport().setAutoFillBackground(False)
+        self._reminder_list = QWidget()
+        self._reminder_list.setObjectName("reminderList")
+        self._reminder_rows = QVBoxLayout(self._reminder_list)
+        self._reminder_rows.setContentsMargins(0, 4, 4, 4)
+        self._reminder_rows.setSpacing(6)
+        self._reminder_scroll.setWidget(self._reminder_list)
+
+        self._pages = QStackedWidget(self)
+        self._pages.addWidget(chat_page)
+        self._pages.addWidget(self._reminder_scroll)
+        self._layout.addWidget(self._pages, 1)
         self._apply_margins()
+        self.set_reminders([])
 
         # Any typing, scrolling or clicking inside counts as chat activity.
-        for widget in (self._input, self._history, self._history.viewport()):
+        for widget in (self._input, self._history, self._history.viewport(),
+                       self._reminder_scroll.viewport()):
             widget.installEventFilter(self)
 
         self._auto_close = QTimer(self)
@@ -297,8 +379,10 @@ class ChatBubble(QWidget):
     # ------------------------------------------------------------------ public API
 
     def open(self) -> None:
-        """Show the bubble beside the pet (fading in), focus the input and start the countdown."""
+        """Show the bubble beside the pet (fading in) on the Chat tab, focus the input and start
+        the countdown."""
         self._closing = False
+        self.show_tab(0)
         self._choose_side(force=not self.isVisible())
         self._follow()
         if not self.isVisible():
@@ -411,6 +495,44 @@ class ChatBubble(QWidget):
         bar.setValue(bar.maximum())
         return message_start
 
+    def show_tab(self, index: int) -> None:
+        """Switch to the Chat (0) or Reminders (1) tab."""
+        self._tabs.button(index).setChecked(True)
+        self._pages.setCurrentIndex(index)
+        if index == 0:
+            if self.is_open() and self._input.isEnabled():
+                self._input.setFocus()
+        else:
+            self.setFocus()   # keep Esc working while no input field is shown
+
+    def current_tab(self) -> int:
+        """The tab on show: 0 = Chat, 1 = Reminders."""
+        return self._pages.currentIndex()
+
+    def set_reminders(self, reminders: Sequence[ReminderLike]) -> None:
+        """Show ``reminders`` (soonest first) in the Reminders tab and their number in its
+        title. Called by the app whenever the list changes."""
+        while self._reminder_rows.count():
+            item = self._reminder_rows.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.hide()           # gone from the screen now, freed by Qt a bit later
+                widget.setParent(None)
+                widget.deleteLater()
+        now = datetime.now()
+        for reminder in reminders:
+            self._reminder_rows.addWidget(self._make_reminder_row(reminder, now))
+        if not reminders:
+            empty = QLabel(EMPTY_REMINDERS, self._reminder_list)
+            empty.setObjectName("reminderEmpty")
+            empty.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            empty.setWordWrap(True)
+            self._reminder_rows.addSpacing(40)
+            self._reminder_rows.addWidget(empty)
+        self._reminder_rows.addStretch(1)
+        count = len(reminders)
+        self._reminders_tab.setText(f"Reminders ({count})" if count else "Reminders")
+
     def clear_history(self) -> None:
         """Forget every message on screen (used when the chat memory expires)."""
         self._history.clear()
@@ -430,7 +552,7 @@ class ChatBubble(QWidget):
         else:
             self._dots_timer.stop()
             self._thinking.setText("")
-            if self.is_open():
+            if self.is_open() and self.current_tab() == 0:
                 self._input.setFocus()
             self._kick()
 
@@ -571,6 +693,53 @@ class ChatBubble(QWidget):
         self.closed.emit()
 
     # ------------------------------------------------------------------ internals
+
+    def _make_tab(self, text: str) -> QPushButton:
+        """A flat, checkable tab button for the header."""
+        button = QPushButton(text, self)
+        button.setObjectName("tab")
+        button.setCheckable(True)
+        button.setCursor(Qt.CursorShape.PointingHandCursor)
+        button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        return button
+
+    def _on_tab_clicked(self, index: int) -> None:
+        """A tab was clicked: show its page and count it as activity."""
+        self.show_tab(index)
+        self._kick()
+
+    def _make_reminder_row(self, reminder: ReminderLike, now: datetime) -> QFrame:
+        """One row of the Reminders tab: time on top, text below, x button on the right."""
+        row = QFrame(self._reminder_list)
+        row.setObjectName("reminderRow")
+        layout = QHBoxLayout(row)
+        layout.setContentsMargins(10, 5, 4, 6)
+        layout.setSpacing(4)
+        texts = QVBoxLayout()
+        texts.setSpacing(1)
+        when = QLabel(format_due(datetime.fromtimestamp(reminder.due), now), row)
+        when.setObjectName("reminderTime")
+        what = QLabel(reminder.message, row)
+        what.setObjectName("reminderText")
+        what.setTextFormat(Qt.TextFormat.PlainText)
+        what.setWordWrap(True)
+        texts.addWidget(when)
+        texts.addWidget(what)
+        layout.addLayout(texts, 1)
+        remove = QPushButton("×", row)
+        remove.setObjectName("removeReminder")
+        remove.setCursor(Qt.CursorShape.PointingHandCursor)
+        remove.setToolTip("Remove this reminder")
+        remove.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        reminder_id = reminder.id
+        remove.clicked.connect(lambda: self._on_remove_clicked(reminder_id))
+        layout.addWidget(remove, 0, Qt.AlignmentFlag.AlignTop)
+        return row
+
+    def _on_remove_clicked(self, reminder_id: int) -> None:
+        """The x of a reminder row: ask the app to cancel it (the list refreshes when it has)."""
+        self._kick()
+        self.reminder_cancel_requested.emit(reminder_id)
 
     def _on_send(self) -> None:
         """Echo the typed message into the history and emit it."""

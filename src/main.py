@@ -151,6 +151,11 @@ class LavenzureApp(QObject):
         self.monitor.alert_triggered.connect(self._on_alert)
         self.monitor.ambient_due.connect(self._on_ambient_due)
         self.monitor.reminder_triggered.connect(self._on_reminder)
+        # The bubble's Reminders tab mirrors the monitor's list and asks it to cancel ones.
+        self.monitor.reminders_changed.connect(self.chat.set_reminders)
+        self.monitor.reminders_dismissed.connect(self._dismiss_reminders)
+        self.chat.reminder_cancel_requested.connect(self.monitor.cancel_reminder)
+        self.chat.set_reminders(self.monitor.pending_reminders())
 
     def _build_tray_icon(self) -> None:
         """Create the system-tray icon (a portrait drawn by the character itself) and its menu:
@@ -216,6 +221,13 @@ class LavenzureApp(QObject):
             self._show_sticky()
             return
         self.behavior.play_random_reaction()
+
+    def _dismiss_reminders(self) -> None:
+        """The AI was asked to turn off the reminders showing on the pet: same as a click, but
+        an alert (if any) stays."""
+        if self._reminder_texts:
+            self._reminder_texts.clear()
+            self._show_sticky()
 
     def _dismiss_alert(self) -> None:
         """The user acknowledged the alert: calm face, the alert text gone, and the monitor stays

@@ -1,7 +1,10 @@
 """Tests for the chat bubble: text handling (escaping, Markdown) and the auto-close countdown."""
+from datetime import datetime
+from types import SimpleNamespace
+
 from PySide6.QtCore import QRect
 
-from chat.chat_bubble import ChatBubble, markdown_to_plain
+from chat.chat_bubble import ChatBubble, format_due, markdown_to_plain
 
 
 def make_bubble() -> ChatBubble:
@@ -106,3 +109,45 @@ def test_every_message_gets_its_own_box(qapp):
     assert view._message_rect(start, end) is not None
     bubble.clear_history()
     assert view._messages == []
+
+
+def test_format_due():
+    """Reminder times read Today / Tomorrow / weekday + date."""
+    now = datetime(2026, 11, 14, 15, 20)
+    assert format_due(datetime(2026, 11, 14, 20, 0), now) == "Today 20:00"
+    assert format_due(datetime(2026, 11, 15, 8, 0), now) == "Tomorrow 08:00"
+    assert format_due(datetime(2026, 11, 17, 9, 5), now) == "Tue 17 Nov, 09:05"
+
+
+def test_reminders_tab_lists_and_cancels(qapp):
+    """The Reminders tab shows each reminder with its count in the title; its x asks for a
+    cancel (by id) and the list only changes when the app sends a new one."""
+    bubble = make_bubble()
+    assert bubble._reminders_tab.text() == "Reminders"
+    due = datetime.now().timestamp() + 3600
+    bubble.set_reminders([SimpleNamespace(id=4, due=due, message="call <b>mom</b>"),
+                          SimpleNamespace(id=7, due=due + 60, message="tea")])
+    assert bubble._reminders_tab.text() == "Reminders (2)"
+    from PySide6.QtWidgets import QLabel, QPushButton
+    texts = [label.text() for label in bubble._reminder_list.findChildren(QLabel)
+             if label.objectName() == "reminderText"]
+    assert texts == ["call <b>mom</b>", "tea"]
+    asked = []
+    bubble.reminder_cancel_requested.connect(asked.append)
+    buttons = [b for b in bubble._reminder_list.findChildren(QPushButton)
+               if b.objectName() == "removeReminder"]
+    buttons[1].click()
+    assert asked == [7]
+    bubble.set_reminders([])
+    assert bubble._reminders_tab.text() == "Reminders"
+
+
+def test_open_always_starts_on_chat_tab(qapp):
+    """Clicking the Reminders tab switches pages; opening the bubble again shows Chat."""
+    bubble = make_bubble()
+    bubble.open()
+    bubble._reminders_tab.click()
+    assert bubble.current_tab() == 1
+    bubble.open()
+    assert bubble.current_tab() == 0
+    bubble.hide()
