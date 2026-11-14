@@ -4,16 +4,17 @@ API keys are NOT read here: see ``api_keys`` (read when needed, saved in the sys
 """
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 
 import yaml
 from dotenv import load_dotenv
 
-ROOT_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(ROOT_DIR / ".env")
+from paths import resource, resource_root
 
-with open(ROOT_DIR / "config.yaml", encoding="utf-8") as _f:
+ROOT_DIR = resource_root()
+load_dotenv(ROOT_DIR / ".env")   # development only; a packaged build has no .env
+
+with open(resource("config.yaml"), encoding="utf-8") as _f:
     _config: dict[str, Any] = yaml.safe_load(_f)
 
 

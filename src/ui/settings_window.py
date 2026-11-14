@@ -32,6 +32,7 @@ from PySide6.QtWidgets import (
 )
 
 import api_keys
+import version
 from agent.key_check import check_gemini_key, check_openai_key, check_tavily_key
 from pet_lines import LANGUAGES
 from ui.api_key_panel import ApiKeyPanel
@@ -163,6 +164,9 @@ class SettingsWindow(QWidget):
 
         close = QPushButton("Close")
         close.clicked.connect(self.close)
+        version_label = QLabel(version.display_name())
+        version_label.setObjectName("note")
+        version_label.setStyleSheet("margin-left: 0;")
 
         layout.addWidget(title)
         layout.addWidget(language_section)
@@ -180,7 +184,12 @@ class SettingsWindow(QWidget):
         layout.addSpacing(6)
         layout.addWidget(self.live)
         layout.addSpacing(8)
-        layout.addWidget(close, alignment=Qt.AlignmentFlag.AlignRight)
+        footer = QHBoxLayout()
+        footer.setContentsMargins(0, 0, 0, 0)
+        footer.addWidget(version_label)
+        footer.addStretch(1)
+        footer.addWidget(close)
+        layout.addLayout(footer)
 
     def _on_language_toggled(self, code: str, checked: bool) -> None:
         """A language button was picked: report it (ignore the one switched off)."""

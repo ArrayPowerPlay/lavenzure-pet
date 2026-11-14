@@ -15,7 +15,6 @@ os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
 import logging
 import sys
 from datetime import datetime
-from pathlib import Path
 
 from PySide6.QtCore import QObject, Qt, QThread, QTimer, Signal, Slot
 from PySide6.QtGui import QCursor
@@ -23,6 +22,7 @@ from PySide6.QtWidgets import QApplication, QSystemTrayIcon
 
 import app_logging
 import config
+import version
 from agent.emotion import split_emotion, split_emotion_partial
 from agent.errors import friendly_error
 from agent.graph import PROVIDERS, reset_agent, run_agent, set_provider
@@ -34,6 +34,7 @@ from overlay.behavior import BehaviorController, PetState
 from overlay.character import Mood
 from overlay.overlay_window import OverlaySprite
 from overlay.speech_bubble import SpeechBubble
+from paths import resource
 from pet_lines import PetLines
 from single_instance import SingleInstance
 from ui.menus import PetMenu, themed_menu
@@ -43,7 +44,7 @@ from user_settings import UserSettings
 
 log = logging.getLogger(__name__)
 
-DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+DATA_DIR = resource("data")
 
 # Emotion tag of an AI reply -> face the pet shows while the reply appears (decision E1).
 EMOTION_MOODS = {"happy": Mood.HAPPY, "scared": Mood.SCARED, "angry": Mood.ANGRY,
@@ -177,7 +178,7 @@ class LavenzureApp(QObject):
         Settings, Quit App, plus ``Show Pet`` while the pet is hidden (hiding it is done from the
         pet's right-click menu, so the tray has no ``Hide Pet``)."""
         self.tray = QSystemTrayIcon(make_tray_icon(), self.app)
-        self.tray.setToolTip("Lavenzure")
+        self.tray.setToolTip(version.display_name())
 
         self._tray_menu = themed_menu()
         self.show_action = self._tray_menu.addAction("Show Pet")

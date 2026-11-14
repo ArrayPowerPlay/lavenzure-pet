@@ -22,7 +22,6 @@ from __future__ import annotations
 
 import math
 import random
-from pathlib import Path
 
 import numpy as np
 from PySide6.QtGui import QImage
@@ -37,8 +36,9 @@ from overlay.flame_common import (
     FlameDrive,
     ImageFlame,
 )
+from paths import resource
 
-CLIP_PATH = Path(__file__).resolve().parents[2] / "assets" / "flame" / "baked_flame.npz"
+CLIP_PATH = resource("assets", "flame", "baked_flame.npz")
 
 _BURN = 0.2           # temperature where the outer outline sits (at flame height 1)
 _GAIN = 0.62          # heat per unit of temperature above the burn level
