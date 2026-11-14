@@ -1,7 +1,7 @@
 # DECISION_LOG — Lavenzure Desktop Pet
 
 > Nhật ký các quyết định đã chốt giữa user và AI agent, mới nhất ở dưới cùng. Mỗi mục ghi: quyết định, lý do (nếu có), và trạng thái (đã làm / chờ làm / còn bàn).
-> Các quyết định kỹ thuật tổng thể từ trước ngày 2026-11-12 nằm trong [CONTEXT.md](./CONTEXT.md) (§3 bảng quyết định, §7 lịch sử thay đổi); file này bắt đầu ghi từ 2026-11-12.
+> Các quyết định kỹ thuật tổng thể từ trước ngày 2026-11-12 (bảng quyết định + lịch sử thay đổi) từng nằm trong `docs/CONTEXT.md`; file đó đã bị xóa ngày 2026-11-14 (lượt 33), bản cuối còn trong git: `git show 589459d:docs/CONTEXT.md`. Phần còn đúng đã gộp vào mục "Locked decisions" của `CLAUDE.md`. File này bắt đầu ghi từ 2026-11-12.
 > Kế hoạch theo giai đoạn (A-F) nằm ở cuối [implementation_plan.md](./implementation_plan.md), mục "Kế hoạch tiếp theo".
 
 ## 2026-11-12
@@ -434,8 +434,61 @@
 - **T1 đã làm:** khi pet đã ngủ gật (không đụng máy ≥ 10 phút) và user quay lại, pet thức dậy rồi ~1 giây sau cười và nói (theo ngôn ngữ Settings, 3 cách nói mỗi ngôn ngữ), vd "Welcome back! You were away for 25 minutes." / "Mừng bạn quay lại! Bạn đi vắng 25 phút đó." Thời gian tính từ lần đụng chuột/phím cuối: dưới 60 phút thì làm tròn phút; từ 60 phút trở lên **chỉ nói số giờ tròn** kèm "over" (user chốt sau: 1h15 hay 1h45 đều là "Welcome back! You were away for over 1 hour." / "... hơn 1 tiếng"). Không chào khi pet đang ẩn, đang Idle (vẫn ngủ), đang mở chat, hoặc đang có bong bóng nhắc / cảnh báo chờ click. Không làm phần "chào buổi sáng lần đầu trong ngày" (đã có câu quan tâm buổi sáng).
 - **Đã kiểm:** test tự động (behavior, user_activity, pet_lines) + chạy thử app thật offscreen (nhắc → đứng yên + đồng hồ → click → OK → đi tiếp; nhắc đánh thức pet đang ngủ; ngủ gật 25 phút → quay lại → câu chào). **Chưa thử trên desktop thật** (cần khởi động lại pet).
 
+### Lượt 33 (2026-11-14) — gọn tài liệu, bỏ CONTEXT.md, thêm skill `pet-animation`
+- **Quyết định (user):** xóa `docs/CONTEXT.md`, chỉ tập trung `CLAUDE.md`; gom mọi hướng dẫn tạo animation vào một skill.
+- **Đã làm:** `CLAUDE.md` viết lại gọn (mục Locked decisions thay cho bảng quyết định của CONTEXT; phần mô tả chi tiết `face.py` / props / renderer lửa chuyển sang skill). Sửa chỗ ghi sai `chat.idle_timeout_minutes` thành `memory.idle_timeout_minutes`, và đường dẫn repo mới `D:\workspace\Repo\pet`. README, `implementation_plan.md` không còn trỏ tới CONTEXT.md.
+- **Skill `.claude/skills/pet-animation/`** (nằm trong repo): `SKILL.md` (mô hình 4 lớp, định hướng nghệ thuật user đã chốt / đã chê, quy trình làm + kiểm tra), `references/` (thêm mood, prop, dò hình mẫu "copy y hệt", chuyển động + lửa), `scripts/` (`render_sheet.py` render nhiều mood thành 1 ảnh để so với ảnh mẫu, `crop_grid.py` phóng to ảnh mẫu kèm lưới tọa độ để dò, `snap_frames.py` chụp khung hình cố định để chứng minh refactor không đổi hình).
+- **Trạng thái:** đã làm; skill chưa chạy thử với một yêu cầu animation thật (cần user thử và góp ý).
+
+### Lượt 34 (2026-11-15) — chốt hướng đóng gói và phát hành bản đầu tiên v0.1.0 (CHỈ CHỐT, CHƯA CODE)
+- **User chốt:**
+  1. **v0.1.0 chỉ cho Windows.** macOS làm sau (hiện user không có máy Mac để thử); Linux chưa bàn.
+  2. **Khóa API nhập trong Settings**, app tự kiểm tra rồi chạy luôn, lưu bằng **`keyring`** (Windows Credential Manager). Bản đóng gói **không kèm file `.env`**.
+  3. **Tên app và pet luôn là `Lavenzure`** (file `Lavenzure.exe`, tag, tên file tải về). Calcifer chỉ là nhân vật tham khảo, không dùng trong tên sản phẩm.
+  4. **Phát hành công khai, miễn phí, không thu phí** → user không lo bản quyền. Quyết định này **thay** dòng cũ "chỉ dùng cá nhân, không phân phối" trong `CLAUDE.md` (đã sửa) và `README.md` / `README_vi.md` (**chưa sửa**, làm ở F7). Vẫn giữ: không dùng asset gốc của phim (nhân vật vẽ hoàn toàn bằng code).
+- **Quy tắc đặt phiên bản (Claude đề xuất, user đồng ý):** SemVer `MAJOR.MINOR.PATCH`, tag git có chữ `v`.
+  - `fix` → PATCH, `feat` → MINOR, thay đổi phá vỡ (vd đổi định dạng `settings.json` / `reminders.json` mà bản cũ không đọc được) → MAJOR. Khi còn `0.x` thì thay đổi phá vỡ chỉ tăng MINOR. Repo đã dùng Conventional Commits nên số cần tăng suy ra được từ commit.
+  - Bản đầu tiên **`v0.1.0`** (số `0.x` = còn đang thay đổi nhiều). Bản thử trước khi chốt: `v0.1.0-rc.1`. Lên `1.0.0` khi user thấy đủ ổn định.
+- **Cơ chế phiên bản ↔ branch (trunk-based, vì chỉ một người làm):**
+
+  | Branch | Phiên bản | Publish? |
+  |---|---|---|
+  | `main` | luôn ở trạng thái phát hành được; **chỉ tag `vX.Y.Z` đặt trên `main`** mới sinh bản release | Có |
+  | `feat/*`, `fix/*` | bản dev tự sinh `0.1.1.dev3+g<mã commit>` (số commit kể từ tag gần nhất) | Không, chỉ để thử |
+  | `release/0.x` | chỉ tạo khi cần vá bản cũ trong lúc `main` đã đi xa | Có, hiếm |
+
+  - **Nguồn sự thật duy nhất là git tag** — không sửa số phiên bản bằng tay trong code. Lúc build, script chạy `git describe --tags --match "v*"` và ghi `src/_version.py` (git-ignored). Chạy từ source (không có file đó) thì app tự hỏi `git describe`, không được thì ghi `dev`.
+  - Số phiên bản hiện ở **chân cửa sổ Settings** và **tooltip khay** ("Lavenzure v0.1.0").
+- **Khóa API trong Settings — thiết kế:**
+  - **Nơi lưu:** `keyring`, service `Lavenzure`, hai mục `gemini_api_key` và `tavily_api_key`. **Không có đường lùi ghi chữ thường ra file**: keyring lỗi thì báo lỗi. Cài đặt thường vẫn ở `%LOCALAPPDATA%\Lavenzure\settings.json` (đã có `user_settings.app_data_dir()`), **không** thêm thư viện thư mục mới ở bước này (Windows-only).
+  - **Thứ tự đọc key:** biến môi trường / `.env` (chỉ để dev, ghi đè) → keyring. Khi key đang bị ghi đè từ môi trường thì Settings ghi "đang dùng key từ môi trường".
+  - **Tự kiểm tra khi bấm Lưu**, chạy ở luồng phụ (không chặn UI): Gemini → liệt kê model (`GET .../v1beta/models`, bằng `requests`); Tavily → một lần tìm kiếm nhỏ nhất (`max_results=1`). Kết quả hiện ngay cạnh ô nhập: hợp lệ / sai key / lỗi mạng / hết quota. **Chỉ lưu khi hợp lệ**, lưu xong dùng ngay, **không cần khởi động lại**.
+  - **Giao diện:** ô nhập ẩn ký tự (có nút hiện), liên kết tới Google AI Studio để lấy key Gemini miễn phí; **không bao giờ ghi key vào log**. Tavily là tùy chọn.
+  - **Phải sửa trong code:** `config.GEMINI_API_KEY` / `TAVILY_API_KEY` đang đọc **một lần lúc import** (`config.py:28-29`; `graph.py:115,120`; `reminder_check.py:120`) → đổi thành hàm đọc mỗi lần dùng. Client Gemini đã tạo lười (lúc chat đầu tiên), nhưng cần dựng lại khi key đổi. Client Tavily đang tạo lúc import (`web_search.py:17`) → tạo khi dùng. Lời báo lỗi trong `agent/errors.py` đang bảo "thêm GEMINI_API_KEY vào file .env" → đổi thành chỉ tới Settings.
+  - **Lần đầu chưa có key:** pet vẫn chạy bình thường; chat báo cần key và chỉ đường tới Settings. Thiếu key Tavily thì giữ cách hiện tại (công cụ `web_search` trả "chưa cấu hình"; không gỡ/đăng ký lại công cụ cho đơn giản) — *Claude tự quyết, user có thể đổi.*
+  - *Claude tự quyết:* lỗi mạng lúc kiểm tra thì **không lưu**, báo thử lại sau.
+- **Đóng gói (PyInstaller):**
+  - `--onedir --windowed` (không dùng `--onefile`: khởi động chậm vì phải giải nén mỗi lần, hay bị antivirus báo nhầm); tên `Lavenzure.exe`, có icon.
+  - Đưa vào gói: `config.yaml` (giá trị mặc định, chỉ đọc), `data/`, `assets/flame/`, shader GLSL. Cần hàm đường dẫn tài nguyên (`sys._MEIPASS` khi chạy bản đóng gói) thay cho chỗ nào đang dùng `ROOT_DIR`. Dữ liệu của user vẫn ở `%LOCALAPPDATA%\Lavenzure` (không đổi). Thêm hidden import cho backend Windows của `keyring`. **Không** kèm `.env`, `docs/`, tests.
+  - Phải thử trên bản đóng gói thật: shader OpenGL, plugin Qt, khay, `single_instance`, Settings, chat với key nhập trong Settings.
+  - **Build trên Windows** (`.venv-win` hoặc CI), không build trong WSL.
+  - **SmartScreen / antivirus:** file `.exe` chưa ký sẽ bị Windows cảnh báo ("Windows protected your PC" → More info → Run anyway), thỉnh thoảng antivirus báo nhầm. Chưa mua chứng chỉ ký. README phải nói rõ điều này và kèm mã SHA256 của file zip.
+- **Phát hành tự động (CI):** `.github/workflows/release.yml`, chạy khi push tag `v*`, trên `windows-latest`: cài deps → `pytest` → build → nén `Lavenzure-<ver>-win-x64.zip` + file SHA256 → tạo GitHub Release (ghi chú tự sinh từ commit; tag có `-rc` thì đánh dấu pre-release). Sau này thêm macOS bằng cách thêm job cho cùng tag.
+- **macOS / Linux (để sau, đã nghiên cứu ở `TASKS.md` mục "Nghiên cứu — macOS / Linux"):** khả thi, nhưng khó nằm ở hành vi overlay chứ không phải đóng gói. **Chưa tạo lớp `platform/` bây giờ** (không có máy để thử thì tách trừu tượng chỉ là đoán mò; chỉnh so với đề xuất ban đầu của Claude). Phần chuẩn bị sẵn đã có: `pywin32` chỉ dùng ở `autostart/install_startup.py`, `keyring` chạy trên cả ba hệ điều hành.
+- **Thứ tự làm:** xem `implementation_plan.md` giai đoạn F (F1 khóa API → F2/F3 phiên bản + đường dẫn → F4 PyInstaller → F5 CI → F6 tài liệu). Chờ user nói bắt đầu code.
+- **User chốt thêm (cùng ngày):**
+  - **Autostart:** mặc định **tắt**; người dùng tự bật / tắt được trong Settings như các app hiện nay (công tắc "Start with Windows"). Việc này thay C3 và "F7 Task Scheduler" cũ: Claude đề xuất cách làm là ghi một dòng vào khóa đăng ký `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` (không cần quyền admin, tự hiện trong Task Manager → Startup và Windows Settings → Apps → Startup, nơi người dùng cũng tắt được). Dùng `winreg` có sẵn của Python nên `pywin32` có thể bỏ hẳn. Bản dev vẫn dùng `install_startup.py` cho tới khi làm xong.
+  - **Chuyển repo `lavenzure-pet` sang public khi hoàn thành xong phiên bản đầu tiên** (v0.1.0), không phải trước đó.
+  - **Biểu tượng:** app **đã có icon ở khay hệ thống** (cạnh đồng hồ). Còn icon trên desktop / Start Menu thì chỉ có nếu làm file cài đặt.
+  - **Không mua chứng chỉ ký mã** cho v0.1.0 (user đồng ý): README hướng dẫn bấm "More info → Run anyway" khi Windows hiện hộp cảnh báo xanh.
+  - **v0.1.0 chỉ phát hành file zip** (giải nén, bấm đúp `Lavenzure.exe`). File cài đặt `Lavenzure-Setup.exe` (Inno Setup: Start Menu, icon desktop, gỡ cài đặt) **để sau**.
+  - **Cập nhật tự động kiểu VS Code — làm sau khi xong v0.1.0** (chỉ ghi lại, chưa thiết kế sâu). Ý user: mở app thì app tự biết có bản mới; user bấm nút **Update** thì app tự tải bản mới và ghi đè bản cũ. Hướng Claude đề xuất (chờ chốt khi bắt đầu làm): (1) lúc mở app, một luồng phụ hỏi trang Releases của GitHub xem bản mới nhất, so với số phiên bản đang chạy (bỏ qua bản `-rc`); (2) có bản mới thì hiện thông báo + nút **Update** (Settings và/hoặc bong bóng của pet); (3) bấm thì tải file zip về, kiểm tra mã SHA256 khớp với file đã công bố; (4) Windows không cho `.exe` đang chạy tự ghi đè chính nó, nên cần một chương trình nhỏ riêng: app tự thoát, chương trình đó thay thư mục cũ bằng bản mới rồi mở lại app; (5) dữ liệu người dùng ở `%LOCALAPPDATA%\Lavenzure` không bị đụng tới. Cần repo **public** để hỏi GitHub mà không cần đăng nhập. Phần chuẩn bị sẵn từ v0.1.0: số phiên bản theo tag, tên file zip cố định `Lavenzure-<ver>-win-x64.zip`, file SHA256 đi kèm mỗi bản release.
+  - **Tài liệu `.md` không được đóng gói:** PyInstaller chỉ lấy các module Python được import cộng với những file ta liệt kê (`config.yaml`, `data/`, `assets/flame/`, shader); `docs/`, README, `CLAUDE.md`, `tests/`, `.claude/` đều không có trong gói. Chỉ khi muốn thì mới thêm `README.txt` + `LICENSE` ngắn vào zip.
+
 ## Còn bàn
 
+- **Đóng gói v0.1.0** (lượt 34): đã chốt hướng, chờ user nói bắt đầu. Còn một việc nhỏ chưa quyết: chọn giấy phép (`LICENSE`, repo hiện chưa có; Claude đề xuất MIT) trước khi chuyển sang public, và có kèm `README.txt` + `LICENSE` trong file zip không.
+- **Cập nhật tự động** (lượt 34): đã chốt ý tưởng, làm **sau khi xong v0.1.0** (xem `TASKS.md` P7, `implementation_plan.md` giai đoạn I).
 - Đo lại 60 phút ở 30 fps + lửa nhẹ (`src/perf_check.py`, cần thoát pet đang chạy).
 - Cách 3 (tạm dừng khi có app toàn màn hình) và cách 5 (lửa 30 khung/giây) — user để lại, chưa làm.
 - Lượt 24: user thử các tính năng mới trên desktop thật và góp ý; T1, T6, P2 vẫn pending; âm thanh và hướng agent để sau.

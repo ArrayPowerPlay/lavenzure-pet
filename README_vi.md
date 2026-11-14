@@ -191,11 +191,11 @@ assets/flame/               # dữ liệu lửa đã tính sẵn cho renderer `b
 
 ## Tài liệu thiết kế
 
-- [`docs/CONTEXT.md`](./docs/CONTEXT.md) — mục tiêu, kiến trúc, các quyết định kỹ thuật đã chốt, lịch sử thay đổi.
 - [`docs/implementation_plan.md`](./docs/implementation_plan.md) — tiến độ và **kế hoạch các bước tiếp theo**.
 - [`docs/DECISION_LOG.md`](./docs/DECISION_LOG.md) — nhật ký các quyết định đã chốt (và những việc còn bàn).
 - [`docs/TEST_CHECKLIST.md`](./docs/TEST_CHECKLIST.md) — checklist thử trên desktop thật và kết quả đo hiệu năng.
-- [`CLAUDE.md`](./CLAUDE.md) — hướng dẫn cho AI coding agent làm việc trong repo.
+- [`CLAUDE.md`](./CLAUDE.md) — hướng dẫn cho AI coding agent làm việc trong repo (tiếng Anh): kiến trúc, các quyết định đã chốt, lệnh chạy.
+- [`.claude/skills/pet-animation/`](./.claude/skills/pet-animation/SKILL.md) — cách nhân vật được vẽ và cách thêm biểu cảm, đạo cụ, phản ứng mới (skill cho AI agent).
 - [`docs/ANIMATION_TUTORIAL.md`](./docs/ANIMATION_TUTORIAL.md) — hướng làm bằng ảnh PNG cũ, đã bỏ, chỉ giữ để tham khảo.
 
 ## Trạng thái hiện tại (2026-11-12)

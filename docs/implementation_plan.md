@@ -1,6 +1,6 @@
 # Implementation Plan — Lavenzure Desktop Pet
 
-> Xem [CONTEXT.md](./CONTEXT.md) để hiểu bối cảnh/kiến trúc tổng thể. File này chỉ liệt kê việc cần làm theo giai đoạn.
+> Bối cảnh, kiến trúc và các quyết định đã chốt nằm trong `CLAUDE.md` (gốc repo) và [DECISION_LOG.md](./DECISION_LOG.md). File này chỉ liệt kê việc cần làm theo giai đoạn.
 > **Không bắt đầu code Phase 1 trở đi cho tới khi các câu hỏi ở mục "Open Questions" bên dưới được trả lời.**
 
 ## Quyết định đã chốt (round 2)
@@ -34,7 +34,7 @@
 
 ## Phase 1 — Khởi tạo project
 - [ ] Tạo virtualenv, `requirements.txt` (PySide6, langgraph, langchain-google-genai, pywin32, python-dotenv/pydantic-settings, requests/httpx, psutil cho system_status tool)
-- [ ] Tạo cấu trúc thư mục theo `CONTEXT.md` mục 5
+- [ ] Tạo cấu trúc thư mục (cấu trúc hiện tại: xem `src/` và mục Architecture trong `CLAUDE.md`)
 - [x] `.env.example` đã tạo (`GEMINI_API_KEY`, `TAVILY_API_KEY`)
 - [x] `config.yaml` đã tạo (model, idle_timeout_minutes, system_status thresholds, ambient interval, tray...)
 - [x] `data/facts_jokes.json` (50 câu, tiếng Anh) và `data/click_reactions.json` (20 câu, tiếng Anh) đã tạo sẵn
@@ -106,7 +106,7 @@
 
 ## Ghi chú
 - Mỗi phase chỉ bắt đầu khi phase trước đã xong và các Open Question liên quan đã được trả lời.
-- Cập nhật checklist này (đánh dấu `[x]`) khi hoàn thành từng việc, và cập nhật `CONTEXT.md` khi có quyết định/thay đổi thiết kế mới.
+- Cập nhật checklist này (đánh dấu `[x]`) khi hoàn thành từng việc, và ghi vào `DECISION_LOG.md` / `CLAUDE.md` khi có quyết định/thay đổi thiết kế mới.
 
 ## Trạng thái triển khai (cập nhật 2026-08-13)
 
@@ -187,9 +187,26 @@ Còn thiếu / cần làm tiếp:
 - [x] **H7. Biểu cảm nhắc lịch** (lượt 32): mood `REMIND` + đồng hồ báo thức ⏰ (`AlarmClockProp`) rung liên tục cạnh pet, pet đứng yên tới khi click; click → đồng hồ rút đi + mood `OK` (mắt "^ ^" cười 1 giây).
 - [x] **H8. T1 — chào khi quay lại máy** (lượt 32): sau khi pet ngủ gật vì vắng ≥ 10 phút, user quay lại → "Welcome back! You were away for 25 minutes." / "... for over 1 hour." (EN/VI, `UserActivityWatcher.user_returned`, `PetLines.welcome_back`).
 
-### Giai đoạn F — Đóng gói (Phase 11) — *để sau (user chốt 2026-11-12)*
-- [ ] **F1. PyInstaller** ra `.exe` (chú ý: `data/`, `assets/flame/`, shader GLSL, OpenGL trong bản đóng gói).
-- [ ] **F2. Autostart bằng Task Scheduler** cho bản `.exe`.
+- [x] **H9. Dọn tài liệu + skill `pet-animation`** (lượt 33): `CLAUDE.md` gọn lại, bỏ `docs/CONTEXT.md`, phần đồ họa/animation chuyển vào skill `.claude/skills/pet-animation/`.
+
+### Giai đoạn F — Đóng gói và phát hành v0.1.0 (Windows) — *chốt hướng 2026-11-15, lượt 34; CHƯA CODE, chờ user nói bắt đầu*
+> Chi tiết và lý do: [DECISION_LOG.md](./DECISION_LOG.md) lượt 34. Thứ tự làm: F1 → F2 + F3 → F4 → F5 → F6.
+- [ ] **F1. Khóa API trong Settings:** ô nhập Gemini (bắt buộc) + Tavily (tùy chọn), lưu bằng `keyring` (service `Lavenzure`), tự kiểm tra ở luồng phụ, chỉ lưu khi hợp lệ, dùng ngay không cần khởi động lại. Đổi `config.GEMINI_API_KEY` / `TAVILY_API_KEY` (đọc lúc import) thành hàm đọc mỗi lần dùng; Tavily tạo client khi dùng; sửa lời báo lỗi trong `agent/errors.py` (đang nhắc `.env`); `.env` chỉ còn là lớp ghi đè cho dev. Thêm test (keyring giả, kiểm tra key giả lập HTTP).
+- [ ] **F2. Phiên bản theo git tag:** `src/_version.py` (git-ignored) sinh lúc build từ `git describe --tags --match "v*"`; chạy từ source thì tự hỏi git; hiện ở chân Settings + tooltip khay.
+- [ ] **F3. Đường dẫn tài nguyên cho bản đóng gói:** hàm tìm `config.yaml`, `data/`, `assets/flame/`, shader (`sys._MEIPASS` khi đã đóng gói), thay cho các chỗ đang dùng `ROOT_DIR`; thêm test.
+- [ ] **F4. PyInstaller:** spec `--onedir --windowed`, tên `Lavenzure.exe`, icon, hidden import cho `keyring` Windows; script build (`build.ps1` hoặc `scripts/build.py`). Thử bản đóng gói thật trên desktop (shader, khay, `single_instance`, Settings, chat) rồi ghi vào `TEST_CHECKLIST.md`.
+- [ ] **F5. CI phát hành:** `.github/workflows/release.yml` chạy khi push tag `v*` trên `windows-latest`: pytest → build → `Lavenzure-<ver>-win-x64.zip` + SHA256 → GitHub Release (tag `-rc` là pre-release). Thử bằng tag `v0.1.0-rc.1` rồi mới tag `v0.1.0`.
+- [ ] **F6. Tài liệu:** README / README_vi — mục tải về và cài, nhập key trong Settings (bỏ hướng dẫn `.env` cho người dùng thường), cảnh báo SmartScreen + SHA256, đổi câu "Personal use only … must not be distributed" thành miễn phí / phi thương mại / không dùng asset gốc, bỏ dòng "There is no packaged `.exe` yet"; cập nhật mục Environment trong `CLAUDE.md`.
+- [ ] **F7. Autostart là công tắc trong Settings** ("Start with Windows", **mặc định tắt**, user chốt lượt 34): bật thì ghi khóa `HKCU\...\Run` trỏ tới `Lavenzure.exe` (module `winreg`, không cần admin), tắt thì xóa; trạng thái đọc lại từ đăng ký mỗi lần mở Settings (vì user có thể tắt trong Task Manager). Thay `install_startup.py`; cân nhắc bỏ `pywin32`.
+- [ ] **F4b. File cài đặt `Lavenzure-Setup.exe`** (Inno Setup: Start Menu, biểu tượng desktop tùy chọn, gỡ cài đặt) — *để sau v0.1.0* (user chốt: v0.1.0 chỉ phát hành file zip).
+- [ ] **F6b. Chọn giấy phép:** thêm `LICENSE` (Claude đề xuất MIT) trước khi chuyển repo sang public; có kèm `README.txt` + `LICENSE` trong zip không (chờ user).
+- [ ] **F9. Đổi repo sang public** sau khi v0.1.0 xong (user chốt lượt 34).
+- [ ] **F8. macOS (rồi mới tới Linux)** — để sau khi có máy Mac để thử; xem `TASKS.md` "Nghiên cứu — macOS / Linux".
+
+### Giai đoạn I — Cập nhật tự động kiểu VS Code — *làm sau khi xong v0.1.0 (user chốt lượt 34)*
+- [ ] **I1.** Lúc mở app, luồng phụ hỏi GitHub Releases bản mới nhất (bỏ qua `-rc`), so với số phiên bản đang chạy.
+- [ ] **I2.** Có bản mới → thông báo + nút **Update**; bấm thì tải zip, kiểm SHA256, thoát app, chương trình cập nhật nhỏ thay thư mục cũ rồi mở lại app (dữ liệu trong `%LOCALAPPDATA%\Lavenzure` giữ nguyên).
+- [ ] **I3.** Cần chốt khi bắt đầu: hiện thông báo ở đâu (Settings, bong bóng pet, hay cả hai), có công tắc tắt kiểm tra cập nhật không, làm file cài đặt `Lavenzure-Setup.exe` (F4b) trước hay sau. Chi tiết: DECISION_LOG lượt 34.
 
 ### Để sau
 - Chat bằng giọng nói (voice).

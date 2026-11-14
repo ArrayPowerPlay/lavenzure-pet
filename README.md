@@ -193,11 +193,11 @@ assets/flame/               # pre-computed fire data for the `baked` renderer
 
 The design documents are written in Vietnamese:
 
-- [`docs/CONTEXT.md`](./docs/CONTEXT.md) — goals, architecture, locked technical decisions, change log.
 - [`docs/implementation_plan.md`](./docs/implementation_plan.md) — progress and the **next-steps roadmap**.
 - [`docs/DECISION_LOG.md`](./docs/DECISION_LOG.md) — log of the decisions agreed so far (and the ones still open).
 - [`docs/TEST_CHECKLIST.md`](./docs/TEST_CHECKLIST.md) — real-desktop test checklist and performance measurements.
-- [`CLAUDE.md`](./CLAUDE.md) — guidance for AI coding agents working in this repo (English).
+- [`CLAUDE.md`](./CLAUDE.md) — guidance for AI coding agents working in this repo (English): architecture, locked decisions, commands.
+- [`.claude/skills/pet-animation/`](./.claude/skills/pet-animation/SKILL.md) — how the character is drawn and how to add moods, props and reactions (agent skill).
 - [`docs/ANIMATION_TUTORIAL.md`](./docs/ANIMATION_TUTORIAL.md) — the abandoned PNG-cutout approach, kept for reference only.
 
 ## Status (2026-11-12)

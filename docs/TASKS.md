@@ -35,6 +35,15 @@ Khi một mục được chốt: ghi quyết định vào `DECISION_LOG.md`, chu
 ### P4. T6 — trang phục ngày lễ
 - **Ý tưởng:** Tết, Giáng sinh, Halloween, sinh nhật user → pet đeo đồ + câu chúc riêng. Ước lượng công sức ở `DECISION_LOG.md` lượt 23 (đợt đầu đề xuất: mũ tiệc, mũ Noel, bao lì xì).
 
+### P6. Đóng gói và phát hành v0.1.0 (Windows)
+- **Trạng thái:** đã chốt hướng ở `DECISION_LOG.md` lượt 34 (2026-11-15), danh sách việc ở `implementation_plan.md` giai đoạn F1-F8. **Chưa code**, chờ user nói bắt đầu.
+- **Chốt thêm:** v0.1.0 chỉ phát hành file zip; không ký mã; autostart là công tắc trong Settings (mặc định tắt); repo public sau khi xong v0.1.0.
+- **Tóm tắt:** `Lavenzure.exe` (PyInstaller onedir) chỉ cho Windows; khóa API nhập trong Settings và lưu bằng `keyring`; phiên bản SemVer lấy từ git tag, CI GitHub Actions đóng gói khi push tag `v*`; công khai, miễn phí.
+
+### P7. Cập nhật tự động kiểu VS Code — làm SAU khi xong v0.1.0
+- **Ý của user (2026-11-15):** mở app thì app tự biết có bản mới; bấm nút **Update** thì app tự tải bản mới và ghi đè bản cũ.
+- **Trạng thái:** chỉ ghi lại, chưa thiết kế sâu. Hướng đề xuất và các bước nằm ở `DECISION_LOG.md` lượt 34, việc cần làm ở `implementation_plan.md` giai đoạn I. Cần repo public.
+
 ---
 
 ## Nghiên cứu — tương tác với màn hình (2026-11-14)
@@ -96,6 +105,26 @@ Khi một mục được chốt: ghi quyết định vào `DECISION_LOG.md`, chu
 
 ---
 
+## Nghiên cứu — macOS / Linux (2026-11-15, chưa làm; user chưa có máy Mac để thử)
+
+Đóng gói thì khả thi; chỗ khó là hành vi của lớp phủ (cửa sổ pet). Chỉ `autostart/install_startup.py` đang dùng `pywin32`; phần còn lại (PySide6, psutil, LangGraph, keyring) chạy trên cả ba hệ điều hành.
+
+| | Windows (v0.1.0) | macOS | Linux |
+|---|---|---|---|
+| Cửa sổ trong suốt, luôn ở trên | Có | Có (cần thử) | Có trên X11 |
+| Click xuyên vùng trong suốt | Tự động theo alpha từng pixel | Rất có thể tự động, **phải thử trên máy thật** | Không tự động: phải dùng XShape/XFixes (`python-xlib`) |
+| Tự di chuyển cửa sổ quanh màn hình | Có | Có | **Wayland không cho** app tự đặt vị trí / luôn-ở-trên → phải ép chạy qua XWayland (`QT_QPA_PLATFORM=xcb`) |
+| Hiện trên mọi Space / app toàn màn hình | Có | Cần `pyobjc` đặt `collectionBehavior` | Tùy trình quản lý cửa sổ |
+| Autostart | Shortcut Startup / Task Scheduler | LaunchAgent `.plist` | `~/.config/autostart/*.desktop` |
+| Gói phát hành | zip | `.app` trong `.dmg` | AppImage hoặc tar.gz |
+
+- **Cơ chế build:** PyInstaller **không build chéo**, mỗi hệ điều hành phải build trên máy của hệ đó → thêm job vào matrix CI cho cùng tag `v*`: `windows-latest`, `macos-latest` (Apple Silicon; thêm `macos-13` nếu cần Intel), `ubuntu-22.04` (build trên Ubuntu cũ để AppImage chạy được nhiều distro). Tên file: `Lavenzure-0.1.0-win-x64.zip`, `-macos-arm64.dmg`, `-linux-x86_64.AppImage`.
+- **macOS không ký** → Gatekeeper chặn, người dùng phải bấm chuột phải → Open; muốn hết cảnh báo cần tài khoản Apple Developer (99 USD/năm) để ký + notarize.
+- **Thứ tự nếu mở rộng:** macOS trước (click-through dễ hơn, không có chuyện Wayland), Linux chỉ hỗ trợ X11 theo kiểu cố gắng hết sức.
+- **Chưa tách lớp `platform/`** (luôn-ở-trên/click-through, autostart, thư mục dữ liệu) — để làm cùng lúc với bản macOS đầu tiên khi đã có máy để thử. Cần thêm `platformdirs` thay cho `%LOCALAPPDATA%` khi đó.
+
+---
+
 ## Không chọn (đã bàn 2026-11-14)
 
 - Cảnh báo kèm tên app ăn RAM + pet đổ mồ hôi khi máy nặng.
@@ -103,5 +132,5 @@ Khi một mục được chốt: ghi quyết định vào `DECISION_LOG.md`, chu
 - Phím tắt mở chat.
 - Thêm nội dung cho cửa sổ Settings.
 - Pet đi trên cửa sổ khác (ý đầu, nay chi tiết hơn ở N1 để user xem lại).
-- Tự khởi động cùng Windows (C3).
+- Tự khởi động cùng Windows (C3) — *đã đổi ý ở lượt 34 (2026-11-15): làm thành công tắc tùy chọn trong Settings, mặc định tắt; xem `implementation_plan.md` F7.*
 - Pomodoro / hẹn giờ tập trung (lượt 21: đã có ngủ gật khi rời máy).
