@@ -11,196 +11,87 @@
 
 ---
 
-Một linh hồn lửa nhỏ bằng bàn tay, lấy ý tưởng từ nhân vật Calcifer của Studio Ghibli, sống nổi trên mọi cửa sổ. Nó đi dạo dọc đáy màn hình, nhún nhảy, gọi khúc củi rồi cưỡi củi bay vèo đi, ngủ gật khi bạn rời máy, bày trò ngẫu nhiên khi bạn click và giật mình khi bị nhấc lên. Chuột phải là mở bong bóng chat: một AI agent (Google Gemini) trả lời theo ngôn ngữ bạn gõ, xem thời tiết, tìm kiếm web hay cho bạn biết máy đang vất vả cỡ nào, và mỗi câu trả lời lại đi kèm một nét mặt hợp cảnh.
-
-**Nhân vật này không dùng một file ảnh nào.** Từng đợt lửa bập bùng, từng cái chớp mắt, từng nụ cười đều được tính bằng code, trực tiếp, 60 lần mỗi giây, và không bao giờ lặp lại cùng một khung hình.
-
-> **Chỉ dùng cá nhân.** Ý tưởng của Lavenzure được lấy cảm hứng từ Calcifer, nhân vật có bản quyền của Studio Ghibli. Dự án này là sản phẩm hâm mộ phi thương mại, không dùng bất kỳ hình ảnh/âm thanh gốc nào của phim, và không được phát hành công khai hay thương mại.
-
-## Hoạt ảnh
+Lavenzure là một linh hồn lửa nhỏ bằng bàn tay, sống nổi trên mọi cửa sổ của bạn. Nó đi dạo, nhún nhảy, ngủ gật khi bạn rời máy và phản ứng khi bạn click hay nhấc nó lên. Chuột phải để chat: một AI trả lời theo ngôn ngữ bạn gõ, xem thời tiết, tìm kiếm web, nhắc việc, và mỗi câu trả lời lại đi kèm một nét mặt hợp cảnh.
 
 <p align="center">
-  <img src="docs/images/expressions.png" alt="Các biểu cảm: bình thường, vui, ngạc nhiên, hoảng, giận, chill với chảo rán, ghê, ngủ, cưỡi khúc củi">
-  <br>
-  <sub>bình thường · vui · ngạc nhiên · hoảng · giận · chill · ghê · ngủ · cưỡi củi, tất cả là khung hình lấy thẳng từ bộ vẽ đang chạy</sub>
+  <img src="docs/images/expressions.png" alt="Các biểu cảm: bình thường, vui, ngạc nhiên, sợ, giận, chill với chảo rán, ghê, ngủ, cưỡi khúc củi">
 </p>
 
-Mục tiêu: nét vẽ phẳng, viền mực như sticker vẽ tay, nhưng *chuyển động* như lửa thật và *diễn* như một nhân vật có tính cách. Bên dưới là:
-
-### 🔥 Ngọn lửa không bao giờ lặp lại
-
-- **Lửa được đốt bằng GPU shader.** Một fragment shader GLSL tính "độ nóng" cho từng pixel: thân tròn cộng một chóp hình giọt nước, bị gặm mòn bởi **nhiễu fractal 3D bẻ cong miền (domain warping) cuộn dần lên trên**. Lưỡi lửa sinh ra trên thân, bốc lên, kéo dài, tách đôi, đứt thành mẩu nhỏ rồi tắt. Nhiễu có cả trục thời gian nên hoa văn không bao giờ lặp vòng.
-- **Phong cách sticker, nhưng vẽ thật.** Độ nóng được cắt thành ba dải màu phẳng (viền đỏ, cam, lõi vàng) và bao quanh bằng một nét mực nâu đậm dày *đều*: shader chia cho gradient của độ nóng nên viền không phình to ở chỗ lửa mềm. Mọi mép đều được khử răng cưa.
-- **"Thời tiết" của lửa.** Ngọn lửa tự chuyển qua lại giữa các trạng thái: *cháy đều*, *bùng gió* cao và lắc lư, *lách tách* ngắn và giật, *lặng* thấp và lười, mỗi trạng thái kéo dài ngẫu nhiên, còn chóp lửa chính thì trôi qua trôi lại. Không bao giờ đều đều như máy đếm nhịp.
-- **Mặt luôn nằm yên.** Nhiễu yếu ở phần thân dưới và mạnh dần lên tới chóp, nên khuôn mặt luôn nằm trên vùng vàng mịn trong khi ngọn lửa phía trên tha hồ bùng.
-- **Ba bộ vẽ thay được cho nhau.** Ngoài shader còn có bộ **metaball** chạy CPU (các lưỡi lửa hạt hòa thành trường mật độ rồi dò thành đường viền vector) và bộ **baked** (các đoạn mô phỏng chất lỏng 2D thật, tính sẵn offline rồi biến hình qua lại). Máy không có OpenGL 3.3 thì pet tự lặng lẽ chuyển sang metaball.
-
-### 🎭 Khuôn mặt biết diễn, không chỉ đổi hình
-
-- **Thời điểm so le.** Mắt phản ứng trước, miệng theo sau nửa nhịp, đúng kiểu các họa sĩ hoạt hình làm, thay vì mọi thứ bật đổi cùng một khung hình.
-- **Lò xo và lấy đà.** Mỗi thông số trên mặt là một lò xo hơi vượt quá đích (mắt *bật* to khi ngạc nhiên), và mỗi lần đổi cảm xúc đều bắt đầu bằng một cú co nhẹ theo hướng ngược lại.
-- **Mí mắt thật.** Mí trên sụp hoặc xếch cho vẻ buồn ngủ, cáu hay lo lắng; má đẩy mí dưới lên khi cười; chớp mắt nhắm nhanh, mở chậm.
-- **Biết quay đầu.** Các nét mặt nằm trên một quả cầu tưởng tượng: khi liếc sang bên, cả khuôn mặt trượt theo và nửa xa hẹp lại. Mắt nhìn theo con trỏ chuột và đảo nhẹ liên tục (saccade).
-- **Biểu cảm vụn khi rảnh.** Để yên một lúc, nó tự lướt qua những nét mặt nhỏ vào những lúc bất chợt: nhếch mép tự mãn, nheo mắt khoan khoái, chữ "o" nho nhỏ, ngáp, nhăn mặt lo lắng.
-- **Miệng biến hình liền mạch.** Từ cười sang chữ "o" rồi sang hét là một hình dạng biến đổi liên tục, không phải chồng mờ giữa các bản vẽ. Mặt vui và mặt chill được dò từng điểm theo bản phác thảo tham khảo rồi trộn vào.
-- **Biểu cảm đổi cả ngọn lửa.** *Hoảng* thì lửa dựng tua tủa thành khối vuông, *giận* thì bùng ra hai bên, *chill* thì bẹt xuống dưới chiếc chảo đang rán trứng với thịt xông khói xèo xèo, *ngủ* thì lùn và bè ra, thở chậm, bay chữ "z". Hình dáng cũng là lò xo, nên lửa rung rinh như thạch khi chuyển dáng.
-
-### 🪵 Dáng người theo chuyển động thật
-
-- **Không có keyframe nào.** Nghiêng, kéo dài, bẹp và nhún đều *suy ra từ cách cửa sổ thật sự di chuyển*: lửa ngả ngược hướng đi, dãn dài khi vọt lên hay rơi xuống, bẹp và rung khi tiếp đất, nảy nhẹ khi bước. Gió do chuyển động thổi lửa bạt ra sau.
-- **Tàn lửa sống trong không gian màn hình.** Tàn lửa cứ bay lên từ chỗ nó sinh ra, nên khi pet di chuyển chúng kéo thành vệt phía sau.
-- **Đạo cụ có màn xuất hiện.** Khúc củi hiện ra trong một chùm tia lửa khi cất cánh, đôi tay lửa nhỏ bám lấy nó khi bay, rồi củi tan thành tàn lửa khi đáp xuống.
-- **Chuyển động mượt như bơ.** Vị trí cửa sổ được tính chính xác dưới mức pixel (phần lẻ thành độ lệch khi vẽ), và vòng lặp khung hình chạy chung đồng hồ animation Qt với chuyển động, nên khi đi chậm nó lướt êm chứ không giật 1 px, 2 px, 1 px.
-- **Có ngày, có đêm.** Từ 20h đến 5h sáng lửa cháy thấp, chậm và đỏ trầm hơn; sau 10 phút không đụng chuột/bàn phím nó ngáp, mắt từ từ nhắm rồi ngủ gật, và bật tỉnh khi bạn quay lại.
+**Nhân vật này không dùng một file ảnh nào.** Ngọn lửa, từng cái chớp mắt, từng nụ cười đều được vẽ bằng code, trực tiếp, và không bao giờ lặp lại cùng một khung hình.
 
 ## Tính năng
 
-- **Nhân vật vẽ hoàn toàn bằng code**, lửa chạy bằng GPU shader và khuôn mặt giàu cảm xúc (xem [Hoạt ảnh](#hoạt-ảnh)): vui (hai kiểu mặt), ngạc nhiên, hoảng, giận, chill, ghê (`yuck`), ngầu (`cool`, đeo kính râm), suy nghĩ, cảnh báo, ngủ.
-- **Tự di chuyển**: đứng yên, đi dọc đáy màn hình, cưỡi khúc củi bay lượn, nhảy — chọn ngẫu nhiên.
-- **Ngủ**: chọn `Idle` thì pet nằm ngủ (thở chậm, bay chữ "z"); sau 10 phút không đụng chuột/bàn phím pet tự ngủ gật, dùng máy lại thì tỉnh.
-- **Ban đêm**: từ 20h đến 5h sáng lửa dịu và trầm màu hơn, pet cử động chậm hơn.
-- **Luôn nổi trên cùng, trong suốt, click xuyên qua**: chỉ phần có hình nhân vật mới nhận chuột, vùng xung quanh vẫn bấm được vào app bên dưới.
-- **Tương tác chuột**: click trái → một hoạt ảnh ngẫu nhiên (không lặp lại hai lần liền); giữ và kéo → mang nhân vật đi; chuột phải → menu nhỏ `Chat`, `Idle` / `Wander` và `Hide Pet`.
-- **Bong bóng thoại đi theo pet** khi nó di chuyển.
-- **Chat với AI agent** (LangGraph + Google Gemini `gemini-flash-lite-latest`), trả lời theo ngôn ngữ bạn gõ, chữ hiện dần trong bong bóng ngay khi model bắt đầu trả lời, tự chọn cảm xúc cho mỗi câu trả lời (pet làm mặt đó ngay khi câu trả lời bắt đầu), có 4 công cụ:
-  - `weather` — thời tiết theo địa danh (Open-Meteo, không cần key)
-  - `web_search` — tìm kiếm web (Tavily)
-  - `system_status` — CPU / RAM / pin hiện tại
-  - `set_timer_reminder` — "nhắc tôi sau 30 phút…" / "nhắc tôi lúc 11 giờ…": app tự tính giờ, tới giờ pet hiện ra nhắc và bong bóng giữ tới khi bạn click vào pet. Không nói giờ hoặc giờ mơ hồ ("tối nay") thì pet hỏi lại kèm giờ gợi ý. Chat "thôi khỏi nhắc nữa" / "đổi sang 22h" cũng được, và tab **Reminders** trong bong bóng chat liệt kê mọi lời nhắc đang chờ, bấm × để gỡ. Lời nhắc được lưu ở `%LOCALAPPDATA%\Lavenzure\reminders.json` nên chat bị xoá hay tắt app mở lại vẫn còn (nếu lỡ giờ vì máy ngủ / app tắt thì nhắc ngay khi có thể, kèm số phút trễ)
-- **Bong bóng chat** tông màu lửa, gắn cạnh pet (pet đứng yên khi bong bóng mở), mỗi tin nhắn nằm trong một khung bo tròn riêng (của bạn bên phải, của pet bên trái), hiển thị Markdown, Esc để đóng, tự đóng sau 30 giây không chat (không tính lúc đang gõ hoặc AI đang trả lời).
-- **Báo lỗi dễ hiểu**: thiếu/sai key, hết quota, mất mạng… đều được pet giải thích trong chat thay vì im lặng hay crash.
-- **Theo dõi máy nền**: tự cảnh báo khi pin < 30%, CPU > 90% hoặc RAM > 90%; cảnh báo giữ nguyên đến khi bạn click vào pet (hoặc chọn `Idle`), sau đó pet im 10 phút mới báo lại (`system_status.snooze_minutes`).
-- **Pet tự nói**: cứ 5 phút (tính từ câu gần nhất, lần click hoặc chat gần nhất) pet nói một câu, xen kẽ câu quan tâm (ăn chưa, uống nước, ngủ sớm…; vài câu chỉ nói đúng khung giờ) và fact / câu đùa về lửa. Hoạt ảnh "nói" khi click cũng bốc trong 70 câu này.
-- **Tiếng Anh hoặc tiếng Việt**: `Settings` → `Language` đổi mọi câu pet nói trên màn hình (câu click, câu quan tâm, fact/joke, cảnh báo, nhắc việc); câu trả lời trong chat vẫn theo ngôn ngữ bạn gõ.
-- **Lịch sử chat chỉ nằm trong RAM**, tự xóa sau 15 phút không chat — không bao giờ lưu xuống ổ đĩa (lời nhắc lưu riêng).
-- **Icon ở khay hệ thống** (vẽ chính hình pet): `Settings` (ngôn ngữ English / Tiếng Việt, chọn 30 / 60 fps, đều có hiệu lực ngay), `Quit App`; khi pet đang ẩn thì có thêm `Show Pet` để hiện lại (ẩn pet bằng menu chuột phải).
-- **Chỉ chạy 1 bản**: mở app lần nữa sẽ chỉ mở bong bóng chat của con pet đang chạy.
+- **Sống trên màn hình**: luôn nằm trên cùng, trong suốt, chuột xuyên qua mọi chỗ trừ ngọn lửa. Nó đứng yên, đi dạo, cưỡi củi bay, nhảy, ngủ gật sau 10 phút bạn không đụng máy, và dịu lại vào ban đêm.
+- **Biểu cảm**: ngọn lửa vẽ bằng shader GPU cùng khuôn mặt có "diễn xuất" thật (mắt nhìn theo con trỏ chuột; vui, ngạc nhiên, sợ, giận, chill, buồn ngủ…).
+- **Chat với AI agent** (Google Gemini hoặc OpenAI, bạn chọn) có sẵn công cụ **thời tiết**, **tìm kiếm web**, **tình trạng máy** (CPU / RAM / pin) và **nhắc việc** ("nhắc tôi lúc 11:00 làm…").
+- **Quan tâm bạn**: cảnh báo khi pin, CPU hoặc RAM ở mức nguy hiểm; cứ 5 phút lại nói một câu quan tâm, một sự thật thú vị hoặc một câu đùa.
+- **Tiếng Anh hoặc tiếng Việt** cho mọi câu nó nói (trong Settings).
+- **Riêng tư**: cuộc trò chuyện chỉ nằm trong RAM, khóa API được cất trong Windows Credential Manager.
 
-## Yêu cầu
+## Tải về và chạy (Windows 10/11)
 
-- Windows 10/11, 1 màn hình.
-- Python 3.13 (bản Windows).
-- Card đồ họa hỗ trợ OpenGL 3.3 (không bắt buộc — thiếu thì dùng cách vẽ dự phòng).
-- API key:
-  - `GEMINI_API_KEY` — lấy tại [Google AI Studio](https://aistudio.google.com/apikey) (bắt buộc cho chat; thiếu key thì pet vẫn chạy, chỉ chat không dùng được).
-  - `TAVILY_API_KEY` — lấy tại [tavily.com](https://tavily.com) (cho công cụ tìm kiếm web).
+1. Tải `Lavenzure-<phiên bản>-win-x64.zip` ở trang [Releases](../../releases) rồi giải nén vào thư mục bất kỳ.
+2. Bấm đúp `Lavenzure.exe`. Pet hiện ra và có thêm một biểu tượng ở khay hệ thống.
+3. Chuột phải biểu tượng khay → **Settings**, chọn **Chat AI** rồi dán khóa API của nó. Khóa được kiểm tra trước, rồi mới lưu, và dùng được ngay.
+   - **Gemini**: lấy khóa miễn phí ở [Google AI Studio](https://aistudio.google.com/apikey).
+   - **OpenAI**: lấy khóa ở [OpenAI platform](https://platform.openai.com/api-keys).
+   - **Tavily** (tùy chọn, để tìm kiếm web): [tavily.com](https://tavily.com).
+4. Tùy chọn: bật **Start with Windows** trong Settings.
 
-## Cài đặt
+Chưa có khóa thì pet vẫn chạy bình thường; chỉ phần chat cần khóa.
 
-Mở PowerShell trong thư mục dự án:
-
-```powershell
-py -3.13 -m venv .venv-win
-.venv-win\Scripts\python.exe -m pip install -r requirements.txt
-copy .env.example .env      # rồi mở .env và điền 2 API key
-```
-
-## Chạy
-
-```powershell
-.venv-win\Scripts\python.exe src\main.py
-```
-
-Tự khởi động cùng Windows (tạo shortcut trong thư mục Startup, chạy bằng `pythonw.exe` nên không hiện cửa sổ console):
-
-```powershell
-.venv-win\Scripts\python.exe src\autostart\install_startup.py
-```
-
-Muốn bỏ tự khởi động: xóa `Lavenzure.lnk` trong `shell:startup` (gõ `shell:startup` vào hộp thoại Run).
-
-Có lỗi gì thì xem file log: `%LOCALAPPDATA%\Lavenzure\logs\lavenzure.log`.
+> **Windows có thể cảnh báo** ("Windows protected your PC") vì app chưa được ký số. Bấm **More info → Run anyway**. Mỗi bản phát hành đều kèm mã SHA-256 của file zip để bạn kiểm tra file tải về (`Get-FileHash Lavenzure-<phiên bản>-win-x64.zip`).
 
 ## Cách dùng
 
 | Thao tác | Kết quả |
 |---|---|
-| Click trái vào pet | Một hoạt ảnh ngẫu nhiên; nếu đang cảnh báo thì chỉ tắt cảnh báo |
-| Giữ chuột trái và kéo | Mang pet đi chỗ khác |
-| Chuột phải vào pet | Menu: `Chat` (mở bong bóng chat), `Idle` (đi ngủ; đang cảnh báo thì tắt luôn cảnh báo) / `Wander` (đi lại tiếp), `Hide Pet` (ẩn pet, bật lại ở icon khay) |
-| Esc trong bong bóng chat | Đóng chat (lịch sử vẫn giữ trong 15 phút) |
-| Icon ở khay hệ thống | Ẩn/hiện pet, Settings, thoát app |
+| Click chuột trái | Một phản ứng ngẫu nhiên (cũng tắt cảnh báo / nhắc việc đang chờ) |
+| Nhấn giữ và kéo | Bế pet sang chỗ khác |
+| Chuột phải | `Chat`, `Idle` (ngủ) / `Wander` (đi lại), `Hide Pet` (ẩn) |
+| Biểu tượng khay | `Settings` (ngôn ngữ, Chat AI và khóa, chạy cùng Windows, tốc độ khung hình), `Show Pet`, `Quit App` |
 
-## Cấu hình
+File log ở `%LOCALAPPDATA%\Lavenzure\logs\lavenzure.log`.
 
-Các cài đặt không bí mật nằm trong [`config.yaml`](./config.yaml):
+## Chạy từ mã nguồn
 
-| Khóa | Ý nghĩa |
-|---|---|
-| `llm.model`, `llm.temperature` | Model Gemini dùng cho chat (mặc định `gemini-flash-lite-latest`: nhanh, không "suy nghĩ"; `gemini-flash-latest` thông minh hơn nhưng chậm gấp 2-3 lần) |
-| `llm.timeout_seconds`, `llm.max_retries` | Chờ bao lâu / thử lại mấy lần trước khi báo lỗi |
-| `character.scale` | Kích thước nhân vật (0.75 = 150×177 px) |
-| `character.fps` | Số khung hình/giây mặc định, 30 (Settings cho chọn thêm 60); cao hơn = mượt hơn, tốn CPU hơn |
-| `character.flame_renderer` | Cách vẽ thân lửa: `shader` (mặc định, GPU) / `metaball` / `baked` |
-| `performance.lite_flame` | Lửa nhẹ: lửa vẽ ở độ phân giải `lite_flame_supersample` (1.5) thay vì 2.0 (bật sẵn) |
-| `behavior.state_weights` | Tỉ lệ chọn đứng yên / đi / bay / nhảy |
-| `system_status.*` | Chu kỳ kiểm tra máy, ngưỡng cảnh báo và thời gian im sau khi tắt cảnh báo |
-| `ambient.interval_minutes` | Bao lâu pet tự nói một câu (5 phút) |
-| `language` | Ngôn ngữ mặc định của câu pet nói: `en` / `vi` (Settings ghi đè) |
-| `chat.reply_bubble_max_chars` | Câu trả lời ngắn hơn số ký tự này hiện cả trong bong bóng (0 = tắt) |
-| `memory.idle_timeout_minutes` | Bao lâu không chat thì xóa lịch sử |
+Cần Python 3.13 trên Windows.
 
-Câu quan tâm và kho fact/joke nằm trong `data/care_lines.json` (20 câu mỗi ngôn ngữ, có thể kèm khung giờ `hours`) và `data/facts_jokes.json` (50 câu mỗi ngôn ngữ), mỗi file có danh sách `en` và `vi`.
-
-## Phát triển
-
-Repo dùng 2 môi trường ảo (đều không đưa lên git):
-
-- `.venv-win` — Python Windows, dùng để chạy app thật. Từ WSL vẫn gọi được: cửa sổ sẽ mở trên desktop Windows.
-- `.venv` — Python Linux (tùy chọn), chỉ để xem nhanh animation qua WSLg; không dùng để đánh giá độ trong suốt / click xuyên qua.
-
-```bash
-.venv-win/Scripts/python.exe -m pip install -r requirements-dev.txt  # cài thêm pytest + ruff
-.venv-win/Scripts/python.exe -m pytest                            # chạy test (không cần màn hình)
-.venv-win/Scripts/python.exe -m ruff check .                      # kiểm tra code
-.venv-win/Scripts/python.exe src/character_preview.py [renderer]  # thử mọi biểu cảm/chuyển động, so sánh cách vẽ lửa
-.venv-win/Scripts/python.exe src/perf_check.py --minutes 60  # đo CPU / RAM / GPU của app thật
-.venv-win/Scripts/python.exe src/desktop_check.py              # kiểm tra luôn nổi / click xuyên của pet đang chạy
-.venv-win/Scripts/python.exe src/bake_flame.py                    # tạo lại dữ liệu lửa cho renderer `baked`
-QT_QPA_PLATFORM=offscreen WSLENV=QT_QPA_PLATFORM .venv-win/Scripts/python.exe src/main.py  # chạy thử không cần màn hình
+```powershell
+py -3.13 -m venv .venv-win
+.venv-win\Scripts\python.exe -m pip install -r requirements.txt
+.venv-win\Scripts\python.exe src\main.py
 ```
 
-Ghi chú:
+Khi phát triển có thể để khóa trong file `.env` thay vì Settings (`copy .env.example .env`); khóa trong `.env` hoặc biến môi trường sẽ đè lên khóa đã lưu.
 
-- `src/` là thư mục gốc khi import (`import config`, `from overlay.x import ...`).
-- Khi gọi Python Windows từ WSL, biến môi trường chỉ được chuyển sang nếu khai báo trong `WSLENV` (như ví dụ trên).
-- Giữ nguyên kiểu xuống dòng (CRLF hoặc LF) sẵn có của từng file khi sửa.
-- Chưa có bản đóng gói `.exe` (để giai đoạn sau).
+```powershell
+.venv-win\Scripts\python.exe -m pip install -r requirements-dev.txt   # pytest, ruff, pyinstaller
+.venv-win\Scripts\python.exe -m pytest                                 # chạy test (không cần màn hình)
+.venv-win\Scripts\python.exe -m ruff check .                           # kiểm tra lint
+.venv-win\Scripts\python.exe scripts\build.py                          # tạo dist\Lavenzure-<phiên bản>-win-x64.zip
+```
 
-## Cấu trúc thư mục
+Những thứ hay chỉnh nằm trong [`config.yaml`](./config.yaml) (cỡ nhân vật, tốc độ khung hình, kiểu vẽ lửa, ngưỡng cảnh báo, model AI, tần suất pet nói). Lựa chọn của bạn trong cửa sổ Settings được lưu ở `%LOCALAPPDATA%\Lavenzure\settings.json`.
+
+Bản phát hành được tạo khi đẩy một tag như `v0.1.0` (xem `.github/workflows/release.yml`); số phiên bản luôn lấy từ git tag.
+
+## Cấu trúc dự án
 
 ```
 src/
-├── main.py                 # điểm khởi động, nối mọi thành phần bằng Qt signal
-├── config.py               # đọc config.yaml + .env
-├── app_logging.py          # ghi log ra file
-├── single_instance.py      # chỉ cho chạy 1 bản
-├── character_preview.py    # cửa sổ xem thử nhân vật
-├── bake_flame.py           # mô phỏng lửa offline cho renderer `baked`
-├── overlay/                # cửa sổ pet, nhân vật, khuôn mặt, 3 cách vẽ lửa, hành vi, bong bóng thoại
-├── chat/                   # bong bóng chat
-├── agent/                  # LangGraph agent, công cụ, bộ nhớ phiên, xử lý lỗi
-├── monitor/                # theo dõi máy, hẹn giờ nhắc, câu nói ngẫu nhiên, thời gian rảnh / ban đêm
-├── ui/                     # menu theo phong cách pet, icon khay, cửa sổ Settings
-└── autostart/              # tạo shortcut khởi động cùng Windows
-tests/                      # test tự động (pytest)
-docs/                       # tài liệu thiết kế (tiếng Việt)
-data/                       # câu quan tâm + kho fact/joke (Anh + Việt)
-assets/flame/               # dữ liệu lửa đã tính sẵn cho renderer `baked`
+├── main.py            # điểm vào; nối mọi thành phần bằng tín hiệu Qt
+├── overlay/           # cửa sổ pet, nhân vật, khuôn mặt, các kiểu vẽ lửa, hành vi, bong bóng thoại
+├── chat/              # bong bóng chat
+├── agent/             # LangGraph agent (Gemini / OpenAI), công cụ, kiểm tra khóa, bộ nhớ phiên
+├── monitor/           # cảnh báo hệ thống, nhắc việc, câu tự nói, thời gian rảnh / ban đêm
+├── ui/                # menu, biểu tượng khay, cửa sổ Settings
+└── api_keys.py, version.py, paths.py, autostart/ ...
+tests/  data/  assets/  scripts/  docs/
 ```
 
-## Tài liệu thiết kế
+Các tài liệu thiết kế trong [`docs/`](./docs) (quyết định, kế hoạch, checklist kiểm thử) viết bằng tiếng Việt; [`CLAUDE.md`](./CLAUDE.md) và [skill `pet-animation`](./.claude/skills/pet-animation/SKILL.md) hướng dẫn các AI coding agent làm việc trong repo này.
 
-- [`docs/implementation_plan.md`](./docs/implementation_plan.md) — tiến độ và **kế hoạch các bước tiếp theo**.
-- [`docs/DECISION_LOG.md`](./docs/DECISION_LOG.md) — nhật ký các quyết định đã chốt (và những việc còn bàn).
-- [`docs/TEST_CHECKLIST.md`](./docs/TEST_CHECKLIST.md) — checklist thử trên desktop thật và kết quả đo hiệu năng.
-- [`CLAUDE.md`](./CLAUDE.md) — hướng dẫn cho AI coding agent làm việc trong repo (tiếng Anh): kiến trúc, các quyết định đã chốt, lệnh chạy.
-- [`.claude/skills/pet-animation/`](./.claude/skills/pet-animation/SKILL.md) — cách nhân vật được vẽ và cách thêm biểu cảm, đạo cụ, phản ứng mới (skill cho AI agent).
-- [`docs/ANIMATION_TUTORIAL.md`](./docs/ANIMATION_TUTORIAL.md) — hướng làm bằng ảnh PNG cũ, đã bỏ, chỉ giữ để tham khảo.
+## Giấy phép
 
-## Trạng thái hiện tại (2026-11-12)
-
-- Nhân vật, chuyển động, click/kéo, khay hệ thống, theo dõi máy, chat với 4 công cụ: đã chạy (chat đã chuyển sang `gemini-flash-latest` sau khi Google ngừng `gemini-2.0-flash`).
-- Mới: bong bóng chat, bộ hoạt ảnh khi click, menu chuột phải, biểu cảm mới do AI chọn cảm xúc, bay trên khúc củi, ngủ / ngủ gật, dáng vẻ ban đêm, icon khay vẽ từ nhân vật.
-- Có 85 test tự động và kiểm tra code bằng ruff.
-- Còn lại: dùng thử lâu dài trên desktop thật; chọn fps mặc định; tay thật (E3) (đang chờ quyết định); đóng gói `.exe` (để sau).
+Miễn phí và phi thương mại, phát hành theo [giấy phép MIT](./LICENSE). Lavenzure lấy cảm hứng từ Calcifer, nhân vật của Studio Ghibli; đây là sản phẩm hâm mộ không chính thức, không dùng tài nguyên gốc của phim và không liên kết với Studio Ghibli.

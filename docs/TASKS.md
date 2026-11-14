@@ -36,7 +36,7 @@ Khi một mục được chốt: ghi quyết định vào `DECISION_LOG.md`, chu
 - **Ý tưởng:** Tết, Giáng sinh, Halloween, sinh nhật user → pet đeo đồ + câu chúc riêng. Ước lượng công sức ở `DECISION_LOG.md` lượt 23 (đợt đầu đề xuất: mũ tiệc, mũ Noel, bao lì xì).
 
 ### P6. Đóng gói và phát hành v0.1.0 (Windows)
-- **Trạng thái:** đã chốt hướng ở `DECISION_LOG.md` lượt 34 (2026-11-15), danh sách việc ở `implementation_plan.md` giai đoạn F1-F8. **Chưa code**, chờ user nói bắt đầu.
+- **Trạng thái:** đã chốt hướng ở lượt 34 và **đã code F1-F7 ở lượt 35** (2026-11-15; thêm cả OpenAI làm nhà cung cấp chat thứ hai). Còn: thử bản đóng gói trên desktop thật, tag `v0.1.0-rc.1` → `v0.1.0`, chuyển repo sang public.
 - **Chốt thêm:** v0.1.0 chỉ phát hành file zip; không ký mã; autostart là công tắc trong Settings (mặc định tắt); repo public sau khi xong v0.1.0.
 - **Tóm tắt:** `Lavenzure.exe` (PyInstaller onedir) chỉ cho Windows; khóa API nhập trong Settings và lưu bằng `keyring`; phiên bản SemVer lấy từ git tag, CI GitHub Actions đóng gói khi push tag `v*`; công khai, miễn phí.
 
