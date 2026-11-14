@@ -72,8 +72,8 @@ WELCOME_BACK: dict[str, list[str]] = {
         "There you are! I waited {away} for you :3",
     ],
     "vi": [
-        "Mừng bạn quay lại! Bạn đi vắng {away} đó.",
-        "A, bạn về rồi! Bạn đi {away} luôn đó.",
+        "Mừng bạn quay lại! Bạn đi vắng {away} rồi đó.",
+        "A, bạn về rồi! Bạn đi vắng {away} luôn đó.",
         "Bạn đây rồi! Mình chờ bạn {away} rồi đó :3",
     ],
 }
