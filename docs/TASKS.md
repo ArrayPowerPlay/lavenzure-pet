@@ -19,11 +19,17 @@ Khi một mục được chốt: ghi quyết định vào `DECISION_LOG.md`, chu
 - **Cách làm:** cửa sổ pet nhận drag & drop của Qt (`setAcceptDrops`); gửi nội dung file cho Gemini (Gemini đọc được ảnh và PDF trực tiếp); câu trả lời hiện trong khung chat như bình thường.
 - **Cần chốt trước khi làm:** loại file nào, giới hạn dung lượng; thả file xong thì tự tóm tắt luôn hay chờ user hỏi; có hoạt ảnh "ăn" riêng không. Lưu ý: nội dung file được gửi lên Google.
 
-### P5. Biểu cảm riêng khi nhắc lịch
+### P5. Biểu cảm riêng khi nhắc lịch — **đã làm** (lượt 32, xem `implementation_plan.md` H7)
 - **Ý tưởng:** khi một lời nhắc đến giờ, pet có một biểu cảm / hoạt ảnh riêng (không dùng chung mặt vui / giật mình của click). Hiện lời nhắc chỉ có câu nói giọng pet (lượt 28) và pet nhảy lên báo (`trigger_notice`).
-- **Cần chốt trước khi làm:** biểu cảm trông thế nào (user gửi hình tham khảo hoặc để Claude thiết kế), có kèm hoạt ảnh (rung chuông, vẫy tay…) hay chỉ đổi mặt.
+- **User đã chốt (2026-11-14, CHƯA CODE):**
+  - Biểu tượng là **⏰ đồng hồ báo thức** (không dùng 🔔 chuông, 🎗️ ruy-băng, 📌 ghim, ☝️ ngón tay). Lý do: ⏰ là emoji quen thuộc nhất cho "đến giờ / nhắc việc", không lẫn với cảnh báo máy.
+  - Đồng hồ **rung liên tục cho đến khi user click vào pet** thì mới biến mất (không rung 2 giây rồi đứng yên, không rung lại theo chu kỳ). Click = rút đồng hồ đi + pet chớp mắt cười ~1 giây.
+- **Thiết kế Claude đề xuất (user đã đồng ý hướng chung):** mood mới `REMIND` (`face.py`) + prop `AlarmClockProp` (`props.py`, theo mẫu `SunglassesProp`), `_on_reminder` (`main.py`) gọi mood này thay cho `trigger_notice` (surprised).
+  - Mặt: mắt tròn mở to nhìn ra phía người dùng, lông mày hơi nhướng, cười nhẹ kèm miệng hé "à này!"; lửa màu bình thường, không rung, không dùng bảng màu cảnh báo.
+  - Đồng hồ: mặt tròn màu kem, viền nâu đỏ đậm như phong cách sticker, hai chuông nhỏ trên đỉnh, hai chân nhỏ dưới đáy; chuông và chân màu xanh ngọc cho nổi trên nền lửa cam. Nảy vào có độ nảy (overshoot), rung liên tục kèm vạch "kring" hai bên, kim giây nhích.
+- **Còn mở:** dáng đồng hồ chi tiết (tay tròn cầm hay lơ lửng bên mặt), tốc độ / biên độ rung sao cho không gây khó chịu khi để lâu. Khi code sẽ so ảnh render với các mood khác rồi mới báo user.
 
-### P3. T1 — chào khi quay lại máy
+### P3. T1 — chào khi quay lại máy — **đã làm** (lượt 32, xem `implementation_plan.md` H8)
 - **Ý tưởng:** rời máy đủ lâu (pet đã ngủ gật) rồi quay lại → pet thức dậy và chào "Welcome back! You were away 25 minutes." (`DECISION_LOG.md` lượt 21-22).
 
 ### P4. T6 — trang phục ngày lễ

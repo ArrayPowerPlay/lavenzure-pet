@@ -423,6 +423,17 @@
 - **User góp ý 7 câu fact chưa ổn** (bếp gas xanh, nến vàng, gỗ không tự cháy, lon nhôm, phượng hoàng, bonfire, lửa lên dốc) và nhờ soát lại cả bản Việt lẫn Anh; cho phép dùng fact không liên quan lửa và thêm emoticon `-.-` `^.^` `:3` `:>`.
 - **Đã làm:** viết lại các câu đó cho gần lời nói hơn (bếp gas + nến gộp thành một câu, bỏ chữ "cháy rất hết"/"hong khô"); bỏ phượng hoàng và bonfire (không phải fact kiểm chứng được / hơi rợn). Thay bằng: mẹo thắp lại nến qua làn khói, lính cứu hỏa dùng lửa dập lửa, mật ong không hỏng, đốt củi chỉ còn ~1% tro, người nhìn màn hình chớp mắt ít một nửa. Bỏ câu "khói bay lên vì khí nóng nhẹ" (nhạt) và câu "nấu chín làm não to" (chỉ là giả thuyết). Giữ nguyên 2 câu đầu bản Việt mà user đã tự sửa. Thêm emoticon vào ~10 câu mỗi ngôn ngữ, chủ yếu câu cá tính. Vẫn 25 fact + 25 câu cá tính = 50.
 
+### Lượt 31 (2026-11-14) — biểu cảm riêng khi nhắc lịch (CHỈ CHỐT, CHƯA CODE)
+- **User hỏi:** nên hiện emoji gì khi nhắc nhở, cần một biểu cảm riêng. Claude tra emoji "reminder": ⏰ phổ biến nhất, 🔔 quá chung (lẫn với cảnh báo máy), 🎗️ tên đúng nhưng không ai hiểu, 📌 hợp ghi chú hơn giờ hẹn.
+- **User chốt:** biểu tượng là **⏰ đồng hồ báo thức**; đồng hồ **rung liên tục đến khi user click** vào pet thì mới biến mất. Chi tiết thiết kế (mood `REMIND` + `AlarmClockProp`) ghi ở `TASKS.md` mục P5; chờ user nói bắt đầu code.
+
+### Lượt 32 (2026-11-14) — ĐÃ CODE P5 (biểu cảm nhắc lịch) và P3/T1 (chào khi quay lại)
+- **User:** code P3 (T1) và P5; lưu ý khi click lúc pet đang nhắc thì đồng hồ rút đi và pet chớp mắt cười ~1 giây kiểu "ok nhé".
+- **P5 đã làm:** mood `REMIND` + `AlarmClockProp` (⏰ mặt kem, vỏ nâu đỏ, chuông + chân xanh ngọc). Đồng hồ nảy vào, **rung liên tục** tới khi click (kèm vạch "kring" hai bên nhấp nháy, búa gõ qua lại, kim giây nhích mỗi giây). Pet **đứng yên** tại chỗ trong lúc nhắc (trạng thái `REMIND`, ưu tiên ngay dưới cảnh báo máy), đang ngủ thì thức dậy. Click → đồng hồ thu nhỏ biến mất (kèm làn "poof") + mood `OK`: mắt nhắm "^ ^" cười, gật nhẹ, 1 giây; rồi pet đi lại bình thường (hoặc ngủ tiếp nếu đang Idle). AI tắt nhắc (`dismiss`) cũng vậy.
+- **Hai điểm "còn mở" Claude tự chọn:** đồng hồ **lơ lửng bên phải** đầu pet (pet không có tay, vẽ tay cầm sẽ lệch phong cách); rung **6 lần/giây**, 4 giây đầu nghiêng 11° rồi dịu xuống 6° để để lâu không khó chịu. Đang có cảnh báo máy thì mặt cảnh báo thắng nhưng đồng hồ vẫn rung; một click tắt cả hai.
+- **T1 đã làm:** khi pet đã ngủ gật (không đụng máy ≥ 10 phút) và user quay lại, pet thức dậy rồi ~1 giây sau cười và nói (theo ngôn ngữ Settings, 3 cách nói mỗi ngôn ngữ), vd "Welcome back! You were away 25 minutes." / "Mừng bạn quay lại! Bạn đi vắng 25 phút đó." Thời gian tính từ lần đụng chuột/phím cuối, làm tròn phút, trên 60 phút thì "1 hour 5 minutes" / "1 tiếng 5 phút". Không chào khi pet đang ẩn, đang Idle (vẫn ngủ), đang mở chat, hoặc đang có bong bóng nhắc / cảnh báo chờ click. Không làm phần "chào buổi sáng lần đầu trong ngày" (đã có câu quan tâm buổi sáng).
+- **Đã kiểm:** test tự động (behavior, user_activity, pet_lines) + chạy thử app thật offscreen (nhắc → đứng yên + đồng hồ → click → OK → đi tiếp; nhắc đánh thức pet đang ngủ; ngủ gật 25 phút → quay lại → câu chào). **Chưa thử trên desktop thật** (cần khởi động lại pet).
+
 ## Còn bàn
 
 - Đo lại 60 phút ở 30 fps + lửa nhẹ (`src/perf_check.py`, cần thoát pet đang chạy).
