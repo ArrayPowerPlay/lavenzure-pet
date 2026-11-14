@@ -8,7 +8,9 @@ key is needed instead of the whole app crashing.
 (token chunks from the model), so the chat can show the answer while it is still being written.
 
 Every model call gets the system prompt plus the PC's current local date and time (``_prompt``),
-so the model understands "tonight" or "tomorrow at 7" when setting reminders.
+so the model understands "tonight" or "tomorrow at 7" when setting reminders. The reminder rules
+(ask for a time with a suggestion when none or only a vague one is given; list before cancelling)
+are part of the system prompt, with the suggested times read from ``config.yaml``.
 """
 from __future__ import annotations
 
@@ -24,26 +26,62 @@ from langgraph.prebuilt import create_react_agent
 import config
 from agent.emotion import EMOTION_INSTRUCTIONS
 from agent.errors import MissingApiKeyError
-from agent.tools.set_timer_reminder import set_timer_reminder
+from agent.tools.set_timer_reminder import (
+    cancel_reminder,
+    dismiss_reminder_bubble,
+    list_reminders,
+    set_timer_reminder,
+)
 from agent.tools.system_status import system_status
 from agent.tools.weather import get_weather
 from agent.tools.web_search import web_search
 
 log = logging.getLogger(__name__)
 
+# Times suggested when the user asks for a reminder without a clear time (round 25).
+DEFAULT_SUGGESTED_TIMES = {"morning": "08:00", "noon": "12:00", "afternoon": "15:00",
+                           "evening": "20:00", "late night": "22:00"}
+DEFAULT_DELAY_MINUTES = 30
+
+
+def reminder_rules() -> str:
+    """The reminder part of the system prompt, with the suggested times from config.yaml."""
+    times = config.get("reminders.suggested_times", None) or DEFAULT_SUGGESTED_TIMES
+    delay = config.get("reminders.suggested_delay_minutes", DEFAULT_DELAY_MINUTES)
+    table = ", ".join(f"{part} {clock}" for part, clock in times.items())
+    return (
+        "Reminders: whenever the user wants to be reminded or notified of something later, "
+        "in any wording (e.g. 'remind me', 'nhắc mình', 'nhắc tớ', 'nhớ báo mình', "
+        "'đừng để mình quên'), handle it as a reminder. "
+        "If they give an exact time or delay, call set_timer_reminder right away: pass "
+        "'minutes' for a delay or 'at' for a clock time, let the tool work out the exact time, "
+        "then confirm the time it reports. "
+        "If they give no time, or only a vague one ('tonight', 'this afternoon', 'later', "
+        "'soon'), do NOT set it yet: ask what time, and suggest one in the same question "
+        f"(by part of the day: {table}; with no time at all: in {delay} minutes). "
+        "Set it once they accept the suggestion or give a time. "
+        "When the user no longer needs a reminder, or wants to change one, call list_reminders, "
+        "then cancel_reminder with its number; to change it, cancel it and set a new one. "
+        "If only one reminder could be meant (the only pending one, or the one just discussed), "
+        "cancel it without asking; if several could be meant, ask which one and list them. "
+        "If they want to turn off a reminder that is showing on the pet right now, call "
+        "dismiss_reminder_bubble. "
+    )
+
+
 SYSTEM_PROMPT = (
     "You are Lavenzure, a small, witty fire spirit living on the user's desktop. "
     "Keep replies short, warm, and a little playful. Use tools when the user asks "
     "about weather, needs a web search, or asks about their PC's CPU/RAM/battery status. "
-    "When the user asks to be reminded of something (in N minutes/hours, or at a clock time), "
-    "call set_timer_reminder: pass 'minutes' for a delay or 'at' for a clock time, and let the "
-    "tool work out the exact time; then confirm the time it reports. "
-    "Always reply in the same language the user writes in. "
+    + reminder_rules()
+    + "Always reply in the same language the user writes in. "
     + EMOTION_INSTRUCTIONS
 )
 
-# Reminders were switched off on 2026-11-12 and switched back on in round 24 (saved to a file).
-TOOLS = [get_weather, web_search, system_status, set_timer_reminder]
+# Reminders were switched off on 2026-11-12 and switched back on in round 24 (saved to a file);
+# listing / cancelling them came in round 25.
+TOOLS = [get_weather, web_search, system_status, set_timer_reminder, list_reminders,
+         cancel_reminder, dismiss_reminder_bubble]
 
 _agent = None
 _agent_lock = threading.Lock()

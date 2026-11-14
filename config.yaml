@@ -54,6 +54,16 @@ language: en # default language of everything the pet says: en / vi (Settings > 
 chat:
   auto_close_seconds: 30 # the chat bubble closes after this long without chatting
 
+reminders:
+  # Asked for a reminder with no time or a vague one ("tonight"), the pet asks back and suggests:
+  suggested_times:
+    morning: "08:00"
+    noon: "12:00"
+    afternoon: "15:00"
+    evening: "20:00"
+    late night: "22:00"
+  suggested_delay_minutes: 30 # suggestion when no time was given at all
+
 click_reaction:
   lines_file: data/click_reactions.json
 

@@ -1,13 +1,17 @@
 """Polls system health, fires scheduled reminders, and says when it is time for an ambient line.
 
-Everything here runs on the Qt UI thread (QTimers). Reminders requested by the agent's worker
-thread arrive through the queued ``_reminder_requested`` signal and are saved to a file
-(``monitor.reminders.ReminderStore``), so they survive restarts. Alert texts are written in the
-language chosen in Settings (``set_language``); which ambient line to say is up to the app
-(``pet_lines.PetLines``), the monitor only keeps the clock.
+Everything here runs on the Qt UI thread (QTimers). Reminder requests from the agent's worker
+thread (add, cancel, hide the bubble) arrive through queued internal signals, so the reminder
+list is only ever changed on the UI thread; it is saved to a file
+(``monitor.reminders.ReminderStore``), so it survives restarts. Other threads read it through
+``pending_reminders``, an immutable snapshot replaced after every change. Alert texts are
+written in the language chosen in Settings (``set_language``); which ambient line to say is up
+to the app (``pet_lines.PetLines``), the monitor only keeps the clock.
 """
 from __future__ import annotations
 
+import itertools
+import threading
 import time
 from pathlib import Path
 
@@ -17,7 +21,7 @@ from PySide6.QtCore import QObject, Qt, QTimer, Signal
 import config
 import pet_lines
 from agent.tools import set_timer_reminder as reminder_tool
-from monitor.reminders import ReminderStore
+from monitor.reminders import Reminder, ReminderStore
 
 LATE_GRACE_SECONDS = 60   # a reminder going off later than this says how late it is
 
@@ -27,12 +31,23 @@ class BackgroundMonitor(QObject):
     for ``system_status.snooze_minutes`` after the user dismisses it), ``reminder_triggered``
     (message, minutes late - 0 when on time; late when the PC slept or the app was closed at the
     due time) and ``ambient_due`` (``ambient.interval_minutes`` since the last line or
-    interaction: time for the pet to say something on its own)."""
+    interaction: time for the pet to say something on its own). For the reminders list it also
+    emits ``reminders_changed(list[Reminder])`` after every add / cancel / reminder going off,
+    and ``reminders_dismissed`` when the AI asks to hide the reminders showing on the pet.
+
+    It is the ``ReminderService`` of the reminder tools (``agent.tools.set_timer_reminder``):
+    ``schedule_reminder``, ``pending_reminders``, ``cancel_reminder`` and
+    ``dismiss_shown_reminders`` are safe to call from any thread."""
 
     alert_triggered = Signal(str)
     ambient_due = Signal()
     reminder_triggered = Signal(str, int)
-    _reminder_requested = Signal(float, str)  # internal: worker thread -> UI thread hand-off
+    reminders_changed = Signal(list)
+    reminders_dismissed = Signal()
+    # Internal worker thread -> UI thread hand-offs.
+    _reminder_requested = Signal(int, float, str)
+    _cancel_requested = Signal(int)
+    _dismiss_requested = Signal()
 
     def __init__(self, reminders_path: Path | None = None) -> None:
         """Read thresholds/intervals from config, load saved reminders and start the poll
@@ -50,9 +65,15 @@ class BackgroundMonitor(QObject):
         self._snoozed_until = 0.0   # no new alerts before this time (set when one is dismissed)
         self._last_activity = time.time()
         self._reminders = ReminderStore(reminders_path)
+        self._snapshot: tuple[Reminder, ...] = self._reminders.items()
+        self._ids = itertools.count(self._reminders.max_id() + 1)
+        self._ids_lock = threading.Lock()
 
-        self._reminder_requested.connect(self._add_reminder, Qt.ConnectionType.QueuedConnection)
-        reminder_tool.register_reminder_scheduler(self.schedule_reminder)
+        queued = Qt.ConnectionType.QueuedConnection
+        self._reminder_requested.connect(self._add_reminder, queued)
+        self._cancel_requested.connect(self._remove_reminder, queued)
+        self._dismiss_requested.connect(self.reminders_dismissed, queued)
+        reminder_tool.register_reminder_service(self)
 
         self._status_timer = QTimer(self)
         self._status_timer.timeout.connect(self._check_system_status)
@@ -81,13 +102,45 @@ class BackgroundMonitor(QObject):
         self._alert_active = False
         self._snoozed_until = time.time() + self._snooze_seconds
 
-    def schedule_reminder(self, due: float, message: str) -> None:
-        """Schedule a reminder at unix time ``due``. Safe to call from any thread."""
-        self._reminder_requested.emit(float(due), message)
+    def schedule_reminder(self, due: float, message: str) -> int:
+        """Schedule a reminder at unix time ``due`` and return its id. Safe to call from any
+        thread (the list itself is updated on the UI thread a moment later)."""
+        with self._ids_lock:
+            reminder_id = next(self._ids)
+        self._reminder_requested.emit(reminder_id, float(due), message)
+        return reminder_id
 
-    def _add_reminder(self, due: float, message: str) -> None:
+    def pending_reminders(self) -> list[Reminder]:
+        """The reminders still waiting, soonest first. Safe to call from any thread."""
+        return list(self._snapshot)
+
+    def cancel_reminder(self, reminder_id: int) -> Reminder | None:
+        """Cancel the pending reminder ``reminder_id``; returns it, or ``None`` when no pending
+        reminder has that id. Safe to call from any thread (removed on the UI thread)."""
+        found = next((r for r in self._snapshot if r.id == reminder_id), None)
+        if found is not None:
+            self._cancel_requested.emit(reminder_id)
+        return found
+
+    def dismiss_shown_reminders(self) -> None:
+        """Ask the app to hide the reminders showing on the pet (``reminders_dismissed`` is
+        emitted on the UI thread). Safe to call from any thread."""
+        self._dismiss_requested.emit()
+
+    def _add_reminder(self, reminder_id: int, due: float, message: str) -> None:
         """Store (and save) a reminder (UI thread only)."""
-        self._reminders.add(due, message)
+        self._reminders.add(Reminder(reminder_id, due, message))
+        self._publish()
+
+    def _remove_reminder(self, reminder_id: int) -> None:
+        """Drop a cancelled reminder (UI thread only; already gone = nothing to do)."""
+        if self._reminders.remove(reminder_id) is not None:
+            self._publish()
+
+    def _publish(self) -> None:
+        """Refresh the snapshot other threads read and announce the new list."""
+        self._snapshot = self._reminders.items()
+        self.reminders_changed.emit(list(self._snapshot))
 
     def _check_system_status(self) -> None:
         """Poll CPU/RAM/battery and raise at most one alert until the user clears it (and none
@@ -122,7 +175,10 @@ class BackgroundMonitor(QObject):
         it from the saved list. Runs every second, and right after startup for reminders that
         fell due while the app was closed."""
         now = time.time()
-        for reminder in self._reminders.pop_due(now):
+        due = self._reminders.pop_due(now)
+        if due:
+            self._publish()
+        for reminder in due:
             late = now - reminder.due
             minutes_late = int(round(late / 60)) if late > LATE_GRACE_SECONDS else 0
             self.reminder_triggered.emit(reminder.message, minutes_late)

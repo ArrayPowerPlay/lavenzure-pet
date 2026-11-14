@@ -1,5 +1,6 @@
 """Tests for the agent tools with the network faked out."""
 from datetime import datetime
+from types import SimpleNamespace
 
 import pytest
 import requests
@@ -95,12 +96,72 @@ def test_web_search_without_key(monkeypatch):
      ({"at": "half past ten", "message": "x"}, False)],
 )
 def test_reminder_validation(monkeypatch, args, accepted):
-    """Only sensible reminders reach the scheduler (as a due timestamp + message)."""
-    calls = []
-    monkeypatch.setattr(reminder_module, "_scheduler", lambda due, msg: calls.append((due, msg)))
+    """Only sensible reminders reach the service (as a due timestamp + message)."""
+    service = FakeReminderService()
+    monkeypatch.setattr(reminder_module, "_service", service)
     reply = reminder_module.set_timer_reminder.invoke(args)
-    assert bool(calls) is accepted
+    assert bool(service.items) is accepted
     assert reply.startswith("Okay") is accepted
+    if accepted:
+        assert "#1" in reply
+
+
+class FakeReminderService:
+    """Stands in for the BackgroundMonitor in the reminder tool tests."""
+
+    def __init__(self) -> None:
+        """No reminders yet."""
+        self.items: list[SimpleNamespace] = []
+        self.dismissed = 0
+
+    def schedule_reminder(self, due: float, message: str) -> int:
+        """Keep the reminder; ids count from 1."""
+        self.items.append(SimpleNamespace(id=len(self.items) + 1, due=due, message=message))
+        return self.items[-1].id
+
+    def pending_reminders(self) -> list:
+        """The kept reminders, soonest first."""
+        return sorted(self.items, key=lambda r: r.due)
+
+    def cancel_reminder(self, reminder_id: int):
+        """Remove and return a reminder, or None."""
+        for item in self.items:
+            if item.id == reminder_id:
+                self.items.remove(item)
+                return item
+        return None
+
+    def dismiss_shown_reminders(self) -> None:
+        """Count the requests."""
+        self.dismissed += 1
+
+
+def test_list_and_cancel_reminders(monkeypatch):
+    """list_reminders names each pending reminder by number; cancel_reminder removes one and
+    explains when the number is unknown."""
+    service = FakeReminderService()
+    monkeypatch.setattr(reminder_module, "_service", service)
+    assert "no pending" in reminder_module.list_reminders.invoke({})
+    reminder_module.set_timer_reminder.invoke({"minutes": 30, "message": "call mom"})
+    reminder_module.set_timer_reminder.invoke({"minutes": 10, "message": "tea"})
+    listing = reminder_module.list_reminders.invoke({})
+    assert listing.index('#2') < listing.index('#1')            # soonest first
+    assert '"call mom"' in listing and ("today" in listing or "tomorrow" in listing)
+    reply = reminder_module.cancel_reminder.invoke({"reminder_id": 1})
+    assert reply.startswith("Cancelled") and "call mom" in reply
+    assert [r.id for r in service.items] == [2]
+    assert reminder_module.cancel_reminder.invoke({"reminder_id": 1}).startswith("Error")
+    assert reminder_module.dismiss_reminder_bubble.invoke({}).startswith("Done")
+    assert service.dismissed == 1
+
+
+def test_reminder_tools_without_service(monkeypatch):
+    """Before the monitor exists the tools say so instead of failing."""
+    monkeypatch.setattr(reminder_module, "_service", None)
+    for tool_, args in ((reminder_module.list_reminders, {}),
+                        (reminder_module.cancel_reminder, {"reminder_id": 1}),
+                        (reminder_module.dismiss_reminder_bubble, {})):
+        assert tool_.invoke(args) == reminder_module.UNAVAILABLE
 
 
 NOW = datetime(2026, 11, 14, 15, 20)
