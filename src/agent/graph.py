@@ -1,7 +1,7 @@
-"""LangGraph tool-calling agent backed directly by the Google Gemini API.
+"""LangGraph tool-calling agent backed by the Google Gemini API or the OpenAI API (the user picks).
 
-The Gemini client and the agent graph are built lazily on the first chat message (not at import
-time), so the pet still starts when ``GEMINI_API_KEY`` is missing; the chat then explains that a
+The chat model and the agent graph are built lazily on the first chat message (not at import
+time), so the pet still starts when no API key is set; the chat then explains that a
 key is needed instead of the whole app crashing.
 
 ``run_agent`` can stream: given an ``on_text`` callback it reports the reply text as it grows
@@ -20,9 +20,9 @@ from collections.abc import Callable
 from datetime import datetime
 
 from langchain_core.messages import AIMessageChunk, SystemMessage
-from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.prebuilt import create_react_agent
 
+import api_keys
 import config
 from agent.emotion import EMOTION_INSTRUCTIONS
 from agent.errors import MissingApiKeyError
@@ -107,30 +107,77 @@ def _prompt(state) -> list:
     return [SystemMessage(content=system_prompt(datetime.now())), *state["messages"]]
 
 
-def _build_agent():
-    """Create the Gemini chat model and wrap it in a LangGraph ReAct (tool-calling) agent.
+PROVIDERS = ("gemini", "openai")
 
-    Raises ``MissingApiKeyError`` when no Gemini key is configured.
+_provider = config.get("llm.provider", "gemini")
+
+
+def set_provider(provider: str) -> None:
+    """Choose which AI answers the chat (``gemini`` / ``openai``) and rebuild the agent on the
+    next message. Called at start-up and whenever Settings changes the provider."""
+    global _provider
+    if provider not in PROVIDERS:
+        raise ValueError(f"unknown AI provider {provider!r}")
+    _provider = provider
+    reset_agent()
+
+
+def _build_llm():
+    """Create the chat model of the chosen provider.
+
+    Raises ``MissingApiKeyError`` when that provider has no key.
     """
-    if not config.GEMINI_API_KEY:
-        raise MissingApiKeyError("GEMINI_API_KEY is not set in .env")
+    # Both clients are imported only when needed (they are slow to import).
+    common = {
+        "temperature": config.get("llm.temperature", 0.7),
+        # Fail fast with a clear error instead of retrying for minutes (e.g. when out of quota).
+        "timeout": config.get("llm.timeout_seconds", 60),
+        "max_retries": config.get("llm.max_retries", 2),
+    }
+    if _provider == "openai":
+        api_key = api_keys.openai_api_key()
+        if not api_key:
+            raise MissingApiKeyError("no OpenAI API key is set")
+        from langchain_openai import ChatOpenAI
+
+        model = config.get("llm.openai_model", "gpt-4o-mini")
+        log.info("OpenAI agent created (model=%s)", model)
+        return ChatOpenAI(model=model, api_key=api_key, **common)
+
+    api_key = api_keys.gemini_api_key()
+    if not api_key:
+        raise MissingApiKeyError("no Gemini API key is set")
+    from langchain_google_genai import ChatGoogleGenerativeAI
+
     model = config.get("llm.model", "gemini-flash-lite-latest")
-    llm = ChatGoogleGenerativeAI(
+    log.info("Gemini agent created (model=%s)", model)
+    return ChatGoogleGenerativeAI(
         model=model,
-        google_api_key=config.GEMINI_API_KEY,
-        temperature=config.get("llm.temperature", 0.7),
+        google_api_key=api_key,
         # The "-latest" aliases (e.g. gemini-flash-latest) only exist on the v1beta endpoint.
         api_version=config.get("llm.api_version", "v1beta"),
-        # Fail fast with a clear error instead of retrying for minutes (e.g. when out of quota).
-        timeout=config.get("llm.timeout_seconds", 60),
-        max_retries=config.get("llm.max_retries", 2),
+        **common,
     )
-    log.info("Gemini agent created (model=%s)", model)
+
+
+def _build_agent():
+    """Wrap the chosen provider's chat model in a LangGraph ReAct (tool-calling) agent.
+
+    Raises ``MissingApiKeyError`` when that provider has no key.
+    """
     return create_react_agent(
-        llm,
+        _build_llm(),
         tools=TOOLS,
         prompt=_prompt,
     )
+
+
+def reset_agent() -> None:
+    """Forget the built agent so the next chat builds a new one (call after a key or the provider
+    changed in Settings)."""
+    global _agent
+    with _agent_lock:
+        _agent = None
 
 
 def _get_agent():

@@ -55,4 +55,4 @@ def test_classify_looks_through_exception_chain():
 
 def test_friendly_error_is_english_text():
     """The reply shown in the chat mentions what the user should fix."""
-    assert "GEMINI_API_KEY" in friendly_error(MissingApiKeyError())
+    assert "Settings" in friendly_error(MissingApiKeyError())

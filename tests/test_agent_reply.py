@@ -2,7 +2,7 @@
 import pytest
 from langchain_core.messages import AIMessage, AIMessageChunk, ToolMessage
 
-import config
+import api_keys
 from agent import graph
 from agent.errors import MissingApiKeyError
 
@@ -37,7 +37,7 @@ def test_plain_string_content(monkeypatch):
 def test_missing_key_raises_clear_error(monkeypatch):
     """Without a key the agent is not built and a MissingApiKeyError explains why."""
     monkeypatch.setattr(graph, "_agent", None)
-    monkeypatch.setattr(config, "GEMINI_API_KEY", "")
+    monkeypatch.setattr(api_keys, "gemini_api_key", lambda: "")
     with pytest.raises(MissingApiKeyError):
         graph.run_agent([], "hi")
 
@@ -87,3 +87,39 @@ def test_streaming_reports_growing_text(monkeypatch):
     reply = graph.run_agent([], "weather?", on_text=seen.append)
     assert seen == ["Let me look", "[happy", "[happy] It is ", "[happy] It is 18 C!"]
     assert reply == "[happy] It is 18 C!"
+
+
+def test_provider_must_be_known():
+    """Only the supported AI providers can be chosen."""
+    with pytest.raises(ValueError):
+        graph.set_provider("claude")
+
+
+def test_openai_provider_needs_the_openai_key(monkeypatch):
+    """With OpenAI chosen, a Gemini key alone is not enough."""
+    monkeypatch.setattr(graph, "_provider", "openai")
+    monkeypatch.setattr(api_keys, "gemini_api_key", lambda: "gemini-key")
+    monkeypatch.setattr(api_keys, "openai_api_key", lambda: "")
+    with pytest.raises(MissingApiKeyError):
+        graph._build_llm()
+
+
+def test_each_provider_builds_its_own_model(monkeypatch):
+    """The chosen provider decides the chat model class and the model name from config.yaml."""
+    monkeypatch.setattr(api_keys, "gemini_api_key", lambda: "gemini-key")
+    monkeypatch.setattr(api_keys, "openai_api_key", lambda: "sk-test")
+    monkeypatch.setattr(graph, "_provider", "openai")
+    openai_llm = graph._build_llm()
+    assert type(openai_llm).__name__ == "ChatOpenAI"
+    assert openai_llm.model_name == "gpt-4o-mini"
+    monkeypatch.setattr(graph, "_provider", "gemini")
+    assert type(graph._build_llm()).__name__ == "ChatGoogleGenerativeAI"
+
+
+def test_changing_the_provider_drops_the_built_agent(monkeypatch):
+    """The next chat after a provider change builds a fresh agent."""
+    monkeypatch.setattr(graph, "_agent", object())
+    monkeypatch.setattr(graph, "_provider", "gemini")
+    graph.set_provider("openai")
+    assert graph._agent is None
+    graph.set_provider("gemini")

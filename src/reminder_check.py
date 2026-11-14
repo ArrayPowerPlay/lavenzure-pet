@@ -11,7 +11,7 @@ really happened to the reminder list, not what the reply claims:
 - ``ask``    - no time or a vague one: nothing may be set, and the reply must ask (contain "?").
 - ``cancel`` - reminders are prepared first; the message must cancel exactly the named one.
 
-Usage (Windows venv, needs ``GEMINI_API_KEY`` in ``.env``)::
+Usage (Windows venv, needs a Gemini key: ``GEMINI_API_KEY`` in ``.env`` or one saved in Settings)::
 
     .venv-win/Scripts/python.exe src/reminder_check.py            # every case twice
     .venv-win/Scripts/python.exe src/reminder_check.py --repeat 4
@@ -116,9 +116,9 @@ def main() -> int:
     args = parser.parse_args()
     app = QApplication.instance() or QApplication([])
 
-    import config
-    if not config.GEMINI_API_KEY:
-        print("GEMINI_API_KEY is not set (.env); nothing to check.")
+    import api_keys
+    if not api_keys.gemini_api_key():
+        print("No Gemini key (set GEMINI_API_KEY in .env); nothing to check.")
         return 1
 
     failures = 0

@@ -6,6 +6,7 @@ import pytest
 import requests
 from pydantic import ValidationError
 
+import api_keys
 from agent.tools import set_timer_reminder as reminder_module
 from agent.tools import weather, web_search
 
@@ -65,23 +66,29 @@ class FakeTavily:
         return self._result
 
 
+def _use_tavily(monkeypatch, fake):
+    """Pretend a Tavily key is set and make ``TavilyClient(...)`` return ``fake``."""
+    monkeypatch.setattr(api_keys, "tavily_api_key", lambda: "tvly-test")
+    monkeypatch.setattr(web_search, "TavilyClient", lambda api_key: fake)
+
+
 def test_web_search_formats_results(monkeypatch):
     """Results become a short bullet list."""
-    monkeypatch.setattr(web_search, "_client", FakeTavily(
+    _use_tavily(monkeypatch, FakeTavily(
         {"results": [{"title": "PySide6", "content": "Qt for Python"}]}))
     assert web_search.web_search.invoke({"query": "pyside6"}) == "- PySide6: Qt for Python"
 
 
 def test_web_search_error_is_reported(monkeypatch):
     """An API error is returned as text so the model can rephrase."""
-    monkeypatch.setattr(web_search, "_client", FakeTavily(error=RuntimeError("bad query")))
+    _use_tavily(monkeypatch, FakeTavily(error=RuntimeError("bad query")))
     assert "Web search failed" in web_search.web_search.invoke({"query": "site:x"})
 
 
 def test_web_search_without_key(monkeypatch):
     """No key configured -> explain instead of failing."""
-    monkeypatch.setattr(web_search, "_client", None)
-    assert "TAVILY_API_KEY" in web_search.web_search.invoke({"query": "x"})
+    monkeypatch.setattr(api_keys, "tavily_api_key", lambda: "")
+    assert "Settings" in web_search.web_search.invoke({"query": "x"})
 
 
 @pytest.mark.parametrize(

@@ -1,7 +1,7 @@
 """Turn agent failures into short, friendly (English) chat replies.
 
-The Gemini / LangChain / HTTP libraries raise many different exception types, and their class
-hierarchy changes between versions. Instead of importing them, ``classify_error`` looks at the
+The Gemini / OpenAI / LangChain / HTTP libraries raise many different exception types, and
+their class hierarchy changes between versions. Instead of importing them, ``classify_error`` looks at the
 whole exception chain (``__cause__`` / ``__context__``): class names in each MRO, an HTTP ``code``
 attribute when present, and well-known phrases in the message.
 """
@@ -11,7 +11,7 @@ import enum
 
 
 class MissingApiKeyError(RuntimeError):
-    """Raised when the chat is used but ``GEMINI_API_KEY`` is not configured."""
+    """Raised when the chat is used but no API key is configured for the chosen AI provider."""
 
 
 class ErrorKind(enum.Enum):
@@ -28,23 +28,24 @@ class ErrorKind(enum.Enum):
 
 FRIENDLY_MESSAGES: dict[ErrorKind, str] = {
     ErrorKind.MISSING_KEY: (
-        "I can't think without my Gemini key! Add GEMINI_API_KEY to the .env file and restart me."
+        "I can't think without an API key! Right-click my tray icon, open Settings and "
+        "paste your Gemini or OpenAI key in."
     ),
     ErrorKind.BAD_KEY: (
-        "Gemini didn't accept my API key. Could you check GEMINI_API_KEY in the .env file?"
+        "My AI service didn't accept my API key. Could you check it in Settings (tray icon)?"
     ),
     ErrorKind.QUOTA: (
-        "Phew, I've used up my Gemini quota for now. Give me a little while and try again!"
+        "Phew, I've used up my AI quota for now. Give me a little while and try again!"
     ),
     ErrorKind.MODEL_GONE: (
-        "The Gemini model I'm set to use isn't available anymore. "
-        "Please change llm.model in config.yaml."
+        "The AI model I'm set to use isn't available anymore. "
+        "A newer version of me should fix that."
     ),
     ErrorKind.NETWORK: (
         "I can't reach the internet right now. Check your connection and try again?"
     ),
     ErrorKind.SERVER: (
-        "Gemini's servers are having a rough moment. Try again in a minute?"
+        "The AI servers are having a rough moment. Try again in a minute?"
     ),
     ErrorKind.UNKNOWN: "Oops, my flame flickered out for a second. Try again?",
 }

@@ -1,1 +1,1 @@
-"""LangGraph agent: Gemini model, tools and in-memory chat history."""
+"""LangGraph agent: Gemini / OpenAI model, tools and in-memory chat history."""

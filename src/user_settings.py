@@ -7,11 +7,13 @@ config path and a last-resort value), so ``config.yaml`` keeps describing the ou
 behaviour and the file only holds the user's own choices. Delete the file to go back to the
 defaults.
 
-Current settings (roadmap Phase 12):
+Current settings:
 
 - ``max_fps`` - frame rate of every animation (30 / 60; default 30, chosen by the user).
 - ``language`` - language of everything the pet says (``en`` / ``vi``; default ``language`` in
   config.yaml).
+- ``provider`` - which AI answers the chat (``gemini`` / ``openai``; default ``llm.provider`` in
+  config.yaml). API keys are NOT stored here: see ``api_keys``.
 """
 from __future__ import annotations
 
@@ -29,6 +31,7 @@ log = logging.getLogger(__name__)
 DEFAULTS: dict[str, tuple[str, Any]] = {
     "max_fps": ("character.fps", 30),
     "language": ("language", "en"),
+    "provider": ("llm.provider", "gemini"),
 }
 
 

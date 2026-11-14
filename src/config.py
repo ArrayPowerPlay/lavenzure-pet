@@ -1,7 +1,9 @@
-"""Load non-secret settings from config.yaml and secrets from .env."""
+"""Load the non-secret settings from config.yaml (and an optional dev-only .env into os.environ).
+
+API keys are NOT read here: see ``api_keys`` (read when needed, saved in the system key store).
+"""
 from __future__ import annotations
 
-import os
 from pathlib import Path
 from typing import Any
 
@@ -24,6 +26,3 @@ def get(path: str, default: Any = None) -> Any:
         node = node[key]
     return node
 
-
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
-TAVILY_API_KEY = os.environ.get("TAVILY_API_KEY", "")

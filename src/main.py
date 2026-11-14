@@ -25,7 +25,7 @@ import app_logging
 import config
 from agent.emotion import split_emotion, split_emotion_partial
 from agent.errors import friendly_error
-from agent.graph import run_agent
+from agent.graph import PROVIDERS, reset_agent, run_agent, set_provider
 from agent.memory import SessionMemory
 from chat.chat_bubble import ChatBubble
 from monitor.background_monitor import BackgroundMonitor
@@ -121,6 +121,9 @@ class LavenzureApp(QObject):
         # Everything the pet says, in the language chosen in Settings (alerts too).
         self.lines = PetLines(DATA_DIR)
         self._apply_language(str(self.user_settings.get("language")))
+        # Which AI answers the chat (Gemini / OpenAI), chosen in Settings.
+        saved_provider = str(self.user_settings.get("provider"))
+        set_provider(saved_provider if saved_provider in PROVIDERS else "gemini")
 
         self._alert_message = ""
         self._reminder_texts: list[str] = []   # reminders on screen until the pet is clicked
@@ -191,9 +194,12 @@ class LavenzureApp(QObject):
         """Open the Settings window (built on first use and wired to the pet)."""
         if self.settings is None:
             self.settings = SettingsWindow(max_fps=self.sprite.max_fps,
-                                           language=self.lines.language)
+                                           language=self.lines.language,
+                                           provider=str(self.user_settings.get("provider")))
             self.settings.max_fps_changed.connect(self._set_max_fps)
             self.settings.language_changed.connect(self._set_language)
+            self.settings.provider_changed.connect(self._set_provider)
+            self.settings.api_keys_changed.connect(reset_agent)
             self.sprite.frame_rate_changed.connect(self.settings.show_frame_rate)
         self.settings.open()
 
@@ -207,6 +213,12 @@ class LavenzureApp(QObject):
         """Use ``language`` for every line the pet says from now on (pools and alerts)."""
         self.lines.set_language(language)
         self.monitor.set_language(self.lines.language)
+
+    def _set_provider(self, provider: str) -> None:
+        """Settings: switch the chat AI (Gemini / OpenAI) and remember the choice."""
+        set_provider(provider)
+        self.user_settings.set("provider", provider)
+        log.info("Chat AI %s", provider)
 
     def _set_language(self, language: str) -> None:
         """Settings: switch the pet's language and remember the choice."""
