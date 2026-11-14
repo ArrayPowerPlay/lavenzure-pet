@@ -1,4 +1,4 @@
-"""Tests for ``pet_lines``: both languages, 25 care + 50 fact/joke lines, hours, no repeats."""
+"""Tests for ``pet_lines``: both languages, 20 care + 50 fact/joke lines, hours, no repeats."""
 import random
 from datetime import datetime
 from pathlib import Path
@@ -23,9 +23,9 @@ def at(hour: int) -> datetime:
 
 @pytest.mark.parametrize("language", list(LANGUAGES))
 def test_pool_sizes(lines, language):
-    """Each language has 25 care lines and 50 facts/jokes (decision of round 22)."""
+    """Each language has 20 care lines and 50 facts/jokes (decision of round 22)."""
     lines.set_language(language)
-    assert len(lines.pool(CARE)) == 25
+    assert len(lines.pool(CARE)) == 20
     assert len(lines.pool(FACTS)) == 50
 
 

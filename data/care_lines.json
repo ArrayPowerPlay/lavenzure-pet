@@ -54,13 +54,7 @@
       "text": "How's your day going so far?"
     },
     {
-      "text": "Take a sip of water. I'll wait!"
-    },
-    {
       "text": "Give your eyes a break. Look at something far away for 20 seconds -.-"
-    },
-    {
-      "text": "Stretch your shoulders a little. Ahh, better?"
     },
     {
       "text": "Sit up straight! Your back will thank you."
@@ -69,7 +63,7 @@
       "text": "You've been sitting a while. How about a short walk?"
     },
     {
-      "text": "Breathe in... and out. Feeling lighter?"
+      "text": "Breathe in... and out. Feeling better?"
     },
     {
       "text": "I hope my little flame keeps your heart warm today."
@@ -90,20 +84,7 @@
       "text": "Smile a little. It suits you!"
     },
     {
-      "text": "Afternoon slump? A glass of water helps more than you think.",
-      "hours": [
-        13,
-        18
-      ]
-    },
-    {
-      "text": "Remember to eat some fruit today!"
-    },
-    {
       "text": "Don't forget to message someone you love today."
-    },
-    {
-      "text": "A short break now will make you faster later."
     },
     {
       "text": "Thank you for keeping me company today."
@@ -153,17 +134,7 @@
       ]
     },
     {
-      "text": "Hôm nay mệt hả? Tối nay nhớ thương bản thân một chút nha.",
-      "hours": [
-        18,
-        24
-      ]
-    },
-    {
       "text": "Ngày hôm nay của bạn thế nào?"
-    },
-    {
-      "text": "Uống một ngụm nước đi, mình đợi nè!"
     },
     {
       "text": "Cho mắt nghỉ ngơi một chút nhé? Nhìn ra xa màn hình 20 giây nào."
@@ -184,10 +155,7 @@
       "text": "Mong rằng ngọn lửa nhỏ của mình sẽ sưởi ấm trái tim bạn hôm nay:3"
     },
     {
-      "text": "Bạn đang làm tốt lắm, thật đó."
-    },
-    {
-      "text": "Dù mọi thứ có ra sao, mình vẫn sẽ ở đây với bạn."
+      "text": "Dù mọi thứ có ra sao, mình vẫn sẽ ở đây với bạn ^.^"
     },
     {
       "text": "Mình tự hào về bạn:3"
@@ -196,26 +164,16 @@
       "text": "Có chuyện gì cần chia sẻ thì kể mình nghe nha, click chuột phải vào mình là được -.-"
     },
     {
-      "text": "Cười lên cho mình xem nào, bạn cười là cả ngày nhẹ hẳn đi đó:3"
+      "text": "Cười lên cho mình xem nào, mình muốn ngắm nhìn nụ cười của bạn:>"
     },
     {
-      "text": "Chiều rồi, mắt bắt đầu díp lại hả? Uống một ly nước cho tỉnh táo nha!",
-      "hours": [
-        13,
-        17
-      ]
+      "text": "Mong rằng sự xuất hiện của mình sẽ làm tâm trạng của bạn vui hơn:>"
     },
     {
-      "text": "Hôm nay bạn đã ăn miếng trái cây nào chưa? Ăn chút cho khỏe nha!"
+      "text": "Bạn gì ơi! Lúc nào rảnh thì ghé qua đây nói chuyện với mình một chút nhé!"
     },
     {
-      "text": "Nhắn cho người thân một tin hỏi thăm đi, họ sẽ vui lắm đó!"
-    },
-    {
-      "text": "Nghỉ tay vài phút đi bạn, đầu óc khỏe lại thì lát làm sẽ nhanh hơn nhiều."
-    },
-    {
-      "text": "Hôm nay được ở cạnh bạn, mình vui lắm. Cảm ơn bạn nha:3"
+      "text": "Hôm nay được ở bên cạnh bạn, mình vui lắm! Cảm ơn bạn nha:3"
     }
   ]
 }

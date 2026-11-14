@@ -267,7 +267,7 @@ class LavenzureApp(QObject):
             self._dismiss_alert()
 
     def _say_random_line(self) -> None:
-        """The "speak" reaction: one random line from the care + fact/joke pools (75 lines)."""
+        """The "speak" reaction: one random line from the care + fact/joke pools (70 lines)."""
         if not self.bubble.is_sticky():
             text = self.lines.random_line(datetime.now())
             self._say(text, auto_hide_ms=reading_ms(text))

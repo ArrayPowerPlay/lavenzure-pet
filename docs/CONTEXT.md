@@ -81,7 +81,7 @@ flowchart TB
 | Tool: web_search | **Tavily** (free tier, cần API key) |
 | Tool: set_timer_reminder | Đặt nhắc việc qua chat: "sau N phút" (`minutes`) hoặc "lúc HH:MM" (`at`); **code tự tính giờ** (giờ đã qua trong ngày = ngày mai, tối đa 7 ngày), model được biết giờ hiện tại của máy. Lưu ra file `%LOCALAPPDATA%\Lavenzure\reminders.json` (không mất khi chat bị xoá hay tắt app; lỡ giờ thì nhắc ngay khi mở lại kèm số phút trễ). Tới giờ: pet đang ẩn thì hiện ra, đang ngủ thì thức dậy, nhảy lên + bong bóng **giữ tới khi click vào pet** (chung bong bóng với cảnh báo nếu có). Không rõ giờ / giờ mơ hồ → AI hỏi lại kèm giờ gợi ý (`reminders.suggested_times`). Liệt kê / huỷ / đổi giờ qua chat (`list_reminders`, `cancel_reminder`, `dismiss_reminder_bubble`) và tab **Reminders** trong bong bóng chat (nút ✕), lượt 25 |
 | Tool: system_status | Theo dõi CPU/RAM/pin định kỳ (background thread); ngưỡng cảnh báo đã chốt: **pin < 30%**, **CPU > 90%**, **RAM > 90%** → tự động trigger animation cảnh báo + bong bóng thông báo, **giữ nguyên cho tới khi người dùng click vào pet** (hoặc chọn `Idle`) mới tắt; tắt xong pet **im 10 phút** rồi mới báo lại nếu vẫn quá ngưỡng (`system_status.snooze_minutes`, user chốt 2026-11-14). Cũng có thể được LLM gọi chủ động khi người dùng hỏi (vd "pin còn bao nhiêu") |
-| Pet tự nói (ambient) | Không phải tool do LLM gọi. Cứ **5 phút** (tính từ câu / click / chat gần nhất) pet nói 1 câu, **xen kẽ câu quan tâm** (`data/care_lines.json`, 25 câu, vài câu có khung giờ) **và fact/joke** (`data/facts_jokes.json`, 50 câu); bốc kiểu xáo bài, không lặp. Không nói khi pet ẩn / ngủ, đang mở chat, đang có bong bóng giữ (cảnh báo, nhắc việc). Hoạt ảnh "nói" khi click bốc trong cùng 75 câu (lượt 20-22) |
+| Pet tự nói (ambient) | Không phải tool do LLM gọi. Cứ **5 phút** (tính từ câu / click / chat gần nhất) pet nói 1 câu, **xen kẽ câu quan tâm** (`data/care_lines.json`, 20 câu, vài câu có khung giờ) **và fact/joke** (`data/facts_jokes.json`, 50 câu); bốc kiểu xáo bài, không lặp. Không nói khi pet ẩn / ngủ, đang mở chat, đang có bong bóng giữ (cảnh báo, nhắc việc). Hoạt ảnh "nói" khi click bốc trong cùng 70 câu (lượt 20-22) |
 | Ngôn ngữ câu thoại tự động | **Tiếng Anh hoặc tiếng Việt** theo Settings → Language (mặc định `language: en` trong `config.yaml`): đổi mọi câu pet nói trên màn hình (câu click, câu quan tâm, fact/joke, cảnh báo, nhắc việc). Chat vẫn trả lời theo ngôn ngữ user gõ (lượt 22) |
 | Autostart | Giai đoạn dev: shortcut trong thư mục Startup Windows chạy bằng `pythonw.exe`; giai đoạn sau: Task Scheduler khi đóng gói .exe |
 | Bản quyền | Dùng fan art tự tạo/stylized, không dùng asset gốc phim; chỉ dùng cá nhân |
@@ -109,7 +109,7 @@ pet/
 ├── assets/
 │   └── flame/                  # baked_flame.npz: clip mô phỏng lửa cho bộ vẽ `baked`
 ├── data/
-│   ├── care_lines.json          # 25 câu quan tâm mỗi ngôn ngữ (en / vi)
+│   ├── care_lines.json          # 20 câu quan tâm mỗi ngôn ngữ (en / vi)
 │   └── facts_jokes.json           # 50 fact/joke mỗi ngôn ngữ (en / vi)
 ├── src/
 │   ├── main.py                  # entry point, khởi tạo QApplication, nối các thành phần bằng signal

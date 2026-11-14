@@ -2,7 +2,7 @@
 
 Two pools per language live in ``data/`` (decisions of rounds 20-22):
 
-- ``care_lines.json`` - 25 caring lines (have you eaten, drink some water, sleep early...). A
+- ``care_lines.json`` - 20 caring lines (have you eaten, drink some water, sleep early...). A
   line may carry ``"hours": [start, end)`` (local hours, wrapping past midnight when
   ``end < start``) and is only said at those hours, e.g. "Have you had breakfast?" in the
   morning.
@@ -13,7 +13,7 @@ Two pools per language live in ``data/`` (decisions of rounds 20-22):
 - ``next_ambient(now)`` - the line said on its own every few minutes: care line and fact/joke take
   turns. Each pool is drawn like a shuffled deck, so every fitting line is said once before any
   repeats, and never the same line twice in a row.
-- ``random_line(now)`` - the line for the "speak" click reaction: any of the 75 lines (care lines
+- ``random_line(now)`` - the line for the "speak" click reaction: any of the 70 lines (care lines
   only at their hours), never the one said just before.
 - ``phrase(key, **values)`` - short fixed texts outside the pools (system alerts, the
   "Reminder:" prefix, used only for reminders saved without a pet line), from ``PHRASES``.

@@ -70,7 +70,7 @@ Mục tiêu: nét vẽ phẳng, viền mực như sticker vẽ tay, nhưng *chuy
 - **Bong bóng chat** tông màu lửa, gắn cạnh pet (pet đứng yên khi bong bóng mở), mỗi tin nhắn nằm trong một khung bo tròn riêng (của bạn bên phải, của pet bên trái), hiển thị Markdown, Esc để đóng, tự đóng sau 30 giây không chat (không tính lúc đang gõ hoặc AI đang trả lời).
 - **Báo lỗi dễ hiểu**: thiếu/sai key, hết quota, mất mạng… đều được pet giải thích trong chat thay vì im lặng hay crash.
 - **Theo dõi máy nền**: tự cảnh báo khi pin < 30%, CPU > 90% hoặc RAM > 90%; cảnh báo giữ nguyên đến khi bạn click vào pet (hoặc chọn `Idle`), sau đó pet im 10 phút mới báo lại (`system_status.snooze_minutes`).
-- **Pet tự nói**: cứ 5 phút (tính từ câu gần nhất, lần click hoặc chat gần nhất) pet nói một câu, xen kẽ câu quan tâm (ăn chưa, uống nước, ngủ sớm…; vài câu chỉ nói đúng khung giờ) và fact / câu đùa về lửa. Hoạt ảnh "nói" khi click cũng bốc trong 75 câu này.
+- **Pet tự nói**: cứ 5 phút (tính từ câu gần nhất, lần click hoặc chat gần nhất) pet nói một câu, xen kẽ câu quan tâm (ăn chưa, uống nước, ngủ sớm…; vài câu chỉ nói đúng khung giờ) và fact / câu đùa về lửa. Hoạt ảnh "nói" khi click cũng bốc trong 70 câu này.
 - **Tiếng Anh hoặc tiếng Việt**: `Settings` → `Language` đổi mọi câu pet nói trên màn hình (câu click, câu quan tâm, fact/joke, cảnh báo, nhắc việc); câu trả lời trong chat vẫn theo ngôn ngữ bạn gõ.
 - **Lịch sử chat chỉ nằm trong RAM**, tự xóa sau 15 phút không chat — không bao giờ lưu xuống ổ đĩa (lời nhắc lưu riêng).
 - **Icon ở khay hệ thống** (vẽ chính hình pet): `Settings` (ngôn ngữ English / Tiếng Việt, chọn 30 / 60 fps, đều có hiệu lực ngay), `Quit App`; khi pet đang ẩn thì có thêm `Show Pet` để hiện lại (ẩn pet bằng menu chuột phải).
@@ -140,7 +140,7 @@ Các cài đặt không bí mật nằm trong [`config.yaml`](./config.yaml):
 | `chat.reply_bubble_max_chars` | Câu trả lời ngắn hơn số ký tự này hiện cả trong bong bóng (0 = tắt) |
 | `memory.idle_timeout_minutes` | Bao lâu không chat thì xóa lịch sử |
 
-Câu quan tâm và kho fact/joke nằm trong `data/care_lines.json` (25 câu mỗi ngôn ngữ, có thể kèm khung giờ `hours`) và `data/facts_jokes.json` (50 câu mỗi ngôn ngữ), mỗi file có danh sách `en` và `vi`.
+Câu quan tâm và kho fact/joke nằm trong `data/care_lines.json` (20 câu mỗi ngôn ngữ, có thể kèm khung giờ `hours`) và `data/facts_jokes.json` (50 câu mỗi ngôn ngữ), mỗi file có danh sách `en` và `vi`.
 
 ## Phát triển
 

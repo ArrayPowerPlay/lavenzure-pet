@@ -418,6 +418,11 @@
 ### Lượt 29 (2026-11-14) — viết lại toàn bộ fact/joke cho tự nhiên
 - **User báo:** nhiều câu trong `data/facts_jokes.json` cringe và thiếu tự nhiên (ví dụ "đèn ngủ... có cá tính", "đốt calo bằng cách tồn tại", "mẹo an toàn... trừ mình ra"). Yêu cầu tập trung vào fact về lửa dễ hiểu ngay hoặc câu thể hiện cá tính; check cả Anh lẫn Việt.
 - **Đã làm:** viết lại cả 50 câu mỗi ngôn ngữ (vẫn đủ 50 vì test kiểm tra số lượng): **25 fact về lửa + 25 câu cá tính**. Bỏ hết các câu đố "Vì sao ngọn lửa...?", knock-knock và chơi chữ gượng. Bản Anh và bản Việt viết riêng cho tự nhiên, không dịch từ nhau. Sửa vài fact sai/mơ hồ (tiếng nổ lách tách không phải do "không khí bị nhốt"; "chỗ nóng nhất ngay trên chân xanh"; "lửa nóng nhất gần như vô hình"; "tia lửa bằng hạt cát gây cháy rừng"). Thêm fact mới: gỗ không tự cháy, ngọn nến trong không trọng lực, Mặt trời không "cháy", lốc lửa, đuốc Olympic, chảo dầu cháy không tạt nước...
+### Lượt 30 (2026-11-14) — soát lại fact/joke lần 2, câu quan tâm còn 20 câu
+- **User chốt:** câu quan tâm giảm còn **20 câu mỗi ngôn ngữ** (user tự sửa `data/care_lines.json`) → tổng câu click "nói" là 20 + 50 = **70 câu**. Đã cập nhật test, docstring và tài liệu cho khớp.
+- **User góp ý 7 câu fact chưa ổn** (bếp gas xanh, nến vàng, gỗ không tự cháy, lon nhôm, phượng hoàng, bonfire, lửa lên dốc) và nhờ soát lại cả bản Việt lẫn Anh; cho phép dùng fact không liên quan lửa và thêm emoticon `-.-` `^.^` `:3` `:>`.
+- **Đã làm:** viết lại các câu đó cho gần lời nói hơn (bếp gas + nến gộp thành một câu, bỏ chữ "cháy rất hết"/"hong khô"); bỏ phượng hoàng và bonfire (không phải fact kiểm chứng được / hơi rợn). Thay bằng: mẹo thắp lại nến qua làn khói, lính cứu hỏa dùng lửa dập lửa, mật ong không hỏng, đốt củi chỉ còn ~1% tro, người nhìn màn hình chớp mắt ít một nửa. Bỏ câu "khói bay lên vì khí nóng nhẹ" (nhạt) và câu "nấu chín làm não to" (chỉ là giả thuyết). Giữ nguyên 2 câu đầu bản Việt mà user đã tự sửa. Thêm emoticon vào ~10 câu mỗi ngôn ngữ, chủ yếu câu cá tính. Vẫn 25 fact + 25 câu cá tính = 50.
+
 ## Còn bàn
 
 - Đo lại 60 phút ở 30 fps + lửa nhẹ (`src/perf_check.py`, cần thoát pet đang chạy).

@@ -179,7 +179,7 @@ Còn thiếu / cần làm tiếp:
 
 ### Giai đoạn H — Câu nói, ngôn ngữ, nhắc việc (chốt lượt 20-24, 2026-11-14)
 - [x] **H1. Settings → Language** (English / Tiếng Việt): đổi mọi câu pet nói trên màn hình; mặc định `language` trong `config.yaml`, lựa chọn lưu ở `settings.json`.
-- [x] **H2. Pet tự nói mỗi 5 phút:** xen kẽ 25 câu quan tâm (có khung giờ) và 50 fact/joke mỗi ngôn ngữ; câu click "nói" bốc trong cùng 75 câu (`src/pet_lines.py`, `data/care_lines.json`, `data/facts_jokes.json`).
+- [x] **H2. Pet tự nói mỗi 5 phút:** xen kẽ 20 câu quan tâm (có khung giờ) và 50 fact/joke mỗi ngôn ngữ; câu click "nói" bốc trong cùng 70 câu (`src/pet_lines.py`, `data/care_lines.json`, `data/facts_jokes.json`).
 - [x] **H3. Bật lại nhắc việc** (thay G4): theo phút hoặc giờ, code tự tính giờ, lưu file `reminders.json`, bong bóng giữ tới khi click.
 - [x] **H4. Biểu cảm `cool`:** kính râm rơi xuống + cười nhếch mép; có trong phản ứng click và cảm xúc AI.
 - [x] **H6. Nhắc việc hỏi giờ + huỷ nhắc** (lượt 25): giờ thiếu / mơ hồ → hỏi lại kèm giờ gợi ý; công cụ liệt kê / huỷ / tắt bong bóng nhắc; tab **Chat | Reminders** trong bong bóng chat, gỡ nhắc bằng nút ✕.
