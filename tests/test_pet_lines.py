@@ -111,11 +111,12 @@ def test_when_in_both_languages():
 
 
 @pytest.mark.parametrize(("language", "seconds", "text"), [
-    ("en", 1500, "25 minutes"), ("en", 60, "1 minute"), ("en", 3900, "1 hour 5 minutes"),
-    ("en", 7200, "2 hours"), ("vi", 1500, "25 phút"), ("vi", 3900, "1 tiếng 5 phút"),
+    ("en", 1500, "25 minutes"), ("en", 60, "1 minute"), ("en", 3570, "59 minutes"),
+    ("en", 4500, "over 1 hour"), ("en", 6300, "over 1 hour"), ("en", 7800, "over 2 hours"),
+    ("vi", 1500, "25 phút"), ("vi", 6300, "hơn 1 tiếng"),
 ])
 def test_away_text(language, seconds, text):
-    """Time away in words, rounded to minutes, in both languages."""
+    """Time away in words: minutes under an hour, "over N hours" from an hour on."""
     assert away_text(language, seconds) == text
 
 

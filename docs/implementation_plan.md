@@ -185,7 +185,7 @@ Còn thiếu / cần làm tiếp:
 - [x] **H6. Nhắc việc hỏi giờ + huỷ nhắc** (lượt 25): giờ thiếu / mơ hồ → hỏi lại kèm giờ gợi ý; công cụ liệt kê / huỷ / tắt bong bóng nhắc; tab **Chat | Reminders** trong bong bóng chat, gỡ nhắc bằng nút ✕.
 - [ ] **H5. T6 (trang phục ngày lễ)** — pending, chờ user chốt. (T1 đã làm ở H8.)
 - [x] **H7. Biểu cảm nhắc lịch** (lượt 32): mood `REMIND` + đồng hồ báo thức ⏰ (`AlarmClockProp`) rung liên tục cạnh pet, pet đứng yên tới khi click; click → đồng hồ rút đi + mood `OK` (mắt "^ ^" cười 1 giây).
-- [x] **H8. T1 — chào khi quay lại máy** (lượt 32): sau khi pet ngủ gật vì vắng ≥ 10 phút, user quay lại → "Welcome back! You were away 25 minutes." (EN/VI, `UserActivityWatcher.user_returned`, `PetLines.welcome_back`).
+- [x] **H8. T1 — chào khi quay lại máy** (lượt 32): sau khi pet ngủ gật vì vắng ≥ 10 phút, user quay lại → "Welcome back! You were away for 25 minutes." / "... for over 1 hour." (EN/VI, `UserActivityWatcher.user_returned`, `PetLines.welcome_back`).
 
 ### Giai đoạn F — Đóng gói (Phase 11) — *để sau (user chốt 2026-11-12)*
 - [ ] **F1. PyInstaller** ra `.exe` (chú ý: `data/`, `assets/flame/`, shader GLSL, OpenGL trong bản đóng gói).

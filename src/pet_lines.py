@@ -18,7 +18,8 @@ Two pools per language live in ``data/`` (decisions of rounds 20-22):
 - ``phrase(key, **values)`` - short fixed texts outside the pools (system alerts, the
   "Reminder:" prefix, used only for reminders saved without a pet line), from ``PHRASES``.
 - ``welcome_back(seconds)`` - the greeting when the user comes back after the pet dozed off
-  (task T1), e.g. "Welcome back! You were away 25 minutes." (one of a few wordings).
+  (task T1), e.g. "Welcome back! You were away for 25 minutes." or, past an hour, "... for
+  over 1 hour." (one of a few wordings).
 
 Chat replies are not covered here: the AI answers in whatever language the user writes in.
 """
@@ -66,8 +67,8 @@ PHRASES: dict[str, dict[str, str]] = {
 # Greetings when the user comes back to the computer (task T1); ``{away}`` = ``away_text()``.
 WELCOME_BACK: dict[str, list[str]] = {
     "en": [
-        "Welcome back! You were away {away}.",
-        "Hey, you're back! You were gone {away}.",
+        "Welcome back! You were away for {away}.",
+        "Hey, you're back! You were gone for {away}.",
         "There you are! I waited {away} for you :3",
     ],
     "vi": [
@@ -108,16 +109,18 @@ def when(language: str, due: datetime, now: datetime) -> str:
 
 
 def away_text(language: str, seconds: float) -> str:
-    """A time away in words, rounded to whole minutes: ``"25 minutes"``, ``"1 hour 5 minutes"``,
-    ``"2 hours"`` / ``"25 phút"``, ``"1 tiếng 5 phút"``."""
-    total = max(1, round(seconds / 60.0))
-    hours, minutes = divmod(total, 60)
+    """A time away in words. Under an hour: whole minutes (``"25 minutes"`` / ``"25 phút"``).
+    From an hour on: only the full hours, as "over" (1h15 and 1h45 both give ``"over 1 hour"``
+    / ``"hơn 1 tiếng"``; 2h10 gives ``"over 2 hours"``)."""
+    if seconds >= 3600:
+        hours = int(seconds // 3600)
+        if language == "vi":
+            return f"hơn {hours} tiếng"
+        return f"over {hours} hour" + ("s" if hours != 1 else "")
+    minutes = min(59, max(1, round(seconds / 60.0)))
     if language == "vi":
-        parts = ([f"{hours} tiếng"] if hours else []) + ([f"{minutes} phút"] if minutes else [])
-    else:
-        parts = (([f"{hours} hour" + ("s" if hours != 1 else "")] if hours else [])
-                 + ([f"{minutes} minute" + ("s" if minutes != 1 else "")] if minutes else []))
-    return " ".join(parts)
+        return f"{minutes} phút"
+    return f"{minutes} minute" + ("s" if minutes != 1 else "")
 
 
 def fits_hour(entry: dict, hour: int) -> bool:
