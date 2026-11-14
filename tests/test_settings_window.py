@@ -47,3 +47,16 @@ def test_set_autostart_shows_the_real_state_without_reporting_it(qapp):
     window.set_autostart(True)
     assert window.autostart_box.isChecked()
     assert seen == []
+
+
+def test_window_is_short_and_scrolls(qapp):
+    """All the options sit in a scroll area, so the window stays shorter than its content."""
+    from PySide6.QtWidgets import QScrollArea
+
+    window = SettingsWindow()
+    window.show()
+    scroll = window.findChild(QScrollArea)
+    assert scroll is not None
+    assert window.height() <= 540
+    assert scroll.widget().sizeHint().height() > scroll.viewport().height()
+    window.close()

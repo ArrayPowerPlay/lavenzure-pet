@@ -12,6 +12,9 @@ It holds these options; a choice made here is remembered (``user_settings``):
 - **Frame rate** - 30 / 60 fps for every animation (roadmap Phase 12). 30 is the default the user
   chose (``character.fps`` in config.yaml).
 
+The options scroll inside a fixed-height window (title on top, version and Close at the bottom
+stay in view).
+
 A small live readout shows how many frames per second the pet is really drawing, so the effect of
 the choice is visible at once. (The lite flame is not a switch here: the user chose it, so it is
 always on - see ``performance.lite_flame`` in config.yaml.)
@@ -30,6 +33,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QPushButton,
     QRadioButton,
+    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
@@ -42,7 +46,13 @@ from pet_lines import LANGUAGES
 from ui.api_key_panel import ApiKeyPanel
 
 STYLE = """
-QWidget#settings { background: #fff8ea; }
+QWidget#settings, QWidget#settingsContent { background: #fff8ea; }
+QScrollArea#settingsScroll { border: none; background: #fff8ea; }
+QScrollBar:vertical { background: transparent; width: 10px; margin: 2px; }
+QScrollBar::handle:vertical { background: #e4b979; border-radius: 4px; min-height: 30px; }
+QScrollBar::handle:vertical:hover { background: #d9a152; }
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical { background: transparent; }
 QLabel { color: #6c0e16; font-family: "Segoe UI", "Arial"; }
 QLabel#title { font-size: 15pt; font-weight: 600; }
 QLabel#section { font-size: 11pt; font-weight: 600; margin-top: 4px; }
@@ -62,6 +72,9 @@ QLineEdit { background: white; color: #6c0e16; border: 1px solid #e4b979; border
             padding: 4px 8px; font-family: "Segoe UI", "Arial"; font-size: 10pt; }
 QLabel#note a { color: #c0561a; }
 """
+
+# Height of the window when the screen is tall enough (the options scroll inside it).
+WINDOW_HEIGHT = 540
 
 # Frame rates offered in the window (30 = the default the user chose).
 FPS_CHOICES = (30, 60)
@@ -87,14 +100,29 @@ class SettingsWindow(QWidget):
         super().__init__(None, Qt.WindowType.Window | Qt.WindowType.WindowStaysOnTopHint)
         self.setObjectName("settings")
         self.setWindowTitle("Lavenzure - Settings")
-        self.setFixedWidth(380)
+        self.setFixedWidth(400)
+        # The window is only as tall as the screen comfortably allows: the options scroll, the
+        # title above and the version / Close row below stay in view.
+        self.resize(400, min(WINDOW_HEIGHT, self.screen().availableGeometry().height() - 80))
         self.setStyleSheet(STYLE)
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(24, 20, 24, 18)
+
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.setSpacing(0)
+        content = QWidget()
+        content.setObjectName("settingsContent")
+        layout = QVBoxLayout(content)
+        layout.setContentsMargins(24, 4, 12, 12)
         layout.setSpacing(6)
+        scroll = QScrollArea()
+        scroll.setObjectName("settingsScroll")
+        scroll.setWidgetResizable(True)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll.setWidget(content)
 
         title = QLabel("Settings")
         title.setObjectName("title")
+        title.setContentsMargins(24, 18, 24, 4)
 
         language_section = QLabel("Language")
         language_section.setObjectName("section")
@@ -183,7 +211,6 @@ class SettingsWindow(QWidget):
         version_label.setObjectName("note")
         version_label.setStyleSheet("margin-left: 0;")
 
-        layout.addWidget(title)
         layout.addWidget(language_section)
         layout.addLayout(language_row)
         layout.addWidget(language_note)
@@ -201,13 +228,16 @@ class SettingsWindow(QWidget):
         layout.addWidget(fps_note)
         layout.addSpacing(6)
         layout.addWidget(self.live)
-        layout.addSpacing(8)
-        footer = QHBoxLayout()
-        footer.setContentsMargins(0, 0, 0, 0)
+
+        footer_bar = QWidget()
+        footer = QHBoxLayout(footer_bar)
+        footer.setContentsMargins(24, 8, 24, 14)
         footer.addWidget(version_label)
         footer.addStretch(1)
         footer.addWidget(close)
-        layout.addLayout(footer)
+        outer.addWidget(title)
+        outer.addWidget(scroll, 1)
+        outer.addWidget(footer_bar)
 
     def _on_language_toggled(self, code: str, checked: bool) -> None:
         """A language button was picked: report it (ignore the one switched off)."""
@@ -225,7 +255,6 @@ class SettingsWindow(QWidget):
         """Show only the key box of the chosen chat AI."""
         for code, panel in self.key_panels.items():
             panel.setVisible(code == provider)
-        self.adjustSize()
 
     def _on_fps_toggled(self, fps: int, checked: bool) -> None:
         """A frame-rate button was picked: report the new rate (ignore the one switched off)."""
