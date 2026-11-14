@@ -2,7 +2,7 @@
 
 - ``themed_menu()`` builds an empty styled ``QMenu`` (also used by the tray icon).
 - ``PetMenu`` is the right-click menu of the pet itself: ``Chat``, ``Idle`` / ``Wander`` and
-  ``Hide Pet``.
+  ``Hide Pet`` (no separator lines between the items: the user asked for a plain list).
 """
 from __future__ import annotations
 
@@ -65,7 +65,6 @@ class PetMenu(QObject):
         self._chat.triggered.connect(self.chat_requested.emit)
         self._rest = self._menu.addAction("Idle")
         self._rest.triggered.connect(self._on_rest)
-        self._menu.addSeparator()
         self._hide = self._menu.addAction("Hide Pet")
         self._hide.triggered.connect(self.hide_requested.emit)
         self._resting = False

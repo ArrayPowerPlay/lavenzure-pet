@@ -159,13 +159,15 @@ class LavenzureApp(QObject):
 
     def _build_tray_icon(self) -> None:
         """Create the system-tray icon (a portrait drawn by the character itself) and its menu:
-        Hide/Show Pet, Settings, Quit App."""
+        Settings, Quit App, plus ``Show Pet`` while the pet is hidden (hiding it is done from the
+        pet's right-click menu, so the tray has no ``Hide Pet``)."""
         self.tray = QSystemTrayIcon(make_tray_icon(), self.app)
         self.tray.setToolTip("Lavenzure")
 
         self._tray_menu = themed_menu()
-        self.toggle_action = self._tray_menu.addAction("Hide Pet")
-        self.toggle_action.triggered.connect(self._toggle_visibility)
+        self.show_action = self._tray_menu.addAction("Show Pet")
+        self.show_action.triggered.connect(self._show_pet)
+        self.show_action.setVisible(False)
         self._tray_menu.addAction("Settings", self._open_settings)
         self._tray_menu.addSeparator()
         self._tray_menu.addAction("Quit App", self.app.quit)
@@ -303,12 +305,17 @@ class LavenzureApp(QObject):
             self.sprite.hide()
             self.bubble.hide()
             self.chat.hide()
-            self.toggle_action.setText("Show Pet")
+            self.show_action.setVisible(True)
         else:
             self.sprite.show()
-            self.toggle_action.setText("Hide Pet")
+            self.show_action.setVisible(False)
             if self._reminder_texts or self._alert_message:
                 self._show_sticky()        # bring back what is still waiting for a click
+
+    def _show_pet(self) -> None:
+        """Tray menu ``Show Pet`` (only offered while the pet is hidden): bring it back."""
+        if not self.sprite.isVisible():
+            self._toggle_visibility()
 
     def _hide_pet(self) -> None:
         """Right-click menu ``Hide Pet``: hide it (the tray icon's ``Show Pet`` brings it back)."""

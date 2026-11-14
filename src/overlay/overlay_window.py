@@ -267,7 +267,7 @@ class OverlaySprite(QWidget):
         self._frame_clock.start()
 
     def hideEvent(self, event) -> None:  # noqa: N802 - Qt override
-        """Stop redrawing while hidden (e.g. "Hide Pet" in the tray) to save CPU."""
+        """Stop redrawing while hidden (e.g. "Hide Pet" in the right-click menu) to save CPU."""
         super().hideEvent(event)
         self._frame_clock.stop()
 
