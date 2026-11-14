@@ -399,6 +399,14 @@
   - Log + file `reminders.json` cho thấy lần chat đó AI **không gọi công cụ đặt nhắc**, chỉ trả lời như đã đặt. Thử lại: hướng dẫn mới của lượt 25 làm Gemini flash-lite gần như không gọi công cụ nữa (1/16 lần), hướng dẫn cũ 16/16; thêm một câu "chưa gọi công cụ thì không được nói đã đặt" đưa về 16/16.
 - **User chốt + đã làm:** bỏ `Hide Pet` khỏi menu khay (đã có ở menu chuột phải); khay chỉ hiện `Show Pet` khi pet đang ẩn (Claude tự quyết để còn cách gọi pet về). Bỏ vạch ngăn màu cam trong menu chuột phải của pet.
 
+### Lượt 27 (2026-11-14) — sửa lỗi nhắc giả, giải thích `hours`, lỗi Alt+Tab
+- **User chốt:** làm cả 3 hướng sửa lỗi "pet nói đã đặt nhắc nhưng không đặt" (lượt 26). **Đã làm:**
+  1. Hướng dẫn cho AI nói rõ: viết chữ "đã đặt" không tạo được nhắc, phải gọi công cụ trước rồi mới báo (bỏ câu trích nguyên văn kết quả công cụ vì AI bắt chước in ra luôn). Thử với Gemini thật: 33/33, 15/15, 31/33 (2 lần trượt cùng một câu, sau đó chạy lại 33/33).
+  2. Mỗi khi nhắc **thật sự** được đặt / huỷ qua chat, khung chat có một dòng nhỏ ở giữa do **code** viết: "⏰ Đã đặt nhắc: 21:00 hôm nay · đi đổ rác" (Anh / Việt theo Settings). Gỡ bằng nút × ở tab Reminders thì không có dòng này.
+  3. `src/reminder_check.py`: chạy 11 tình huống (đặt, hỏi lại, huỷ) với Gemini thật, kiểm tra danh sách nhắc thật chứ không tin câu trả lời; chạy lại mỗi khi sửa hướng dẫn cho AI.
+- **User hỏi:** trường `hours` trong `data/care_lines.json` làm gì, có phải gọi API xem giờ không? **Trả lời:** không gọi API; chỉ đọc đồng hồ của máy đúng lúc pet sắp nói (xem câu trả lời lượt 27).
+- **User báo lỗi:** Alt+Tab thì pet bị ẩn, Alt+Tab lần nữa không chuyển được. Đang tìm nguyên nhân, **chưa sửa**.
+
 ## Còn bàn
 
 - Đo lại 60 phút ở 30 fps + lửa nhẹ (`src/perf_check.py`, cần thoát pet đang chạy).
