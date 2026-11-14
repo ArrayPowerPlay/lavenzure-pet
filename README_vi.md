@@ -73,7 +73,7 @@ Mục tiêu: nét vẽ phẳng, viền mực như sticker vẽ tay, nhưng *chuy
 - **Pet tự nói**: cứ 5 phút (tính từ câu gần nhất, lần click hoặc chat gần nhất) pet nói một câu, xen kẽ câu quan tâm (ăn chưa, uống nước, ngủ sớm…; vài câu chỉ nói đúng khung giờ) và fact / câu đùa về lửa. Hoạt ảnh "nói" khi click cũng bốc trong 75 câu này.
 - **Tiếng Anh hoặc tiếng Việt**: `Settings` → `Language` đổi mọi câu pet nói trên màn hình (câu click, câu quan tâm, fact/joke, cảnh báo, nhắc việc); câu trả lời trong chat vẫn theo ngôn ngữ bạn gõ.
 - **Lịch sử chat chỉ nằm trong RAM**, tự xóa sau 15 phút không chat — không bao giờ lưu xuống ổ đĩa (lời nhắc lưu riêng).
-- **Icon ở khay hệ thống** (vẽ chính hình pet): `Hide Pet` / `Show Pet`, `Settings` (ngôn ngữ English / Tiếng Việt, chọn 30 / 60 fps, đều có hiệu lực ngay), `Quit App`.
+- **Icon ở khay hệ thống** (vẽ chính hình pet): `Settings` (ngôn ngữ English / Tiếng Việt, chọn 30 / 60 fps, đều có hiệu lực ngay), `Quit App`; khi pet đang ẩn thì có thêm `Show Pet` để hiện lại (ẩn pet bằng menu chuột phải).
 - **Chỉ chạy 1 bản**: mở app lần nữa sẽ chỉ mở bong bóng chat của con pet đang chạy.
 
 ## Yêu cầu

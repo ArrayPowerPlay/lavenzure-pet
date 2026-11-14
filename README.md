@@ -73,7 +73,7 @@ The goal was a flat, hand-inked "sticker" look that *moves* like real fire and *
 - **Ambient lines**: every 5 minutes (counted from the last line, click or chat) the pet says something on its own — a caring line (have you eaten, drink some water, sleep early…; some only at fitting hours) and a fire fact / joke take turns. The "speak" click reaction draws from the same 75 lines.
 - **English or Vietnamese**: `Settings` → `Language` switches everything the pet says on screen (click lines, caring lines, facts/jokes, alerts, reminders); chat replies follow the language you write in.
 - **Chat history lives in RAM only** and is wiped after 15 minutes without chatting — it is never written to disk (reminders are kept separately).
-- **System tray icon** (a portrait of the pet): `Hide Pet` / `Show Pet`, `Settings` (language English / Tiếng Việt, frame rate 30 / 60 fps, both applied live), `Quit App`.
+- **System tray icon** (a portrait of the pet): `Settings` (language English / Tiếng Việt, frame rate 30 / 60 fps, both applied live), `Quit App`; while the pet is hidden it also offers `Show Pet` (hide it from the right-click menu).
 - **Single instance**: starting the app again just opens the running pet's chat bubble.
 
 ## Requirements

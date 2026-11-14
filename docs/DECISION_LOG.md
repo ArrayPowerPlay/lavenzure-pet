@@ -394,6 +394,11 @@
 #### Biểu cảm `chill` khi click (user hỏi)
 - **Kết quả kiểm tra:** `chill` **có** trong bộ phản ứng click (10 phản ứng: happy, surprised, scared, angry, thinking, chill, yuck, cool, speak, fly; bốc thử 400 lần: chill ra 42 lần ≈ 1/10). Nhưng theo quyết định lượt 10, **khi pet đang bay trên khúc củi thì click không bao giờ ra `chill`** (chảo không đi với khúc củi). Pet bay khá nhiều (25% thời gian đi lang thang + phản ứng `fly`), nên dễ có cảm giác chill không bao giờ hiện. **Chờ user chọn** có đổi không.
 
+### Lượt 26 (2026-11-14) — tab Reminders không cập nhật, gọn menu
+- **User báo:** chat bảo pet nhắc nhưng tab Reminders không thấy gì. **Chưa sửa** (user dặn chỉ tìm nguyên nhân + hướng fix). Nguyên nhân và hướng fix: xem câu trả lời lượt 26 (chờ user chọn).
+  - Log + file `reminders.json` cho thấy lần chat đó AI **không gọi công cụ đặt nhắc**, chỉ trả lời như đã đặt. Thử lại: hướng dẫn mới của lượt 25 làm Gemini flash-lite gần như không gọi công cụ nữa (1/16 lần), hướng dẫn cũ 16/16; thêm một câu "chưa gọi công cụ thì không được nói đã đặt" đưa về 16/16.
+- **User chốt + đã làm:** bỏ `Hide Pet` khỏi menu khay (đã có ở menu chuột phải); khay chỉ hiện `Show Pet` khi pet đang ẩn (Claude tự quyết để còn cách gọi pet về). Bỏ vạch ngăn màu cam trong menu chuột phải của pet.
+
 ## Còn bàn
 
 - Đo lại 60 phút ở 30 fps + lửa nhẹ (`src/perf_check.py`, cần thoát pet đang chạy).
