@@ -1,7 +1,8 @@
 """Turn agent failures into short, friendly (English) chat replies.
 
 The Gemini / OpenAI / LangChain / HTTP libraries raise many different exception types, and
-their class hierarchy changes between versions. Instead of importing them, ``classify_error`` looks at the
+their class hierarchy changes between versions. Instead of importing them, ``classify_error``
+looks at the
 whole exception chain (``__cause__`` / ``__context__``): class names in each MRO, an HTTP ``code``
 attribute when present, and well-known phrases in the message.
 """
