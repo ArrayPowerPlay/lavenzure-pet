@@ -415,6 +415,9 @@
 - **Câu hỏi han tiếng Việt thiếu tự nhiên:** user gửi 6 câu, đã viết lại trong `data/care_lines.json` (bỏ "bạn cười xinh lắm" vì đoán giới tính, bỏ lối dịch từ tiếng Anh như "cho mình ở bên", "một cốc nước giúp nhiều hơn bạn nghĩ").
 - **VS Code luôn nằm trên cùng:** đã gỡ ghim cửa sổ VS Code bằng `SetWindowPos(HWND_NOTOPMOST)` (không thấy công cụ ghim nào đang chạy nên chưa rõ ai ghim; nếu bị ghim lại thì dùng `Win+Ctrl+T` của PowerToys Always On Top hoặc chạy lại lệnh gỡ).
 
+### Lượt 29 (2026-11-14) — viết lại toàn bộ fact/joke cho tự nhiên
+- **User báo:** nhiều câu trong `data/facts_jokes.json` cringe và thiếu tự nhiên (ví dụ "đèn ngủ... có cá tính", "đốt calo bằng cách tồn tại", "mẹo an toàn... trừ mình ra"). Yêu cầu tập trung vào fact về lửa dễ hiểu ngay hoặc câu thể hiện cá tính; check cả Anh lẫn Việt.
+- **Đã làm:** viết lại cả 50 câu mỗi ngôn ngữ (vẫn đủ 50 vì test kiểm tra số lượng): **25 fact về lửa + 25 câu cá tính**. Bỏ hết các câu đố "Vì sao ngọn lửa...?", knock-knock và chơi chữ gượng. Bản Anh và bản Việt viết riêng cho tự nhiên, không dịch từ nhau. Sửa vài fact sai/mơ hồ (tiếng nổ lách tách không phải do "không khí bị nhốt"; "chỗ nóng nhất ngay trên chân xanh"; "lửa nóng nhất gần như vô hình"; "tia lửa bằng hạt cát gây cháy rừng"). Thêm fact mới: gỗ không tự cháy, ngọn nến trong không trọng lực, Mặt trời không "cháy", lốc lửa, đuốc Olympic, chảo dầu cháy không tạt nước...
 ## Còn bàn
 
 - Đo lại 60 phút ở 30 fps + lửa nhẹ (`src/perf_check.py`, cần thoát pet đang chạy).
