@@ -27,6 +27,7 @@ from agent.emotion import split_emotion, split_emotion_partial
 from agent.errors import friendly_error
 from agent.graph import PROVIDERS, reset_agent, run_agent, set_provider
 from agent.memory import SessionMemory
+from autostart import startup
 from chat.chat_bubble import ChatBubble
 from monitor.background_monitor import BackgroundMonitor
 from monitor.user_activity import UserActivityWatcher
@@ -196,10 +197,12 @@ class LavenzureApp(QObject):
         if self.settings is None:
             self.settings = SettingsWindow(max_fps=self.sprite.max_fps,
                                            language=self.lines.language,
-                                           provider=str(self.user_settings.get("provider")))
+                                           provider=str(self.user_settings.get("provider")),
+                                           autostart=startup.is_enabled())
             self.settings.max_fps_changed.connect(self._set_max_fps)
             self.settings.language_changed.connect(self._set_language)
             self.settings.provider_changed.connect(self._set_provider)
+            self.settings.autostart_toggled.connect(self._set_autostart)
             self.settings.api_keys_changed.connect(reset_agent)
             self.sprite.frame_rate_changed.connect(self.settings.show_frame_rate)
         self.settings.open()
@@ -220,6 +223,17 @@ class LavenzureApp(QObject):
         set_provider(provider)
         self.user_settings.set("provider", provider)
         log.info("Chat AI %s", provider)
+
+    def _set_autostart(self, enabled: bool) -> None:
+        """Settings: turn "Start with Windows" on or off; the switch then shows what really
+        happened (it goes back off if Windows refused)."""
+        try:
+            startup.enable() if enabled else startup.disable()
+        except OSError:
+            log.exception("Could not change the Start with Windows setting")
+        if self.settings is not None:
+            self.settings.set_autostart(startup.is_enabled())
+        log.info("Start with Windows: %s", startup.is_enabled())
 
     def _set_language(self, language: str) -> None:
         """Settings: switch the pet's language and remember the choice."""

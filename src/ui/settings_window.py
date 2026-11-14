@@ -8,6 +8,7 @@ It holds these options; a choice made here is remembered (``user_settings``):
 - **Chat AI** - which service answers the chat (Gemini / OpenAI) and the API keys: one box for the
   chosen service plus an optional Tavily box for web search (``ApiKeyPanel``; keys go to the
   Windows Credential Manager, never to the settings file).
+- **Start with Windows** - a switch (off by default); the app writes / removes the registry entry.
 - **Frame rate** - 30 / 60 fps for every animation (roadmap Phase 12). 30 is the default the user
   chose (``character.fps`` in config.yaml).
 
@@ -16,13 +17,15 @@ the choice is visible at once. (The lite flame is not a switch here: the user ch
 always on - see ``performance.lite_flame`` in config.yaml.)
 
 The window only *reports* changes (``language_changed``, ``max_fps_changed``,
-``provider_changed``, ``api_keys_changed``); the app applies them and remembers them.
+``provider_changed``, ``api_keys_changed``, ``autostart_toggled``); the app applies them and
+remembers them.
 """
 from __future__ import annotations
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QButtonGroup,
+    QCheckBox,
     QHBoxLayout,
     QLabel,
     QPushButton,
@@ -34,6 +37,7 @@ from PySide6.QtWidgets import (
 import api_keys
 import version
 from agent.key_check import check_gemini_key, check_openai_key, check_tavily_key
+from autostart import startup
 from pet_lines import LANGUAGES
 from ui.api_key_panel import ApiKeyPanel
 
@@ -45,6 +49,7 @@ QLabel#section { font-size: 11pt; font-weight: 600; margin-top: 4px; }
 QLabel#note { font-size: 9pt; color: #8a4a14; margin-left: 26px; }
 QLabel#live { font-size: 9pt; color: #8a4a14; background: #fdecc8; border-radius: 8px;
               padding: 6px 10px; }
+QCheckBox { color: #6c0e16; font-family: "Segoe UI", "Arial"; font-size: 10pt; spacing: 8px; }
 QRadioButton { color: #6c0e16; font-family: "Segoe UI", "Arial"; font-size: 10pt; spacing: 8px; }
 QPushButton {
     background: #f6a23a; color: white; border: none; border-radius: 12px;
@@ -73,8 +78,10 @@ class SettingsWindow(QWidget):
     max_fps_changed = Signal(int)
     provider_changed = Signal(str)
     api_keys_changed = Signal()
+    autostart_toggled = Signal(bool)
 
-    def __init__(self, max_fps: int = 30, language: str = "en", provider: str = "gemini") -> None:
+    def __init__(self, max_fps: int = 30, language: str = "en", provider: str = "gemini",
+                 autostart: bool = False) -> None:
         """Build the window; the buttons matching the current language, chat AI and frame rate
         start selected."""
         super().__init__(None, Qt.WindowType.Window | Qt.WindowType.WindowStaysOnTopHint)
@@ -140,6 +147,14 @@ class SettingsWindow(QWidget):
             panel.changed.connect(self.api_keys_changed)
         self._show_provider_panel(provider)
 
+        startup_section = QLabel("Startup")
+        startup_section.setObjectName("section")
+        self.autostart_box = QCheckBox("Start with Windows")
+        self.autostart_box.setChecked(autostart)
+        self.autostart_box.toggled.connect(self.autostart_toggled)
+        startup_note = self._note("Lavenzure opens by itself when you sign in to Windows. You can "
+                                  "also switch it off in Task Manager > Startup.")
+
         section = QLabel("Performance")
         section.setObjectName("section")
 
@@ -177,6 +192,9 @@ class SettingsWindow(QWidget):
         layout.addWidget(ai_note)
         for panel in (*self.key_panels.values(), self.tavily_panel):
             layout.addWidget(panel)
+        layout.addWidget(startup_section)
+        layout.addWidget(self.autostart_box)
+        layout.addWidget(startup_note)
         for widget in (section, fps_label):
             layout.addWidget(widget)
         layout.addLayout(fps_row)
@@ -222,6 +240,12 @@ class SettingsWindow(QWidget):
         note.setWordWrap(True)
         return note
 
+    def set_autostart(self, enabled: bool) -> None:
+        """Show the real state of the switch without reporting it as a user choice."""
+        self.autostart_box.blockSignals(True)
+        self.autostart_box.setChecked(enabled)
+        self.autostart_box.blockSignals(False)
+
     def show_frame_rate(self, fps: float) -> None:
         """Update the live readout (connected to the pet window's ``frame_rate_changed``)."""
         self.live.setText(f"Drawing: {fps:.0f} fps")
@@ -230,6 +254,7 @@ class SettingsWindow(QWidget):
         """Show the window (or bring it to the front if it is already open)."""
         for panel in (*self.key_panels.values(), self.tavily_panel):
             panel.refresh()
+        self.set_autostart(startup.is_enabled())   # the user may have changed it elsewhere
         self.show()
         self.raise_()
         self.activateWindow()

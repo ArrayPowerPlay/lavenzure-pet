@@ -27,3 +27,23 @@ def test_tavily_box_is_always_there(qapp):
     window = SettingsWindow(provider="openai")
     window.show()
     assert window.tavily_panel.isVisible()
+
+
+def test_autostart_switch_is_reported_when_the_user_clicks_it(qapp):
+    """Ticking "Start with Windows" emits the new state; it starts off by default."""
+    window = SettingsWindow()
+    assert not window.autostart_box.isChecked()
+    seen = []
+    window.autostart_toggled.connect(seen.append)
+    window.autostart_box.setChecked(True)
+    assert seen == [True]
+
+
+def test_set_autostart_shows_the_real_state_without_reporting_it(qapp):
+    """The app syncing the switch with the registry is not a user choice."""
+    window = SettingsWindow()
+    seen = []
+    window.autostart_toggled.connect(seen.append)
+    window.set_autostart(True)
+    assert window.autostart_box.isChecked()
+    assert seen == []
