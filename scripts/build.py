@@ -7,7 +7,7 @@ Usage (Windows, from the project folder)::
 
 Steps: write ``src/_version.py`` -> PyInstaller (``lavenzure.spec``) -> zip the ``Lavenzure``
 folder (with ``LICENSE`` when the repo has one) -> SHA-256 of the zip. Needs ``pyinstaller``
-(the ``dev`` group of ``pyproject.toml``, installed by ``uv sync``). Build on Windows, not in WSL's Linux Python.
+(the ``dev`` group of ``pyproject.toml``, installed by ``uv sync``). Build on Windows, not in WSL.
 """
 from __future__ import annotations
 

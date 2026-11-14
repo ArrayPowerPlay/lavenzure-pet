@@ -503,9 +503,14 @@
 - **Đã kiểm:** tạo môi trường mới tinh từ `uv.lock` → ruff sạch, 245 test qua. **Chưa đụng `.venv-win` đang chạy** (pet của user dùng nó; Windows khóa file `.pyd` đang mở): khi user tắt pet thì chạy `UV_PROJECT_ENVIRONMENT=.venv-win uv sync` (hoặc `uv sync` để có `.venv` mới).
 - **Ghi chú:** `uv add <gói>` để thêm thư viện, rồi commit cả `pyproject.toml` và `uv.lock`. Python 3.13 vì build và bản phát hành đều dùng 3.13.
 
+### Lượt 37 (2026-11-15) — lời báo lỗi theo ngôn ngữ, Settings có thanh cuộn, phát hành v0.1.0
+- **User:** thử `rc.1` chạy được; yêu cầu (1) thông báo thiếu API key phải theo ngôn ngữ đang chọn, (2) cửa sổ Settings quá dài → thu ngắn, có thanh cuộn, (3) phát hành bản chính thức.
+- **Đã làm:** `agent/errors.py` có đủ 7 lời báo lỗi bằng cả **tiếng Anh và tiếng Việt**, chọn theo Settings > Language (`friendly_error(exc, language)`; ngôn ngữ lạ → tiếng Anh); `AgentWorker` nhận ngôn ngữ từ `PetLines`. Settings: cao tối đa 540 px (hoặc thấp hơn nếu màn hình nhỏ), phần tùy chọn nằm trong `QScrollArea`, tiêu đề ở trên và dòng "phiên bản + Close" ở dưới luôn hiện. Giao diện Settings vẫn chỉ có tiếng Anh (chưa ai yêu cầu dịch).
+- **Phát hành:** tag `v0.1.0` trên `main` (xem `implementation_plan.md` F4-F5). Repo đã ở chế độ public từ trước khi tag.
+
 ## Còn bàn
 
-- **Đóng gói v0.1.0** (lượt 34-35): đã code xong F1-F7. Còn: user xem lại giấy phép MIT (lượt 35), thử bản đóng gói trên desktop thật, rồi tag `v0.1.0-rc.1` → `v0.1.0` và chuyển repo sang public.
+- **Đóng gói v0.1.0** (lượt 34-37): đã code, user thử `rc.1` trên desktop thật (chạy được) và v0.1.0 đã phát hành. Còn: user xem lại giấy phép MIT và chuyện `README.txt` trong zip.
 - **Cập nhật tự động** (lượt 34): đã chốt ý tưởng, làm **sau khi xong v0.1.0** (xem `TASKS.md` P7, `implementation_plan.md` giai đoạn I).
 - Đo lại 60 phút ở 30 fps + lửa nhẹ (`src/perf_check.py`, cần thoát pet đang chạy).
 - Cách 3 (tạm dừng khi có app toàn màn hình) và cách 5 (lửa 30 khung/giây) — user để lại, chưa làm.
