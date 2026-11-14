@@ -50,7 +50,14 @@ def reminder_rules() -> str:
     delay = config.get("reminders.suggested_delay_minutes", DEFAULT_DELAY_MINUTES)
     table = ", ".join(f"{part} {clock}" for part, clock in times.items())
     return (
-        "Reminders: whenever the user wants to be reminded or notified of something later, "
+        "Reminders: writing that a reminder is set does nothing; only a set_timer_reminder "
+        "tool call creates one. So when the user asks for a reminder or timer with a clear "
+        "time or delay (e.g. 'in 5 minutes', 'hẹn giờ 10 phút' = in 10 minutes, 'at 14h', "
+        "'7h sáng mai' = tomorrow 07:00), your FIRST step is the set_timer_reminder call; "
+        "only after its result may you tell the user it is set. The same goes for "
+        "cancelling (cancel_reminder). Never claim a reminder was set or cancelled when you "
+        "did not call the tool in this turn. "
+        "Whenever the user wants to be reminded or notified of something later, "
         "in any wording (e.g. 'remind me', 'nhắc mình', 'nhắc tớ', 'nhớ báo mình', "
         "'đừng để mình quên'), handle it as a reminder. "
         "If they give an exact time or delay, call set_timer_reminder right away: pass "
