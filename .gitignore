@@ -9,3 +9,5 @@ logs/
 # Third-party reference art (not ours to redistribute)
 docs/references/
 src/_version.py
+dist/
+build/
