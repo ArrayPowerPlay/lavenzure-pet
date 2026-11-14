@@ -102,7 +102,7 @@ def test_every_message_gets_its_own_box(qapp):
     bubble.stream_message("Hello there")
     bubble.finish_stream("Hello there, friend!")
     view = bubble._history
-    assert [mine for _, mine in view._messages] == [True, False]
+    assert [kind for _, kind in view._messages] == ["user", "pet"]
     qapp.processEvents()
     start, _ = view._messages[1]
     end = view.document().characterCount()
@@ -151,3 +151,19 @@ def test_open_always_starts_on_chat_tab(qapp):
     bubble.open()
     assert bubble.current_tab() == 0
     bubble.hide()
+
+
+def test_note_waits_for_streamed_reply(qapp):
+    """A note never lands inside a reply that is still streaming: it follows the reply, and
+    it ends the reply's box without getting one itself."""
+    bubble = make_bubble()
+    bubble.append_message("You", "remind me at 9")
+    bubble.stream_message("Sure")
+    bubble.append_note("Reminder set: Today 21:00")
+    bubble.stream_message("Sure, done!")
+    bubble.finish_stream("Sure, done!")
+    text = bubble._history.toPlainText()
+    assert text.index("Sure, done!") < text.index("Reminder set")
+    assert [kind for _, kind in bubble._history._messages] == ["user", "pet", "note"]
+    bubble.append_note("Another")      # no stream running: added at once
+    assert bubble._history.toPlainText().endswith("Another")

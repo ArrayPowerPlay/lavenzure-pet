@@ -122,6 +122,23 @@ def test_reminder_list_and_cancel_from_worker_thread(qapp, monitor, tmp_path):
     assert len(lists) == 3 and [r.id for r in lists[-1]] == [2]
 
 
+def test_tool_changes_are_announced_tab_removal_is_not(qapp, monitor):
+    """Adds and cancels made by the AI emit reminder_added / reminder_cancelled (the chat shows
+    a note); the Reminders tab's remove_reminder only refreshes the list."""
+    added, cancelled = [], []
+    monitor.reminder_added.connect(added.append)
+    monitor.reminder_cancelled.connect(cancelled.append)
+    first = monitor.schedule_reminder(time.time() + 600, "tea")
+    second = monitor.schedule_reminder(time.time() + 900, "walk")
+    pump(qapp, 0.05)
+    monitor.cancel_reminder(first)
+    pump(qapp, 0.05)
+    monitor.remove_reminder(second)
+    assert [r.message for r in added] == ["tea", "walk"]
+    assert [r.message for r in cancelled] == ["tea"]
+    assert monitor.pending_reminders() == []
+
+
 def test_reminder_ids_continue_after_restart(qapp, monitor, tmp_path):
     """A restarted monitor never hands out an id that a saved reminder already has."""
     monitor.schedule_reminder(time.time() + 600, "a")

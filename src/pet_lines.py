@@ -39,6 +39,11 @@ PHRASES: dict[str, dict[str, str]] = {
         "battery_alert": "Battery is down to {value:.0f}%. Better plug in!",
         "reminder": "Reminder: {message}",
         "reminder_late": "Reminder ({minutes} min late): {message}",
+        "reminder_set_note": "⏰ Reminder set: {when} · {message}",
+        "reminder_cancelled_note": "⏰ Reminder cancelled: {when} · {message}",
+        "today": "Today {clock}",
+        "tomorrow": "Tomorrow {clock}",
+        "other_day": "{weekday} {day}/{month}, {clock}",
     },
     "vi": {
         "cpu_alert": "CPU đang chạy tới {value:.0f}%! Xem thử app nào đang ngốn máy nhé.",
@@ -46,7 +51,18 @@ PHRASES: dict[str, dict[str, str]] = {
         "battery_alert": "Pin chỉ còn {value:.0f}%. Cắm sạc đi bạn ơi!",
         "reminder": "Nhắc nhở: {message}",
         "reminder_late": "Nhắc nhở (trễ {minutes} phút): {message}",
+        "reminder_set_note": "⏰ Đã đặt nhắc: {when} · {message}",
+        "reminder_cancelled_note": "⏰ Đã huỷ nhắc: {when} · {message}",
+        "today": "{clock} hôm nay",
+        "tomorrow": "{clock} ngày mai",
+        "other_day": "{clock} {weekday} {day}/{month}",
     },
+}
+
+# Short weekday names (Monday first), for ``when()``.
+WEEKDAYS: dict[str, list[str]] = {
+    "en": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    "vi": ["T2", "T3", "T4", "T5", "T6", "T7", "CN"],
 }
 
 CARE = "care"
@@ -57,6 +73,20 @@ def phrase(language: str, key: str, **values) -> str:
     """The fixed text ``key`` in ``language`` (English if the language is unknown), filled in."""
     table = PHRASES.get(language, PHRASES[DEFAULT_LANGUAGE])
     return table[key].format(**values)
+
+
+def when(language: str, due: datetime, now: datetime) -> str:
+    """A reminder's time in ``language``: today / tomorrow / weekday + date, e.g.
+    ``"Today 21:00"`` or ``"21:00 hôm nay"``."""
+    clock = due.strftime("%H:%M")
+    days = (due.date() - now.date()).days
+    if days == 0:
+        return phrase(language, "today", clock=clock)
+    if days == 1:
+        return phrase(language, "tomorrow", clock=clock)
+    weekdays = WEEKDAYS.get(language, WEEKDAYS[DEFAULT_LANGUAGE])
+    return phrase(language, "other_day", clock=clock, weekday=weekdays[due.weekday()],
+                  day=due.day, month=due.month)
 
 
 def fits_hour(entry: dict, hour: int) -> bool:
@@ -94,6 +124,10 @@ class PetLines:
     def set_language(self, language: str) -> None:
         """Switch every line to ``language`` (unknown codes fall back to English)."""
         self.language = language if language in LANGUAGES else DEFAULT_LANGUAGE
+
+    def when(self, due: datetime, now: datetime) -> str:
+        """A reminder's time in the current language (see the module function ``when``)."""
+        return when(self.language, due, now)
 
     def phrase(self, key: str, **values) -> str:
         """A fixed text (alert, reminder prefix) in the current language."""

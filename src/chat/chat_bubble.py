@@ -17,6 +17,10 @@ What it looks like / how it behaves:
   does (the app calls it when the chat memory expires).
 - Replies can stream in: ``stream_message(text)`` shows Lavenzure's answer so far and redraws it as
   it grows; ``finish_stream(text)`` puts the final text in place.
+- Small centred notes written by the app, not by the AI (``append_note``), e.g. "⏰ Reminder set:
+  Today 21:00 · call mom" whenever a reminder really was set (round 26), so a reply that only
+  claims it is easy to spot. A note that arrives while a reply is streaming waits until the
+  reply is finished, so it never ends up inside the reply.
 - Two tabs at the top (round 25): **Chat** and **Reminders**. The Reminders tab lists the
   reminders still waiting (soonest first, each with its time, text and an x button to remove it);
   the tab title shows how many there are. The app feeds the list with ``set_reminders`` whenever
@@ -81,6 +85,10 @@ FILL = QColor(255, 248, 234)
 INK = QColor(108, 14, 22)            # same dark maroon as the pet's outline
 SHADOW = QColor(40, 10, 0, 45)
 USER_COLOR = "#8a4a14"   # the user's lines; Lavenzure's use the browser's text colour
+NOTE_COLOR = "#a0522d"   # the app's own notes (no box)
+
+# Kinds of entries in the history.
+USER, PET, NOTE = "user", "pet", "note"
 
 # Rounded box drawn around every message (fill, outline) and the room it needs.
 USER_BOX = (QColor(255, 226, 184), QColor(232, 160, 90))
@@ -168,7 +176,8 @@ class MessageView(QTextBrowser):
     """The chat history: a ``QTextBrowser`` that paints a rounded box behind every message.
 
     The text itself stays ordinary rich text (selectable, links clickable, Markdown rendered);
-    each message only remembers where it starts in the document and who sent it. Messages are
+    each message only remembers where it starts in the document and its kind (``USER``, ``PET``
+    or ``NOTE``; notes get no box but still end the box of the message above). Messages are
     only ever added at the end or removed from the end (a streamed reply being redrawn), so the
     start positions stay valid. Each box is fitted around the text that was really laid out,
     so a short message gets a small box and a long one wraps inside a wide box.
@@ -177,12 +186,12 @@ class MessageView(QTextBrowser):
     def __init__(self, parent: QWidget) -> None:
         """An empty history with room around the text for the boxes."""
         super().__init__(parent)
-        self._messages: list[tuple[int, bool]] = []   # (start position, sent by the user)
+        self._messages: list[tuple[int, str]] = []   # (start position, kind)
         self.document().setDocumentMargin(BOX_PAD_Y + 2)
 
-    def add_message_start(self, position: int, mine: bool) -> None:
-        """Remember that a message starts at document ``position`` (``mine`` = the user's)."""
-        self._messages.append((position, mine))
+    def add_message_start(self, position: int, kind: str) -> None:
+        """Remember that a message of ``kind`` starts at document ``position``."""
+        self._messages.append((position, kind))
         self.viewport().update()
 
     def drop_messages_from(self, position: int) -> None:
@@ -225,7 +234,9 @@ class MessageView(QTextBrowser):
             visible = QRectF(self.viewport().rect()).translated(
                 self.horizontalScrollBar().value(), self.verticalScrollBar().value())
             doc_end = self.document().characterCount()
-            for index, (start, mine) in enumerate(self._messages):
+            for index, (start, kind) in enumerate(self._messages):
+                if kind == NOTE:
+                    continue
                 end = self._messages[index + 1][0] if index + 1 < len(self._messages) else doc_end
                 rect = self._message_rect(start, end)
                 if rect is None:
@@ -233,7 +244,7 @@ class MessageView(QTextBrowser):
                 box = rect.adjusted(-BOX_PAD_X, -BOX_PAD_Y, BOX_PAD_X, BOX_PAD_Y)
                 if not box.intersects(visible):
                     continue
-                fill, outline = USER_BOX if mine else PET_BOX
+                fill, outline = USER_BOX if kind == USER else PET_BOX
                 painter.setBrush(fill)
                 painter.setPen(QPen(outline, 1.4))
                 painter.drawRoundedRect(box, BOX_RADIUS, BOX_RADIUS)
@@ -279,6 +290,7 @@ class ChatBubble(QWidget):
         self._thinking_now = False
         self._closing = False
         self._stream_start: int | None = None   # where the reply that is still arriving begins
+        self._held_notes: list[str] = []        # notes waiting for the streamed reply to end
 
         self._chat_tab = self._make_tab("Chat")
         self._reminders_tab = self._make_tab("Reminders")
@@ -438,6 +450,42 @@ class ChatBubble(QWidget):
             else:
                 self.stream_message(text)
         self._stream_start = None
+        held, self._held_notes = self._held_notes, []
+        for note in held:
+            self._insert_note(note)
+
+    def append_note(self, text: str) -> None:
+        """Add a small centred note from the app (plain text, no box). While a reply is still
+        streaming in, it is held back and added right after the reply."""
+        if self._stream_start is not None:
+            self._held_notes.append(text)
+        else:
+            self._insert_note(text)
+
+    def _insert_note(self, text: str) -> None:
+        """Append one note at the end of the history and scroll to it."""
+        first = self._history.document().isEmpty()
+        cursor = self._history.textCursor()
+        cursor.movePosition(QTextCursor.MoveOperation.End)
+        block = QTextBlockFormat()
+        block.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        block.setTopMargin(0 if first else MESSAGE_GAP)
+        block.setLeftMargin(BOX_PAD_X)
+        block.setRightMargin(BOX_PAD_X)
+        if first:
+            cursor.setBlockFormat(block)
+        else:
+            cursor.insertBlock(block, QTextCharFormat())
+        start = cursor.position()
+        fmt = QTextCharFormat()
+        fmt.setForeground(QColor(NOTE_COLOR))
+        fmt.setFontItalic(True)
+        fmt.setFontPointSize(8.5)
+        cursor.insertText(text, fmt)
+        self._history.add_message_start(start, NOTE)
+        self._history.setTextCursor(cursor)
+        bar = self._history.verticalScrollBar()
+        bar.setValue(bar.maximum())
 
     def _remove_from(self, position: int) -> None:
         """Delete everything in the history from ``position`` to the end (text and boxes)."""
@@ -488,7 +536,7 @@ class ChatBubble(QWidget):
         head.setTopMargin(0 if first else MESSAGE_GAP)
         cursor.mergeBlockFormat(head)
         cursor.movePosition(QTextCursor.MoveOperation.End)
-        self._history.add_message_start(text_start, mine)
+        self._history.add_message_start(text_start, USER if mine else PET)
         self._history.setTextCursor(cursor)
         self._history.ensureCursorVisible()
         bar = self._history.verticalScrollBar()
@@ -537,6 +585,7 @@ class ChatBubble(QWidget):
         """Forget every message on screen (used when the chat memory expires)."""
         self._history.clear()
         self._stream_start = None
+        self._held_notes = []
 
     def set_thinking(self, thinking: bool) -> None:
         """While Lavenzure answers: disable the input, animate the status line and pause the

@@ -33,7 +33,10 @@ class BackgroundMonitor(QObject):
     due time) and ``ambient_due`` (``ambient.interval_minutes`` since the last line or
     interaction: time for the pet to say something on its own). For the reminders list it also
     emits ``reminders_changed(list[Reminder])`` after every add / cancel / reminder going off,
-    and ``reminders_dismissed`` when the AI asks to hide the reminders showing on the pet.
+    ``reminder_added(Reminder)`` / ``reminder_cancelled(Reminder)`` when one is set or cancelled
+    through the AI's tools (the chat shows a note written by the app, so a reply that only
+    claims it is easy to spot), and ``reminders_dismissed`` when the AI asks to hide the
+    reminders showing on the pet. ``remove_reminder`` (the Reminders tab's x) is silent.
 
     It is the ``ReminderService`` of the reminder tools (``agent.tools.set_timer_reminder``):
     ``schedule_reminder``, ``pending_reminders``, ``cancel_reminder`` and
@@ -43,6 +46,8 @@ class BackgroundMonitor(QObject):
     ambient_due = Signal()
     reminder_triggered = Signal(str, int)
     reminders_changed = Signal(list)
+    reminder_added = Signal(object)
+    reminder_cancelled = Signal(object)
     reminders_dismissed = Signal()
     # Internal worker thread -> UI thread hand-offs.
     _reminder_requested = Signal(int, float, str)
@@ -71,7 +76,7 @@ class BackgroundMonitor(QObject):
 
         queued = Qt.ConnectionType.QueuedConnection
         self._reminder_requested.connect(self._add_reminder, queued)
-        self._cancel_requested.connect(self._remove_reminder, queued)
+        self._cancel_requested.connect(self._cancel_from_tool, queued)
         self._dismiss_requested.connect(self.reminders_dismissed, queued)
         reminder_tool.register_reminder_service(self)
 
@@ -127,15 +132,26 @@ class BackgroundMonitor(QObject):
         emitted on the UI thread). Safe to call from any thread."""
         self._dismiss_requested.emit()
 
-    def _add_reminder(self, reminder_id: int, due: float, message: str) -> None:
-        """Store (and save) a reminder (UI thread only)."""
-        self._reminders.add(Reminder(reminder_id, due, message))
-        self._publish()
-
-    def _remove_reminder(self, reminder_id: int) -> None:
-        """Drop a cancelled reminder (UI thread only; already gone = nothing to do)."""
+    def remove_reminder(self, reminder_id: int) -> None:
+        """Drop a reminder right away without announcing it (UI thread only; used by the
+        Reminders tab, where the user sees the row go)."""
         if self._reminders.remove(reminder_id) is not None:
             self._publish()
+
+    def _add_reminder(self, reminder_id: int, due: float, message: str) -> None:
+        """Store (and save) a reminder set by the AI and announce it (UI thread only)."""
+        reminder = Reminder(reminder_id, due, message)
+        self._reminders.add(reminder)
+        self._publish()
+        self.reminder_added.emit(reminder)
+
+    def _cancel_from_tool(self, reminder_id: int) -> None:
+        """Drop a reminder the AI cancelled and announce it (UI thread only; already gone =
+        nothing to do)."""
+        reminder = self._reminders.remove(reminder_id)
+        if reminder is not None:
+            self._publish()
+            self.reminder_cancelled.emit(reminder)
 
     def _publish(self) -> None:
         """Refresh the snapshot other threads read and announce the new list."""

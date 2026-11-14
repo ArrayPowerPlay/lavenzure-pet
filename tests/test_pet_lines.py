@@ -87,3 +87,15 @@ def test_unknown_language_falls_back_to_english(lines):
     lines.set_language("fr")
     assert lines.language == "en"
     assert phrase("fr", "reminder", message="x") == "Reminder: x"
+
+
+def test_when_in_both_languages():
+    """Reminder times for the chat notes follow the language."""
+    from datetime import datetime
+
+    import pet_lines
+    now = datetime(2026, 11, 14, 15, 20)
+    assert pet_lines.when("en", datetime(2026, 11, 14, 21, 0), now) == "Today 21:00"
+    assert pet_lines.when("vi", datetime(2026, 11, 15, 8, 0), now) == "08:00 ngày mai"
+    assert pet_lines.when("en", datetime(2026, 11, 17, 9, 5), now) == "Tue 17/11, 09:05"
+    assert pet_lines.when("vi", datetime(2026, 11, 17, 9, 5), now) == "09:05 T3 17/11"

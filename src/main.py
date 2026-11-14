@@ -154,7 +154,12 @@ class LavenzureApp(QObject):
         # The bubble's Reminders tab mirrors the monitor's list and asks it to cancel ones.
         self.monitor.reminders_changed.connect(self.chat.set_reminders)
         self.monitor.reminders_dismissed.connect(self._dismiss_reminders)
-        self.chat.reminder_cancel_requested.connect(self.monitor.cancel_reminder)
+        self.chat.reminder_cancel_requested.connect(self.monitor.remove_reminder)
+        # Notes written by the app (not the AI) whenever the AI really set / cancelled one.
+        self.monitor.reminder_added.connect(
+            lambda r: self._note_reminder("reminder_set_note", r))
+        self.monitor.reminder_cancelled.connect(
+            lambda r: self._note_reminder("reminder_cancelled_note", r))
         self.chat.set_reminders(self.monitor.pending_reminders())
 
     def _build_tray_icon(self) -> None:
@@ -223,6 +228,12 @@ class LavenzureApp(QObject):
             self._show_sticky()
             return
         self.behavior.play_random_reaction()
+
+    def _note_reminder(self, key: str, reminder) -> None:
+        """Add the app's own note about a reminder (``key`` = set / cancelled) to the chat."""
+        now = datetime.now()
+        when = self.lines.when(datetime.fromtimestamp(reminder.due), now)
+        self.chat.append_note(self.lines.phrase(key, when=when, message=reminder.message))
 
     def _dismiss_reminders(self) -> None:
         """The AI was asked to turn off the reminders showing on the pet: same as a click, but
