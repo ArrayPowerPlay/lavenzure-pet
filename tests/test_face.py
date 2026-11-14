@@ -115,3 +115,29 @@ def test_cool_mood_wears_sunglasses_and_takes_them_off(qapp):
     for _ in range(45):                      # mood over, glasses rise and fade out
         ch.update(1 / 30, QPointF(0, 0), None)
     assert not ch.shades.visible
+
+
+def test_santa_hat_stays_above_the_eyes_and_comes_off(qapp):
+    """The Santa hat (2026-11-15) drops on, sits a clear gap above the eyes, makes way for the
+    frying pan of ``chill`` and lifts away when switched off."""
+    from overlay.character import FlameCharacter
+    from overlay.outfits import HAT_GAP
+
+    ch = FlameCharacter(seed=2)
+    ch.set_santa_hat(True)
+    for _ in range(30):                      # 1 s at 30 fps: landed
+        ch.update(1 / 30, QPointF(0, 0), None)
+    assert ch.santa_hat.worn and ch.santa_hat.amount > 0.99
+    assert HAT_GAP >= 0.2                    # the user asked for space between hat and eyes
+    ch.play(Mood.CHILL, 1.0)
+    for _ in range(20):
+        ch.update(1 / 30, QPointF(0, 0), None)
+    assert not ch.santa_hat.worn             # the pan takes the head ...
+    for _ in range(40):
+        ch.update(1 / 30, QPointF(0, 0), None)
+    assert ch.santa_hat.worn                 # ... and the hat comes back after
+    ch.set_santa_hat(False)
+    for _ in range(30):
+        ch.update(1 / 30, QPointF(0, 0), None)
+    assert not ch.santa_hat.visible
+
