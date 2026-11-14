@@ -407,6 +407,12 @@
 - **User hỏi:** trường `hours` trong `data/care_lines.json` làm gì, có phải gọi API xem giờ không? **Trả lời:** không gọi API; chỉ đọc đồng hồ của máy đúng lúc pet sắp nói (xem câu trả lời lượt 27).
 - **User báo lỗi:** Alt+Tab thì pet bị ẩn, Alt+Tab lần nữa không chuyển được. Đang tìm nguyên nhân, **chưa sửa**.
 
+### Lượt 28 (2026-11-14) — sửa lỗi Alt+Tab (pet không bao giờ thành cửa sổ đang dùng)
+- **Nguyên nhân:** bấm hoặc kéo pet làm Windows coi pet là cửa sổ đang dùng, dù pet không có nút taskbar và không có trong danh sách Alt+Tab → Alt+Tab bị rối. Đã tái hiện bằng chuột thật (script thử trên desktop thật): trước khi sửa, bấm/kéo pet thì cửa sổ đang dùng đổi thành pet; sau khi sửa thì giữ nguyên app cũ.
+- **Đã sửa:** cửa sổ pet thêm cờ `WindowDoesNotAcceptFocus` (Windows: `WS_EX_NOACTIVATE`) + `WA_ShowWithoutActivating` (`overlay_window.py`). Bấm, kéo, chuột phải (menu Chat / Idle / Hide Pet) vẫn chạy như cũ — đã thử: menu hiện, chọn Chat mở được khung chat, kéo pet đi theo chuột.
+- **VS Code che mất pet:** lúc kiểm tra thấy cửa sổ VS Code đang ở chế độ "luôn nằm trên cùng" (có công cụ ghim ngoài, không phải của pet). Khi cả hai cùng "luôn nằm trên cùng" thì cửa sổ vừa được bấm sẽ nổi lên trước → VS Code che pet. User tự tắt ghim của VS Code; pet không đổi gì cho phần này.
+- **Nhắc nhở đơn điệu ("Nhắc nhở: học bài"):** user báo lời nhắc chưa giống một con pet; hướng sửa đang chờ user chốt (chưa code).
+
 ## Còn bàn
 
 - Đo lại 60 phút ở 30 fps + lửa nhẹ (`src/perf_check.py`, cần thoát pet đang chạy).

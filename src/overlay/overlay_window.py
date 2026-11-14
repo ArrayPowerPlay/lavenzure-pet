@@ -12,6 +12,13 @@ Click-through is handled by Windows itself: for per-pixel-alpha (layered) window
 transparent pixels let mouse events fall through to the app underneath, so only the visible flame
 catches clicks. (No ``setMask()`` — a mask would also clip the soft glow and the embers.)
 
+The pet never becomes the active (foreground) window: clicking, dragging or right-clicking it
+leaves the app you were using in front, with its keyboard focus. Without this the pet - which has
+no taskbar button and no Alt+Tab entry - became the "current window" on every click, and Alt+Tab
+got confused (the pet seemed to vanish, a second Alt+Tab did not switch). The window flag
+``WindowDoesNotAcceptFocus`` sets ``WS_EX_NOACTIVATE``; mouse events (click, drag, right-click
+menu) still arrive as usual.
+
 Frame rate (``set_max_fps``; Settings window: 30 / 60, default ``character.fps`` = 30): the
 frames per second drawn for every animation. ``frame_rate_changed`` reports the real frame rate
 once a second. Frames are paced against a schedule (``FramePacer``), not just "time since the
@@ -176,9 +183,11 @@ class OverlaySprite(QWidget):
             Qt.WindowType.FramelessWindowHint
             | Qt.WindowType.WindowStaysOnTopHint
             | Qt.WindowType.Tool
-            | Qt.WindowType.NoDropShadowWindowHint,
+            | Qt.WindowType.NoDropShadowWindowHint
+            | Qt.WindowType.WindowDoesNotAcceptFocus,  # WS_EX_NOACTIVATE, see module docstring
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
 
         self.character = FlameCharacter(
             scale=float(config.get("character.scale", 1.0)),
