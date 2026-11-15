@@ -591,9 +591,19 @@
 - **Ảnh** (git-ignored): `docs/references/_xmas8_snowfall.png` (đứng yên / đang đi sang phải / trên khúc gỗ / scared; hàng trên nền tối, giữa nền sáng, dưới cùng là cỡ thật), `_xmas8_snowfall_zoom.png` (phóng to).
 - **Chờ user:** duyệt tuyết rơi; tiếp theo là bước 5 (biểu cảm chúc mừng + câu chúc Giáng sinh).
 
-### Lượt 46 (2026-11-15) — BỎ tuyết rơi; bắt đầu bước 5
+### Lượt 46 (2026-11-15) — BỎ tuyết rơi; bước 5: biểu cảm chúc mừng + câu chúc Giáng sinh
 - **User:** tuyết rơi không cần thiết lắm, **bỏ đi**; làm bước 5 (biểu cảm chúc mừng).
 - **Đã làm:** gỡ toàn bộ code tuyết rơi của lượt 45 (`SnowFall`, `FlameRenderer.top_edge`, test) bằng một commit revert. **Tuyết đọng trên khúc gỗ (lượt 43-44) vẫn giữ.** Bước 4 trong thứ tự ở lượt 39 coi như hủy.
+- **Bước 5 — Claude hỏi, user chốt:** (1) câu chúc Giáng sinh **chỉ có khi bật Xmas outfit**; (2) hiện **khi click trái** (một phản ứng ngẫu nhiên trong nhóm) **và lúc rảnh** (thỉnh thoảng thay câu tự nói); không chúc ngay khi bật outfit / mở app.
+- **Đã làm (bước 5):**
+  - **Biểu cảm `cheer`** (dùng chung cho mọi dịp, sau này sinh nhật / Tết chỉ đổi chữ): mắt nhắm cười "^ ^", miệng cười há to hình chữ D, đầu nghiêng nhẹ, lửa cao và sôi nổi, nhún lấy đà rồi nhảy lên một cái kèm một chùm tia lửa. Kéo dài 3 s.
+  - **Bong bóng chúc mừng** to và đẹp hơn bong bóng thường: thẻ màu kem viền đỏ dày, bo góc; dòng tiêu đề chữ đậm 22px màu đỏ, có 🎄 hai bên (không bao giờ xuống dòng); dưới là một câu chúc chữ xanh lá 14px, căn giữa, tự xuống dòng thành thẻ gọn (rộng tối đa 290px). Tự ẩn sau thời gian đọc + 1,5 s.
+  - **Câu chúc** ở `data/greetings.json`, mỗi ngôn ngữ 6 câu (tiêu đề "Merry Christmas!", "Happy Holidays!", "Season's Greetings!" / "Giáng sinh vui vẻ!", "Giáng sinh an lành!", "Merry Christmas!" + một câu chúc ấm áp). Câu nào cũng ra một lần rồi mới lặp lại, không bao giờ trùng câu vừa nói. Theo Settings > Language.
+  - Click trái: phản ứng `greet` vào nhóm ngẫu nhiên (ngang hàng với cười, đeo kính...), **bị loại khi không mặc Xmas outfit**. Lúc rảnh: mỗi lần tới giờ pet tự nói, có 30% (`ambient.greeting_share` trong `config.yaml`) là câu chúc thay cho câu thường. Dịp lễ lấy từ outfit (`FlameCharacter.occasion`: Xmas outfit → `xmas`).
+  - Preview có nút **Cheer (greeting)** (chỉ biểu cảm, preview không có bong bóng).
+  - **Lưu ý:** app chưa có chỗ bật Xmas outfit cho tới bước 6 (Settings > Outfit), nên trong app thật hiện chưa thấy câu chúc.
+- **Ảnh** (git-ignored): `docs/references/_xmas9_greeting.png` (biểu cảm `cheer` + bong bóng chúc, 2 câu EN và 2 câu VI, nền tối / sáng).
+- **Chờ user:** duyệt biểu cảm + bong bóng chúc; tiếp theo là bước 6 (Settings > Outfit).
 
 ## Còn bàn
 
@@ -602,4 +612,4 @@
 - Đo lại 60 phút ở 30 fps + lửa nhẹ (`src/perf_check.py`, cần thoát pet đang chạy).
 - Cách 3 (tạm dừng khi có app toàn màn hình) và cách 5 (lửa 30 khung/giây) — user để lại, chưa làm.
 - Lượt 24: user thử các tính năng mới trên desktop thật và góp ý; T1, T6, P2 vẫn pending; âm thanh và hướng agent để sau.
-- Lượt 39-41: trang phục Giáng sinh = khăn len (bỏ mũ lượt 38), code theo thứ tự ở lượt 39, duyệt từng bước. Lượt 40: khi bay vẫn là khúc gỗ, ở Xmas outfit có thêm đốm tuyết. Lượt 41: đã gỡ mũ + làm khăn ở `normal`. Lượt 42: quàng khăn thì thân dài ra cho miệng to vừa (mọi biểu cảm), viền mặt mảnh hơn (user duyệt). Lượt 43: khăn ở mọi biểu cảm xong, khúc gỗ phủ tuyết; lượt 44: tuyết dày hơn (user duyệt). Lượt 45: tuyết rơi quanh pet; lượt 46: user **bỏ tuyết rơi** (đã gỡ code), làm bước 5 (biểu cảm chúc mừng).
+- Lượt 39-41: trang phục Giáng sinh = khăn len (bỏ mũ lượt 38), code theo thứ tự ở lượt 39, duyệt từng bước. Lượt 40: khi bay vẫn là khúc gỗ, ở Xmas outfit có thêm đốm tuyết. Lượt 41: đã gỡ mũ + làm khăn ở `normal`. Lượt 42: quàng khăn thì thân dài ra cho miệng to vừa (mọi biểu cảm), viền mặt mảnh hơn (user duyệt). Lượt 43: khăn ở mọi biểu cảm xong, khúc gỗ phủ tuyết; lượt 44: tuyết dày hơn (user duyệt). Lượt 45: tuyết rơi quanh pet; lượt 46: user **bỏ tuyết rơi** (đã gỡ code); đã làm bước 5 (biểu cảm `cheer` + bong bóng chúc 🎄, chỉ khi bật Xmas outfit), **chờ user duyệt** rồi làm bước 6 (Settings > Outfit).
