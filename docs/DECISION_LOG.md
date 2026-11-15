@@ -547,6 +547,15 @@
 - **Còn mở (chờ user):** chọn vật nào; nếu hộp quà: màu (xanh lá + ruy băng đỏ như ảnh thử, hay màu khác), nơ đặt ở đâu, biến mất kiểu gì (nổ ra giấy màu / bị lửa bén cháy thành tàn như khúc gỗ / nắp bật ra rồi biến mất).
 - **User chốt:** **vẫn dùng khúc gỗ** khi bay ở Xmas outfit (không dùng hộp quà / kẹo gậy / xe trượt tuyết), nhưng khúc gỗ **có thêm đốm tuyết** (mảng tuyết trắng đọng trên khúc gỗ, chỉ khi bật Xmas outfit; Normal outfit giữ khúc gỗ như cũ). Khăn vẫn phải thấy khi bay.
 
+### Lượt 41 (2026-11-15) — code bước 1-2 của trang phục Giáng sinh: gỡ mũ, khăn len ở `normal` (CHỜ DUYỆT)
+- **Đã làm (theo thứ tự lượt 39):**
+  1. **Gỡ mũ Noel:** revert commit mũ lượt 38 (`SantaHatProp`, `set_santa_hat`, `HAT_FLAME_DIP`, test mũ, nút preview).
+  2. **Khăn len** (`src/overlay/outfits.py` `ScarfProp`): đỏ sọc trắng đúng màu bản thử lượt 39; ôm sát thân ở mọi khung hình (`flame_common.body_half_width` = bản CPU của thân lửa trong shader); thân lửa hơi thắt lại dưới khăn (shader nhận `uScarf`, chỉ khi quàng khăn); **mặt nhích lên 0,2 R** và miệng luôn ở trên mép khăn. Bật bằng `FlameCharacter.set_outfit("xmas")` / `"normal"` (khăn hiện / mờ dần trong 0,35 s, có vòng "poof"); `character_preview.py` có nút **Outfit normal / xmas**. App chưa bật khăn (mục Settings là bước 6).
+- **Claude tự thiết kế phần còn mở của lượt 39 (để user duyệt):** nút thắt **không còn là hình hộp**: một cục vải tròn, phình ở trên, thắt nhỏ ở dưới, hơi nghiêng, có một sọc trắng chạy vòng như sọc của khăn; nút thắt nằm **gần mép thân bên phải của pet** (bên trái màn hình). **Hai đuôi ngắn chĩa sang bên** (xòe hình chữ V, một đuôi gần nằm ngang, một đuôi chéo xuống), thò ra ngoài thân nên nhìn rõ ở cỡ thật, không giống chân; mỗi đuôi có 2 sọc trắng và tua ở đầu. **Đuôi đung đưa mạnh hơn bản thử:** đi sang phải thì đuôi bị gió hất ngang ra sau, đi sang trái thì đuôi rủ xuống; mỗi lần nhún khi đi đuôi nảy theo; lúc di chuyển đuôi phất phơ thêm.
+- **Chi phí:** thân khăn và nút thắt vẽ sẵn thành ảnh (chỉ vẽ lại khi cỡ thân đổi), chỉ hai đuôi vẽ mỗi khung: thêm ~0,4-0,8 ms/khung ở scale 0.75 (cả khung ~2,4 ms), trong ngân sách. Outfit `normal` vẽ y hệt trước (64/64 khung giống hệt).
+- **Ảnh để duyệt** (git-ignored): `docs/references/_xmas4_scarf_zoom.png` (phóng to, có/không khăn), `_xmas4_scarf_real_size.png` (cỡ thật, nền tối/sáng), `_xmas4_scarf_walk.png` (đi phải / dừng / đi trái), `_xmas4_scarf_moods.png` (các biểu cảm khác, **chưa chỉnh**: `scared` đang bị bóp miệng, sẽ sửa ở bước 3 bằng cách cho thân dài ra).
+- **Chờ user:** duyệt khăn ở `normal` (màu, độ dày, vị trí nút thắt, độ dài/hướng đuôi, độ đung đưa). Sau đó mới làm bước 3 (khăn ở mọi biểu cảm, `scared` dài người, `remind`, `fly`).
+
 ## Còn bàn
 
 - **Đóng gói v0.1.0** (lượt 34-37): đã code, user thử `rc.1` trên desktop thật (chạy được) và v0.1.0 đã phát hành. Còn: user xem lại giấy phép MIT và chuyện `README.txt` trong zip.
@@ -554,4 +563,4 @@
 - Đo lại 60 phút ở 30 fps + lửa nhẹ (`src/perf_check.py`, cần thoát pet đang chạy).
 - Cách 3 (tạm dừng khi có app toàn màn hình) và cách 5 (lửa 30 khung/giây) — user để lại, chưa làm.
 - Lượt 24: user thử các tính năng mới trên desktop thật và góp ý; T1, T6, P2 vẫn pending; âm thanh và hướng agent để sau.
-- Lượt 39-40: trang phục Giáng sinh = khăn len (bỏ mũ lượt 38); đã chốt, **phiên sau code** theo thứ tự ở lượt 39, duyệt từng bước. Lượt 40: khi bay vẫn là khúc gỗ, ở Xmas outfit có thêm đốm tuyết.
+- Lượt 39-41: trang phục Giáng sinh = khăn len (bỏ mũ lượt 38), code theo thứ tự ở lượt 39, duyệt từng bước. Lượt 40: khi bay vẫn là khúc gỗ, ở Xmas outfit có thêm đốm tuyết. Lượt 41: đã gỡ mũ + làm khăn ở `normal`, **chờ user duyệt** rồi mới làm bước 3.

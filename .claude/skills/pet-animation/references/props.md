@@ -2,7 +2,11 @@
 
 Existing props live in `src/overlay/props.py`: `LogProp` (ridden while flying), `PanProp`
 (frying pan with bacon and eggs for `chill`), `SunglassesProp` (`cool`), `AlarmClockProp`
-(ringing beside the pet while a reminder is due) and `Snores` (floating "z"s). Copy the closest
+(ringing beside the pet while a reminder is due) and `Snores` (floating "z"s). Outfits worn
+across every mood live in `src/overlay/outfits.py`: `ScarfProp` (Christmas, `set_outfit("xmas")`)
+hugs the lower body with `flame_common.body_half_width` (the shader body's exact width at a
+height) and pre-draws its still parts into cached images; copy it for anything that must fit
+the body of every expression. Copy the closest
 one; `SunglassesProp` is the smallest complete example.
 
 ## Shape of a prop

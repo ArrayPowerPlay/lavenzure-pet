@@ -183,9 +183,9 @@ Còn thiếu / cần làm tiếp:
 - [x] **H3. Bật lại nhắc việc** (thay G4): theo phút hoặc giờ, code tự tính giờ, lưu file `reminders.json`, bong bóng giữ tới khi click.
 - [x] **H4. Biểu cảm `cool`:** kính râm rơi xuống + cười nhếch mép; có trong phản ứng click và cảm xúc AI.
 - [x] **H6. Nhắc việc hỏi giờ + huỷ nhắc** (lượt 25): giờ thiếu / mơ hồ → hỏi lại kèm giờ gợi ý; công cụ liệt kê / huỷ / tắt bong bóng nhắc; tab **Chat | Reminders** trong bong bóng chat, gỡ nhắc bằng nút ✕.
-- [ ] **H5. T6 (trang phục ngày lễ)** — Giáng sinh đã chốt ở `DECISION_LOG.md` lượt 39, chưa code (T1 đã làm ở H8):
-  - [ ] H5.1 Gỡ mũ Noel lượt 38 (`outfits.py` phần mũ, `set_santa_hat`, `HAT_FLAME_DIP`, test, nút preview)
-  - [ ] H5.2 Khăn len ở `normal` (mặt nhích lên) → user duyệt
+- [ ] **H5. T6 (trang phục ngày lễ)** — Giáng sinh đã chốt ở `DECISION_LOG.md` lượt 39-40; đang code (lượt 41: H5.1-H5.2 xong, chờ user duyệt khăn) (T1 đã làm ở H8):
+  - [x] H5.1 Gỡ mũ Noel lượt 38 (`outfits.py` phần mũ, `set_santa_hat`, `HAT_FLAME_DIP`, test, nút preview)
+  - [x] H5.2 Khăn len ở `normal` (mặt nhích lên) → **chờ user duyệt** (lượt 41: `outfits.py` `ScarfProp`, `set_outfit("xmas")`, nút preview)
   - [ ] H5.3 Khăn ở mọi biểu cảm: `scared` dài người (miệng giữ nguyên cỡ), `remind` có khăn, `fly` trên khúc gỗ → user duyệt
   - [ ] H5.3b Khúc gỗ khi bay ở Xmas outfit có thêm đốm tuyết (vẫn thấy khăn) → user duyệt
   - [ ] H5.4 Tuyết rơi (chỉ khi bật Xmas outfit) → user duyệt
