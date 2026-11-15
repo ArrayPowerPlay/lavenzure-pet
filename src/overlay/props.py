@@ -59,11 +59,12 @@ SNOW_INK_W = 0.045      # outline of the snow patches (R), lighter than the log'
 # the end patches pile up beside the body and the middle one only shows where it hangs down
 # between the paws.
 SNOW_PATCHES = (
-    (-1.33, -0.78, 0.13, 0.16, ((-1.18, 0.1), (-0.95, 0.07))),
-    (-0.42, 0.40, 0.05, 0.2, ((-0.2, 0.07), (0.16, 0.1))),
-    (0.76, LOG_HALF_LEN + 0.8 * END_RX, 0.14, 0.09, ((0.98, 0.1), (1.22, 0.07))),
+    (-1.36, -0.72, 0.24, 0.22, ((-1.2, 0.12), (-0.92, 0.09))),
+    (-0.46, 0.44, 0.06, 0.28, ((-0.22, 0.09), (0.18, 0.12))),
+    (0.70, LOG_HALF_LEN + 0.9 * END_RX, 0.25, 0.17, ((0.94, 0.12), (1.2, 0.09))),
 )
-SNOW_SPECKS = ((-0.55, 0.45, 0.035), (0.45, 0.2, 0.03), (0.2, 0.62, 0.025))  # (x R, y r, size R)
+SNOW_SPECKS = ((-0.6, 0.55, 0.045), (0.5, 0.45, 0.04), (0.15, 0.72, 0.035),
+               (-0.3, 0.78, 0.03), (0.8, 0.7, 0.035))      # (x R, y r, size R)
 
 
 class LogProp:
