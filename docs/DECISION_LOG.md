@@ -564,6 +564,13 @@
 - **Ảnh** (git-ignored): `docs/references/_xmas5_before.png` / `_xmas5_after.png` (các biểu cảm, hàng trên Normal, hàng dưới Xmas), `_xmas5_ink_compare.png` (viền cũ / mới, phóng to), `_xmas5_scared_timeline.png` (scared / surprised theo thời gian, thân dài ra rồi thu lại).
 - **Chờ user:** duyệt; vẫn còn chờ duyệt khăn ở lượt 41 trước khi làm tiếp bước 3 (`remind`, khúc gỗ...).
 
+### Lượt 43 (2026-11-15) — khăn ở mọi biểu cảm (bước 3) + khúc gỗ phủ tuyết (bước 3b)
+- **User:** hài lòng hoàn toàn với lượt 42 (thân dài ra, viền mảnh); bảo làm tiếp.
+- **Bước 3 — khăn ở mọi biểu cảm:** đã render cả 18 biểu cảm khi quàng khăn (`docs/references/_xmas6_all_moods.png`): khăn đeo đúng chỗ ở tất cả, kể cả `remind` (đồng hồ báo thức vẫn ở bên cạnh), `chill` (chảo trên đầu), `cool`, ngủ, và khi bay trên khúc gỗ (khăn vẫn thấy rõ). `scared` / `surprised` dài người đã xong ở lượt 42. Không cần sửa thêm code.
+- **Bước 3b — khúc gỗ phủ tuyết** (chỉ khi bật Xmas outfit): `LogProp` có thêm `snow` (0..1, hiện / tắt cùng lúc với khăn). Vẽ 3 mảng tuyết trắng có viền mực mảnh: một đống ở đầu trái, một đống ở đầu phải phủ lên cả mặt cắt có vân, một mảng giữa rủ xuống mặt trước giữa hai "tay" lửa. Mép dưới mảng tuyết có giọt tuyết tròn chảy xuống, viền xanh nhạt ở chân cho có khối, thêm vài chấm tuyết nhỏ trên vỏ cây. Vì pet ngồi che gần hết mặt trên khúc gỗ, tuyết chủ yếu thấy ở hai đầu và chỗ rủ xuống phía trước; đầu trái bị đuôi khăn che bớt. Normal outfit giữ khúc gỗ như cũ (kiểm tra 64 khung hình giống hệt trước).
+- **Ảnh** (git-ignored): `_xmas6_snowy_log.png` (Normal / Xmas phóng to 3 lần, và cỡ thật), `_xmas6_snowy_log_real_size.png` (cỡ thật trên nền tối / sáng, cột giữa là lúc đang bay sang phải).
+- **Chờ user:** duyệt khúc gỗ phủ tuyết, rồi mới làm bước 4 (tuyết rơi).
+
 ## Còn bàn
 
 - **Đóng gói v0.1.0** (lượt 34-37): đã code, user thử `rc.1` trên desktop thật (chạy được) và v0.1.0 đã phát hành. Còn: user xem lại giấy phép MIT và chuyện `README.txt` trong zip.
@@ -571,4 +578,4 @@
 - Đo lại 60 phút ở 30 fps + lửa nhẹ (`src/perf_check.py`, cần thoát pet đang chạy).
 - Cách 3 (tạm dừng khi có app toàn màn hình) và cách 5 (lửa 30 khung/giây) — user để lại, chưa làm.
 - Lượt 24: user thử các tính năng mới trên desktop thật và góp ý; T1, T6, P2 vẫn pending; âm thanh và hướng agent để sau.
-- Lượt 39-41: trang phục Giáng sinh = khăn len (bỏ mũ lượt 38), code theo thứ tự ở lượt 39, duyệt từng bước. Lượt 40: khi bay vẫn là khúc gỗ, ở Xmas outfit có thêm đốm tuyết. Lượt 41: đã gỡ mũ + làm khăn ở `normal`. Lượt 42: quàng khăn thì thân dài ra cho miệng to vừa (mọi biểu cảm), viền mặt mảnh hơn; **chờ user duyệt** rồi mới làm tiếp bước 3.
+- Lượt 39-41: trang phục Giáng sinh = khăn len (bỏ mũ lượt 38), code theo thứ tự ở lượt 39, duyệt từng bước. Lượt 40: khi bay vẫn là khúc gỗ, ở Xmas outfit có thêm đốm tuyết. Lượt 41: đã gỡ mũ + làm khăn ở `normal`. Lượt 42: quàng khăn thì thân dài ra cho miệng to vừa (mọi biểu cảm), viền mặt mảnh hơn (user duyệt). Lượt 43: khăn ở mọi biểu cảm xong, khúc gỗ phủ tuyết; **chờ user duyệt** rồi mới làm bước 4 (tuyết rơi).
