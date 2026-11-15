@@ -21,23 +21,23 @@ Lavenzure là một linh hồn lửa nhỏ bằng bàn tay, sống nổi trên m
 
 ## Tính năng
 
-- **Sống trên màn hình**: luôn nằm trên cùng, trong suốt, chuột xuyên qua mọi chỗ trừ ngọn lửa. Nó đứng yên, đi dạo, cưỡi củi bay, nhảy, ngủ gật sau 10 phút bạn không đụng máy, và dịu lại vào ban đêm.
-- **Biểu cảm**: ngọn lửa vẽ bằng shader GPU cùng khuôn mặt có "diễn xuất" thật (mắt nhìn theo con trỏ chuột; vui, ngạc nhiên, sợ, giận, chill, buồn ngủ…).
+- **Sống trên màn hình**: Luôn nằm trên cùng, trong suốt, chuột xuyên qua mọi chỗ trừ ngọn lửa. Nó đứng yên, đi dạo, cưỡi củi bay, nhảy, ngủ gật sau 10 phút bạn không đụng máy, và dịu lại vào ban đêm.
+- **Biểu cảm**: Ngọn lửa vẽ bằng shader GPU cùng khuôn mặt có "diễn xuất" thật (mắt nhìn theo con trỏ chuột; vui, ngạc nhiên, sợ, giận, chill, buồn ngủ…).
 - **Chat với AI agent** (Google Gemini hoặc OpenAI, bạn chọn) có sẵn công cụ **thời tiết**, **tìm kiếm web**, **tình trạng máy** (CPU / RAM / pin) và **nhắc việc** ("nhắc tôi lúc 11:00 làm…").
-- **Quan tâm bạn**: cảnh báo khi pin, CPU hoặc RAM ở mức nguy hiểm; cứ 5 phút lại nói một câu quan tâm, một sự thật thú vị hoặc một câu đùa.
+- **Quan tâm bạn**: Cảnh báo khi pin, CPU hoặc RAM ở mức nguy hiểm; cứ 5 phút lại nói một câu quan tâm, một sự thật thú vị hoặc một câu đùa.
 - **Tiếng Anh hoặc tiếng Việt** cho mọi câu nó nói (trong Settings).
-- **Nhiều trang phục** (Settings → Outfit): bạn chọn bộ đồ cho pet. Phiên bản hiện tại có **trang phục Giáng sinh** (khăn len, khúc gỗ phủ tuyết và lời chúc mừng) bên cạnh diện mạo thường, và sẽ có thêm các trang phục khác.
-- **Riêng tư**: cuộc trò chuyện chỉ nằm trong RAM, khóa API được cất trong Windows Credential Manager.
+- **Nhiều trang phục** (Settings → Outfit): Bạn chọn bộ đồ cho pet. Phiên bản hiện tại có **trang phục Giáng sinh** (khăn len, khúc gỗ phủ tuyết và lời chúc mừng) bên cạnh diện mạo thường, và sẽ có thêm các trang phục khác.
+- **Riêng tư**: Cuộc trò chuyện chỉ nằm trong RAM, khóa API được cất trong Windows Credential Manager.
 
 ## Tải về và chạy (Windows 10/11)
 
 1. Tải `Lavenzure-<phiên bản>-win-x64.zip` ở trang [Releases](../../releases) rồi giải nén vào thư mục bất kỳ.
 2. Bấm đúp `Lavenzure.exe`. Pet hiện ra và có thêm một biểu tượng ở khay hệ thống.
 3. Chuột phải biểu tượng khay → **Settings**, chọn **Chat AI** rồi dán khóa API của nó. Khóa được kiểm tra trước, rồi mới lưu, và dùng được ngay.
-   - **Gemini**: lấy khóa miễn phí ở [Google AI Studio](https://aistudio.google.com/apikey).
-   - **OpenAI**: lấy khóa ở [OpenAI platform](https://platform.openai.com/api-keys).
+   - **Gemini**: Lấy khóa miễn phí ở [Google AI Studio](https://aistudio.google.com/apikey).
+   - **OpenAI**: Lấy khóa ở [OpenAI platform](https://platform.openai.com/api-keys).
    - **Tavily** (tùy chọn, để tìm kiếm web): [tavily.com](https://tavily.com).
-4. Tùy chọn: bật **Start with Windows** trong Settings.
+4. Tùy chọn: Bật **Start with Windows** trong Settings.
 
 Chưa có khóa thì pet vẫn chạy bình thường; chỉ phần chat cần khóa.
 
@@ -45,92 +45,63 @@ Chưa có khóa thì pet vẫn chạy bình thường; chỉ phần chat cần k
 
 ## Hướng dẫn sử dụng
 
-### 1. Bản thân chú pet
+### 1. Làm quen với pet
 
 | Thao tác | Kết quả |
 |---|---|
-| Click chuột trái | Một phản ứng ngẫu nhiên (đổi nét mặt, nói một câu, kể chuyện cười). Cũng tắt cảnh báo hoặc nhắc việc đang chờ |
-| Nhấn giữ và kéo | Bế pet lên và mang sang chỗ khác; thả ra là pet rơi xuống |
-| Chuột phải | Mở menu của pet (bên dưới) |
-| Không làm gì | Pet tự đi lại, nhảy và bay quanh trên khúc củi. Mắt pet nhìn theo con trỏ chuột |
+| Click chuột trái | Pet phản ứng lại. Cũng tắt cảnh báo hoặc nhắc việc đang chờ |
+| Nhấn giữ và kéo | Bế pet sang chỗ khác |
+| Chuột phải | Mở menu của pet |
 
-Sau **10 phút** bạn không đụng chuột hay bàn phím, pet sẽ ngủ gật. Thao tác đầu tiên của bạn sẽ đánh thức pet, và pet nói "Welcome back!" kèm thời gian bạn vắng mặt. Từ 20:00 đến 05:00 pet trông dịu hơn và di chuyển chậm hơn (pet không tự đi ngủ chỉ vì đồng hồ).
+Cứ để yên, pet sẽ tự đi lại. Mắt pet nhìn theo con trỏ chuột.
 
 ### 2. Menu của pet (chuột phải vào pet)
 
 | Mục | Tác dụng |
 |---|---|
-| **Chat** | Mở bong bóng chat bên cạnh pet |
-| **Idle** | Cho pet nằm xuống ngủ cho đến khi bạn chọn **Wander** (cùng một mục, đổi tên) |
-| **Wander** | Đánh thức pet và cho pet đi lại tiếp |
-| **Hide Pet** | Ẩn pet. Chat, nhắc việc và cảnh báo vẫn chạy ngầm |
+| **Chat** | Mở bong bóng chat |
+| **Idle** / **Wander** | Cho pet đi ngủ, hoặc đánh thức pet để đi lại tiếp |
+| **Hide Pet** | Ẩn pet (pet vẫn làm việc ngầm) |
 
 ### 3. Biểu tượng ở khay hệ thống (góc phải dưới thanh taskbar)
 
-Pet đặt một biểu tượng nhỏ của mình ở khay hệ thống. Trên Windows 11 biểu tượng có thể nằm sau mũi tên **^**; kéo nó ra ngoài để luôn thấy. Bấm chuột phải vào biểu tượng:
+Pet có một biểu tượng nhỏ ở khay hệ thống. Trên Windows 11 biểu tượng có thể nằm sau mũi tên **^**. Bấm chuột phải vào biểu tượng:
 
 | Mục | Tác dụng |
 |---|---|
-| **Show Pet** | Chỉ hiện khi pet đang bị ẩn: gọi pet ra lại |
-| **Settings** | Mở cửa sổ Settings (bên dưới) |
-| **Quit App** | Tắt hẳn Lavenzure |
-
-Nếu không thấy pet đâu, nhiều khả năng pet đang bị ẩn: dùng **Show Pet** ở biểu tượng khay.
+| **Show Pet** | Gọi pet đang bị ẩn ra lại |
+| **Settings** | Mở cửa sổ Settings |
+| **Quit App** | Tắt Lavenzure |
 
 ### 4. Chat
 
-1. Chuột phải vào pet → **Chat**. Một bong bóng thoại mở ra cạnh pet và đi theo pet khi bạn kéo.
-2. Gõ vào ô ở dưới cùng rồi nhấn **Enter**. Câu trả lời hiện dần ra, và pet đổi nét mặt cho hợp với câu trả lời.
-3. Cuộn lên để đọc lại tin cũ. Nhấn **Esc** hoặc nút **x** để đóng bong bóng.
+Chuột phải vào pet → **Chat**, gõ tin nhắn rồi nhấn **Enter**. Bạn viết bằng ngôn ngữ nào, pet trả lời bằng ngôn ngữ đó. Nhấn **Esc** hoặc **x** để đóng bong bóng.
 
-Cần biết:
-
-- Bạn viết bằng ngôn ngữ nào, pet trả lời bằng ngôn ngữ đó.
-- Bong bóng tự đóng sau 30 giây không chat (nếu chuột bạn đang đặt trên bong bóng thì nó chờ).
-- Cuộc trò chuyện chỉ nằm trong RAM và bị xóa sau 15 phút không chat. Không có gì được lưu xuống ổ đĩa.
-- Chat cần API key (xem Settings → Chat AI). Chưa có khóa thì pet vẫn chạy; chỉ phần chat bị tắt.
-
-Bạn có thể nhờ pet (AI tự chọn công cụ phù hợp):
-
-| Nhờ gì | Ví dụ | Cần |
-|---|---|---|
-| Thời tiết | "Thời tiết ở Hà Nội thế nào?" | không cần gì (miễn phí) |
-| Tìm kiếm web | "Tìm tin mới nhất về …" | khóa Tavily (tùy chọn) |
-| Tình trạng máy | "Pin / CPU / RAM của mình sao rồi?" | không cần gì |
-| Nhắc việc | "Nhắc mình 11 giờ gọi điện cho mẹ" | không cần gì |
+Ngoài trò chuyện, pet còn xem được thời tiết, tìm kiếm web (cần khóa Tavily), cho bạn biết tình trạng máy và đặt nhắc việc. Cứ nhờ là được. Chat cần API key (xem Settings → Chat AI); mọi thứ khác chạy được mà không cần khóa.
 
 ### 5. Nhắc việc
 
-- Cứ nói trong chat: **"nhắc mình sau 30 phút đứng dậy vận động"** hoặc **"nhắc mình lúc 21:00 nộp báo cáo"**. Giờ đã qua trong hôm nay sẽ được hiểu là ngày mai. Đặt trước được tối đa 7 ngày.
-- Nếu bạn không nói giờ hoặc nói mơ hồ ("tối nay", "lát nữa"), pet sẽ hỏi lại và gợi ý một giờ (sáng 08:00, trưa 12:00, chiều 15:00, tối 20:00, khuya 22:00).
-- Khi nhắc việc thật sự được đặt, trong chat hiện một ghi chú nhỏ ("⏰ Reminder set: Today 21:00 · call mom"), để bạn biết pet không chỉ hứa suông.
-- Mở tab **Reminders** ở đầu bong bóng chat để xem những việc đang chờ (việc sớm nhất ở trên). Bấm **x** cạnh một việc để xóa, hoặc nhắn trong chat: "hủy nhắc việc gọi mẹ".
-- Khi đến giờ, pet chạy ra dù đang bị ẩn hay đang ngủ, bật đồng hồ báo thức và nói lời nhắc bằng giọng của mình. Bong bóng nằm đó cho đến khi bạn **click chuột trái vào pet**.
-- Nhắc việc được lưu xuống đĩa nên vẫn còn sau khi tắt app hoặc khởi động lại máy. Nếu giờ nhắc trôi qua lúc app đang tắt, lần mở sau pet sẽ nhắc và báo trễ bao nhiêu phút.
+Nói với pet trong chat, ví dụ **"Nhắc mình lúc 21:00 nộp báo cáo"** hoặc **"Nhắc mình sau 30 phút đứng dậy vận động"**. Mở tab **Reminders** của bong bóng chat để xem hoặc xóa những việc đang chờ. Đến giờ, pet sẽ chạy ra nhắc bạn; click chuột trái vào pet để tắt.
 
-### 6. Cảnh báo và những câu pet tự nói
+### 6. Cảnh báo và trò chuyện vặt
 
-- **Cảnh báo**: cứ 45 giây pet kiểm tra máy một lần. Nếu pin xuống còn 30% hoặc thấp hơn, hay CPU hoặc RAM đạt 90%, pet làm mặt báo động và hiện bong bóng nằm đó cho đến khi bạn click chuột trái vào pet. Sau khi bạn tắt cảnh báo, pet im lặng 10 phút. Các ngưỡng nằm trong [`config.yaml`](./config.yaml).
-- **Tự nói**: khoảng 5 phút một lần pet nói một câu quan tâm (lời chào buổi sáng, nhắc nghỉ ngơi…), một sự thật thú vị hoặc một câu đùa, lần lượt thay nhau. Pet im lặng khi đang bị ẩn, đang ngủ hoặc khi bạn đang chat.
+Nếu pin, CPU hoặc RAM ở mức nguy hiểm, pet sẽ cảnh báo cho đến khi bạn click chuột trái vào pet. Thỉnh thoảng pet cũng tự nói chuyện với bạn.
 
 ### 7. Settings (biểu tượng khay → Settings)
 
-Lựa chọn của bạn được nhớ cho những lần chạy sau.
-
-| Mục | Tùy chọn |
+| Mục | Tác dụng |
 |---|---|
-| **Language** | English hoặc Tiếng Việt: ngôn ngữ pet nói trên màn hình (phản ứng, câu quan tâm, cảnh báo, nhắc việc). Câu trả lời trong chat theo ngôn ngữ bạn viết |
-| **Outfit** | Normal hoặc Giáng sinh (khăn len, khúc củi phủ tuyết, thỉnh thoảng có lời chúc lễ) |
-| **Chat AI** | Chọn **Gemini** hoặc **OpenAI**, dán API key rồi bấm **Save**: khóa được kiểm tra trước, sau đó lưu lại và dùng được ngay (**Show** / **Hide** để xem khóa, **Remove** để xóa). Khóa **Tavily** (tùy chọn) bật tính năng tìm kiếm web. Khóa được lưu trong Windows Credential Manager, không nằm trong file nào |
-| **Startup** | **Start with Windows**: pet xuất hiện mỗi lần bạn đăng nhập (mặc định tắt) |
-| **Performance** | Tốc độ khung hình **30** hoặc **60 fps**. 30 nhẹ máy hơn; dòng bên dưới cho biết fps thực tế đang vẽ |
+| **Language** | Chọn English hoặc Tiếng Việt cho những gì pet nói |
+| **Outfit** | Chọn trang phục của pet (Normal hoặc Giáng sinh) |
+| **Chat AI** | Chọn Gemini hoặc OpenAI, dán API key rồi bấm **Save**. Khóa Tavily (tùy chọn) bật tìm kiếm web |
+| **Startup** | Cho pet chạy cùng Windows |
+| **Performance** | Chọn 30 hoặc 60 fps (30 nhẹ máy hơn) |
 
 ### 8. Xử lý sự cố
 
-- **Pet biến mất**: pet đang bị ẩn; biểu tượng khay → **Show Pet**. Nếu không thấy biểu tượng khay, tìm sau mũi tên **^** của taskbar.
-- **Chat báo có lỗi**: kiểm tra khóa trong Settings → Chat AI (**Save** sẽ báo nếu khóa bị từ chối), kết nối mạng và hạn mức API của bạn.
-- **Mở Lavenzure lần thứ hai**: chỉ chạy một bản; mở lại sẽ chỉ bật chat của bản đang chạy.
-- **Việc khác**: file log ở `%LOCALAPPDATA%\Lavenzure\logs\lavenzure.log`.
+- **Pet biến mất**: Pet đang bị ẩn. Dùng biểu tượng khay → **Show Pet**.
+- **Chat báo lỗi**: Kiểm tra API key trong Settings → Chat AI và kết nối mạng.
+- **Việc khác**: Xem file log ở `%LOCALAPPDATA%\Lavenzure\logs\lavenzure.log`.
 
 ## Chạy từ mã nguồn
 
