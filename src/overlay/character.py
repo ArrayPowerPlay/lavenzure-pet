@@ -488,9 +488,11 @@ class FlameCharacter:
             self._scarf_taller = clamp(self._scarf_taller + short * rate * dt, 0.0,
                                        SCARF_MAX_TALLER)
             self.face.taller = self._scarf_taller * worn
+            self.face.tongue_in_front = True   # a hanging tongue is drawn over the scarf
         else:
             self._scarf_taller = 0.0
             self.face.taller = 0.0
+            self.face.tongue_in_front = False
         face_cursor = None
         if cursor is not None:
             face_cursor = QPointF(cursor.x() - self.feet.x(),
@@ -735,6 +737,7 @@ class FlameCharacter:
         self.shades.paint(painter, self.face.eye_boxes(), self.face.expr.tilt)
         if self._drive is not None:
             self.scarf.paint(painter, self._drive, self._drive.scarf_h)
+        self.face.paint_front_tongue(painter)   # (only when the scarf held it back)
         painter.restore()
 
         if not log_behind:

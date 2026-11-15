@@ -384,6 +384,12 @@ class Face:
         # Written by ``paint``: how far the mouth wanted to go below ``floor_y`` (R; negative =
         # room left; 0 without a floor).
         self.mouth_overflow = 0.0
+        # Set by the character: True while something is worn that would hide a hanging tongue
+        # (the scarf). ``paint`` then keeps the tongue back and ``paint_front_tongue`` draws it
+        # later, after the outfit, so it sticks out over the scarf instead of vanishing under it.
+        self.tongue_in_front = False
+        # The tongue held back by ``paint``: (world transform, opacity, mouth, top, bottom, pen).
+        self._front_tongue: tuple | None = None
 
         # Caches (pure speed-ups, see the module doc): the merged mood + mouth goal, and the
         # last eye geometry of each side together with the inputs it was computed from.
@@ -699,13 +705,31 @@ class Face:
     # ------------------------------------------------------------------ painting
 
     def paint(self, painter: QPainter) -> None:
-        """Draw both eyes, the brows (if any) and the mouth (painter in body coordinates)."""
+        """Draw both eyes, the brows (if any) and the mouth (painter in body coordinates).
+
+        With ``tongue_in_front`` set, a hanging tongue is only remembered here: call
+        ``paint_front_tongue`` after drawing the outfit to put it on top."""
+        self._front_tongue = None
         for side in (-1, 1):
             self._paint_eye(painter, side)
         if abs(self.expr.brow) > 0.03:
             for side in (-1, 1):
                 self._paint_brow(painter, side)
         self._paint_mouth(painter)
+
+    def paint_front_tongue(self, painter: QPainter) -> None:
+        """Draw the tongue that ``paint`` held back (nothing if there is none), in the same place
+        and with the same transform as the mouth it hangs from. The painter must be in the same
+        state as it was for ``paint``, only the drawing order differs."""
+        held, self._front_tongue = self._front_tongue, None
+        if held is None:
+            return
+        transform, opacity, mouth, top, bottom, ink_pen = held
+        painter.save()
+        painter.setWorldTransform(transform)
+        painter.setOpacity(opacity)
+        self._paint_tongue_out(painter, mouth, top, bottom, ink_pen)
+        painter.restore()
 
     def _refs(self) -> list[tuple[RefFace, float]]:
         """The reference faces currently blended in, with their weights (0..1)."""
@@ -1213,7 +1237,11 @@ class Face:
         painter.drawPath(mouth)
         self._paint_corner_strokes(painter, top, refs, ink_pen, squeeze)
         if ex.tongue_out > 0.02:
-            self._paint_tongue_out(painter, mouth, top, bottom, ink_pen)
+            if self.tongue_in_front:
+                self._front_tongue = (painter.worldTransform(), painter.opacity(), mouth, top,
+                                      bottom, ink_pen)
+            else:
+                self._paint_tongue_out(painter, mouth, top, bottom, ink_pen)
         painter.restore()
 
     def _paint_ref_tongue(self, painter: QPainter, ref: RefFace, weight: float,

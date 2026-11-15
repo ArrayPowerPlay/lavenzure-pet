@@ -171,3 +171,27 @@ def test_scarf_makes_the_body_taller_instead_of_shrinking_a_big_mouth(qapp):
     assert ch.face.taller > 0.1 and ch.face.mouth_overflow < 0.01
     run(45)
     assert ch.face.taller < 0.02
+
+
+def test_tongue_is_drawn_over_the_scarf(qapp):
+    """Yuck (tongue out) with the Xmas scarf on: the tongue is held back while the face is
+    drawn and painted after the scarf, so the scarf never hides it."""
+    from PySide6.QtGui import QImage, QPainter
+
+    from overlay.character import FlameCharacter
+
+    ch = FlameCharacter(seed=2, renderer="shader")
+    ch.set_outfit("xmas")
+    img = QImage(ch.width, ch.height, QImage.Format.Format_ARGB32_Premultiplied)
+    ch.play(Mood.YUCK, None)
+    for _ in range(60):
+        ch.update(1 / 30, QPointF(0, 0), None)
+        painter = QPainter(img)
+        ch.paint(painter)
+        painter.end()
+    assert ch.face.tongue_in_front
+    assert ch.face._front_tongue is None     # drawn and cleared by the end of the frame
+    ch.set_outfit("normal")
+    for _ in range(60):
+        ch.update(1 / 30, QPointF(0, 0), None)
+    assert not ch.face.tongue_in_front
