@@ -529,6 +529,23 @@
 - **Thứ tự code và duyệt (user yêu cầu duyệt từng bước):** (1) gỡ mũ; (2) khăn ở `normal` → **user duyệt**; (3) khăn ở các biểu cảm còn lại, gồm `scared` dài người và `remind` → **user duyệt**; (4) tuyết rơi → **user duyệt**; (5) biểu cảm chúc mừng + câu chúc Giáng sinh; (6) mục Outfit trong Settings.
 - **Còn mở (hỏi user khi tới bước đó):** khăn cần chỉnh nút thắt (bản thử còn giống cái hộp) và đuôi khăn đung đưa mạnh hơn khi đi; đuôi khăn phải ngắn, chĩa sang bên (dài quá trông như chân). Tuyết chỉ có khi bật Xmas outfit hay riêng một công tắc? Câu chúc hiện khi nào (khi bật app trong ngày lễ, khi click, mỗi ngày một lần...)? Outfit có tự bật theo ngày (vd. tháng 12) hay chỉ chọn tay trong Settings? Kiểm tra trên nền sáng.
 
+### Lượt 40 (2026-11-15) — trả lời câu hỏi mở của lượt 39; nghiên cứu vật thay khúc gỗ khi bay (CHƯA CODE)
+- **User chốt (trả lời các câu hỏi mở của lượt 39):**
+  1. **Câu chúc là một biểu cảm độc lập**, hiện **ngẫu nhiên như các biểu cảm hiện có** (giống lúc pet cười, lúc nhảy): nằm trong nhóm biểu cảm ngẫu nhiên (click trái / lúc rảnh), không có lịch riêng. Claude hiểu: câu chúc Giáng sinh chỉ có trong nhóm ngẫu nhiên khi bật Xmas outfit (sẽ hỏi lại user lúc code).
+  2. **Tuyết chỉ rơi khi bật Xmas outfit** (không có công tắc riêng).
+  3. **Outfit chọn tay** trong Settings (không tự đổi theo ngày).
+  4. **Khi bay (ngồi trên khúc gỗ / vật thay thế) vẫn phải thấy khăn len.**
+- **User hỏi:** khi bật Xmas outfit thì thay khúc gỗ bằng gì: xe trượt tuyết, Candy Cane hay hộp quà? Lựa chọn nào khả thi nhất? **Claude vẽ thử thô** (`.scratch/xmas3/ride.py`, dùng khăn bản thử): `docs/references/_xmas3_ride_zoom.png`, `_xmas3_ride_real_size.png` (từ trái sang: khúc gỗ hiện tại / hộp quà / kẹo gậy / xe trượt tuyết).
+
+| Vật | Khả thi | Ưu | Nhược | Công sức |
+|---|---|---|---|---|
+| **Hộp quà** | **Dễ nhất** | Ngồi đúng chỗ khúc gỗ đang ngồi (cùng độ cao, lửa vẫn "thả tay" lên mép nắp như với khúc gỗ); đối xứng nên bay trái hay phải đều được; hình đơn giản (hộp + ruy băng + nơ); khăn vẫn lộ rõ; xanh lá tách màu với lửa và khăn đỏ trắng | Nơ trên nắp bị thân che (phải dời nơ ra mặt trước / góc hộp, hoặc làm hộp to hơn); cần cách biến mất mới thay cho "vỡ thành tàn lửa" (vd. nổ "poof" ra giấy màu / ruy băng) | ~1 lượt code + 1 lượt góp ý |
+| Kẹo gậy (Candy Cane) | Vừa | Rất "Noel", kiểu cưỡi chổi phù thủy dễ thương | Thanh mảnh nên ngồi trông chênh vênh, hai "tay" lửa thõng xuống dưới thanh; **sọc đỏ trắng trùng màu khăn**, hai thứ sọc đỏ trắng chạm nhau nhìn rối; móc kẹo ở một đầu nên có hướng (bay ngược chiều thì lạ, có thể phải lật) | ~1 lượt + 1-2 lượt góp ý |
+| Xe trượt tuyết | Khó nhất | Biểu tượng Noel rõ nhất | Pet phải ngồi **trong** xe → thành xe che phần dưới thân, **che mất khăn** (trái với ý 4) trừ khi cho pet ngồi cao hẳn lên (trông như đứng); "tay" lửa của shader không thả qua thành xe được (phải vẽ tay riêng); xe có đầu có đuôi → bay ngược chiều phải lật xe; hình phức tạp (thân cong, càng trượt, hoa văn), cần thêm chỗ trên khung vẽ; xe không có tuần lộc trông hơi trống | ~2-3 lượt + góp ý |
+
+- **Claude đề xuất: hộp quà.** Chỉ thay khi bật Xmas outfit; Normal outfit vẫn là khúc gỗ.
+- **Còn mở (chờ user):** chọn vật nào; nếu hộp quà: màu (xanh lá + ruy băng đỏ như ảnh thử, hay màu khác), nơ đặt ở đâu, biến mất kiểu gì (nổ ra giấy màu / bị lửa bén cháy thành tàn như khúc gỗ / nắp bật ra rồi biến mất).
+
 ## Còn bàn
 
 - **Đóng gói v0.1.0** (lượt 34-37): đã code, user thử `rc.1` trên desktop thật (chạy được) và v0.1.0 đã phát hành. Còn: user xem lại giấy phép MIT và chuyện `README.txt` trong zip.
@@ -536,4 +553,4 @@
 - Đo lại 60 phút ở 30 fps + lửa nhẹ (`src/perf_check.py`, cần thoát pet đang chạy).
 - Cách 3 (tạm dừng khi có app toàn màn hình) và cách 5 (lửa 30 khung/giây) — user để lại, chưa làm.
 - Lượt 24: user thử các tính năng mới trên desktop thật và góp ý; T1, T6, P2 vẫn pending; âm thanh và hướng agent để sau.
-- Lượt 39: trang phục Giáng sinh = khăn len (bỏ mũ lượt 38); đã chốt, **phiên sau code** theo thứ tự ở lượt 39, duyệt từng bước.
+- Lượt 39-40: trang phục Giáng sinh = khăn len (bỏ mũ lượt 38); đã chốt, **phiên sau code** theo thứ tự ở lượt 39, duyệt từng bước. Lượt 40: chờ user chọn vật thay khúc gỗ khi bay (Claude đề xuất hộp quà).
