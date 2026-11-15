@@ -112,6 +112,7 @@ class Expression:
     mouth_top: float = 0.3     # open mouth: upper lip arch (0 = flat "D", 1 = oval, >1 = scream)
     mouth_bottom: float = 1.0  # open mouth: how deep the lower lip hangs
     mouth_dip: float = 0.0     # pushes the middle of the upper lip down (a soft "m" top)
+    mouth_gap: float = 0.0     # extra space between the eyes and an open mouth, in R
     mouth_cat: float = 0.0     # lifts the middle of a closed mouth: a relaxed "w" line
     smirk: float = 0.0         # -1..1: lifts the left / right mouth corner
     mouth_curl: float = 0.0    # closed smile: both ends curl up into small dimples (fig. 7)
@@ -233,10 +234,11 @@ MOOD_TARGETS: dict[Mood, tuple[Expression, ...]] = {
     # "cheer" (round 46, designed freely): the festive greeting shared by every occasion (the
     # bubble carries the words: "Merry Christmas!" now, birthday / New Year later). Eyes closed
     # into happy "^ ^" arcs, a wide open "D" smile, head tipped, the fire tall and lively.
-    Mood.CHEER: (Expression(happy_eyes=1.0, lower_lid=0.4, mouth_open=1.0, smile=0.6,
-                            mouth_width=1.7, mouth_top=0.2, mouth_bottom=1.0, mouth_dip=0.25,
-                            tilt=0.07, flame=1.12, flicker=1.45, wild=1.4, body_w=1.04,
-                            body_h=1.06),),
+    # Round 47: the eyes sit a little higher and further from the mouth (``eye_y``, ``mouth_gap``).
+    Mood.CHEER: (Expression(happy_eyes=1.0, lower_lid=0.4, eye_y=-0.08, mouth_open=1.0,
+                            smile=0.6, mouth_width=1.7, mouth_top=0.2, mouth_bottom=1.0,
+                            mouth_dip=0.25, mouth_gap=0.1, tilt=0.07, flame=1.12, flicker=1.45,
+                            wild=1.4, body_w=1.04, body_h=1.06),),
 }
 
 # Small expressions the idle face drifts through: name -> (weight, (min, max) seconds, values).
@@ -1111,7 +1113,7 @@ class Face:
         # downward like in the reference art); the safe-area fit then scales it about that edge,
         # so it can never creep up onto the eyes. Only the part of the lip that is right below
         # an eye counts: between the eyes a screaming arch may rise higher (fig. 3).
-        clearance = self._eye_bottom() + 0.14 * R
+        clearance = self._eye_bottom() + (0.14 + ex.mouth_gap) * R
         right_cx, _, right_rx, _ = self._eye_geom(1)
         left_cx, _, left_rx, _ = self._eye_geom(-1)
         inner = 0.5 * (right_cx - left_cx) - 1.1 * max(right_rx, left_rx)

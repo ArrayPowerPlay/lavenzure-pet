@@ -55,6 +55,7 @@ EMOTION_MOODS = {"happy": Mood.HAPPY, "scared": Mood.SCARED, "angry": Mood.ANGRY
 EMOTION_SECONDS = 5.0
 WELCOME_DELAY_MS = 1000   # greet after the wake-up stretch (``Mood.WAKE``, 0.9 s) has played
 GREETING_EXTRA_MS = 1500  # the festive greeting bubble stays this much longer than a plain line
+GREETING_LIFT_R = 0.7     # the greeting card sits this much higher (in R) to clear the flame tips
 
 
 def reading_ms(text: str) -> int:
@@ -326,8 +327,10 @@ class LavenzureApp(QObject):
         if occasion is None or self.bubble.is_sticky():
             return
         emoji, title, line = self.lines.greeting(occasion)
+        lift = round(GREETING_LIFT_R * self.sprite.character.R)
         self.bubble.show_greeting(emoji, title, line,
-                                  auto_hide_ms=reading_ms(title + line) + GREETING_EXTRA_MS)
+                                  auto_hide_ms=reading_ms(title + line) + GREETING_EXTRA_MS,
+                                  lift=lift)
         self.monitor.notify_activity()
 
     def _show_pet_menu(self) -> None:
