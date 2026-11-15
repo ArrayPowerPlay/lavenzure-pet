@@ -571,6 +571,12 @@
 - **Ảnh** (git-ignored): `_xmas6_snowy_log.png` (Normal / Xmas phóng to 3 lần, và cỡ thật), `_xmas6_snowy_log_real_size.png` (cỡ thật trên nền tối / sáng, cột giữa là lúc đang bay sang phải).
 - **Chờ user:** duyệt khúc gỗ phủ tuyết, rồi mới làm bước 4 (tuyết rơi).
 
+### Lượt 44 (2026-11-15) — tuyết trên khúc gỗ dày hơn
+- **User:** làm tuyết dày hơn cho dễ nhìn.
+- **Đã làm:** đống tuyết hai đầu cao gần gấp đôi (0,13-0,14 → 0,24-0,25 R) và rộng hơn, rủ xuống mặt trước sâu hơn (đầu trái 0,22 R, đầu phải 0,17 R, mảng giữa 0,28 R), giọt tuyết dài hơn, chấm tuyết trên vỏ cây to hơn và nhiều hơn (3 → 5). Ở cỡ thật giờ thấy rõ tuyết ở cả hai đầu lẫn giữa hai "tay" lửa.
+- **Ảnh** (git-ignored): `docs/references/_xmas7_thicker_snow.png`, `_xmas7_thicker_snow_real_size.png`.
+- **Chờ user:** duyệt, rồi làm bước 4 (tuyết rơi).
+
 ## Còn bàn
 
 - **Đóng gói v0.1.0** (lượt 34-37): đã code, user thử `rc.1` trên desktop thật (chạy được) và v0.1.0 đã phát hành. Còn: user xem lại giấy phép MIT và chuyện `README.txt` trong zip.
@@ -578,4 +584,4 @@
 - Đo lại 60 phút ở 30 fps + lửa nhẹ (`src/perf_check.py`, cần thoát pet đang chạy).
 - Cách 3 (tạm dừng khi có app toàn màn hình) và cách 5 (lửa 30 khung/giây) — user để lại, chưa làm.
 - Lượt 24: user thử các tính năng mới trên desktop thật và góp ý; T1, T6, P2 vẫn pending; âm thanh và hướng agent để sau.
-- Lượt 39-41: trang phục Giáng sinh = khăn len (bỏ mũ lượt 38), code theo thứ tự ở lượt 39, duyệt từng bước. Lượt 40: khi bay vẫn là khúc gỗ, ở Xmas outfit có thêm đốm tuyết. Lượt 41: đã gỡ mũ + làm khăn ở `normal`. Lượt 42: quàng khăn thì thân dài ra cho miệng to vừa (mọi biểu cảm), viền mặt mảnh hơn (user duyệt). Lượt 43: khăn ở mọi biểu cảm xong, khúc gỗ phủ tuyết; **chờ user duyệt** rồi mới làm bước 4 (tuyết rơi).
+- Lượt 39-41: trang phục Giáng sinh = khăn len (bỏ mũ lượt 38), code theo thứ tự ở lượt 39, duyệt từng bước. Lượt 40: khi bay vẫn là khúc gỗ, ở Xmas outfit có thêm đốm tuyết. Lượt 41: đã gỡ mũ + làm khăn ở `normal`. Lượt 42: quàng khăn thì thân dài ra cho miệng to vừa (mọi biểu cảm), viền mặt mảnh hơn (user duyệt). Lượt 43: khăn ở mọi biểu cảm xong, khúc gỗ phủ tuyết; lượt 44: tuyết dày hơn; **chờ user duyệt** rồi mới làm bước 4 (tuyết rơi).
