@@ -171,7 +171,6 @@ def main() -> int:
             ch.set_reminding(True)
 
     button("Remind (clock) / OK", 4, 0, each(toggle_remind))
-    button("Santa hat on / off", 4, 1, each(lambda ch: ch.set_santa_hat(not ch.santa_hat_on)))
 
     def toggle_bg() -> None:
         """Switch the backdrop between dark and light."""
