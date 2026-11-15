@@ -603,6 +603,7 @@ class FlameCharacter:
             self._squash.velocity -= 0.6      # the sunglasses land on the nose: a small nod
         self.clock.update(dt)
         self.scarf.update(dt, self._vx / self.R, (self._vy + self._hop_v) / self.R)
+        self.log.snow = self.scarf.amount if self.scarf.visible else 0.0   # Xmas: a snowy log
         if self.log.crumbling:
             self._crumble_debt += dt * 70.0
             n = int(self._crumble_debt)

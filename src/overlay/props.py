@@ -10,6 +10,8 @@ painting happens in the character's body coordinates (pixels, origin at the feet
   existence with a springy overshoot when summoned, wobbles gently while flying, and crumbles
   into embers when dismissed (the character spawns the embers from ``ember_points()``). Two small
   round flame "paws" drape over its top edge, out toward the sides (clear of the mouth).
+  With the Xmas outfit (round 43) snow lies on it: soft white patches along the top, one
+  capping the cut end, with little drips down the bark.
 - ``PanProp`` - the frying pan (bacon and two fried eggs) resting on the flattened flame's head
   for the ``chill`` mood (reference figure 7): drawn in front of the fire, its bottom just
   above the eyes, tipped a little with the handle hanging down to one side. It drops in from
@@ -48,6 +50,21 @@ LOG_RADIUS = 0.29       # half thickness (R)
 LOG_CY = -0.12          # centre height relative to the feet (R, negative = up)
 END_RX = 0.16           # width of the visible cut end (R)
 
+SNOW = QColor(252, 253, 255)
+SNOW_SHADE = QColor(196, 216, 238)
+SNOW_INK_W = 0.045      # outline of the snow patches (R), lighter than the log's
+# Snow patches on the log, as (start, end, height, drape, drips): x in R along the log (the
+# right patch runs onto the cut end), height of the mound above the bark (R), how far it hangs
+# down the front (R) and drips = (x, extra length in R). The pet hides most of the log's top, so
+# the end patches pile up beside the body and the middle one only shows where it hangs down
+# between the paws.
+SNOW_PATCHES = (
+    (-1.33, -0.78, 0.13, 0.16, ((-1.18, 0.1), (-0.95, 0.07))),
+    (-0.42, 0.40, 0.05, 0.2, ((-0.2, 0.07), (0.16, 0.1))),
+    (0.76, LOG_HALF_LEN + 0.8 * END_RX, 0.14, 0.09, ((0.98, 0.1), (1.22, 0.07))),
+)
+SNOW_SPECKS = ((-0.55, 0.45, 0.035), (0.45, 0.2, 0.03), (0.2, 0.62, 0.025))  # (x R, y r, size R)
+
 
 class LogProp:
     """The flying log. ``show()`` summons it (pop-in), ``hide()`` crumbles it into embers."""
@@ -63,6 +80,8 @@ class LogProp:
         self.crumble = 0.0          # 0 = solid, 1 = fully turned to embers
         self._crumbling = False
         self.visible = False
+        # 0..1 how much snow lies on it (Xmas outfit; the character fades it with the scarf).
+        self.snow = 0.0
 
     @property
     def amount(self) -> float:
@@ -190,10 +209,89 @@ class LogProp:
             else:
                 spiral.lineTo(p)
         painter.drawPath(spiral)
+        if self.snow > 0.01:
+            self._paint_snow(painter)
         painter.restore()
 
         if crumble < 0.3 and paw_colors is not None:
             self._paint_paws(painter, amount, paw_colors)
+
+    def _top_edge(self, x: float) -> float:
+        """Height of the log's silhouette top at ``x`` (both in R, log-local, y down): flat
+        along the bark, curving down over the rounded left end and the cut right end."""
+        L, r, er = LOG_HALF_LEN, LOG_RADIUS, END_RX
+        if x > L:
+            u = clamp((x - L) / er, 0.0, 1.0)
+        elif x < -L + er:
+            u = clamp((-L + er - x) / er, 0.0, 1.0)
+        else:
+            return -r
+        return -r * math.sqrt(1.0 - u * u)
+
+    def _paint_snow(self, painter: QPainter) -> None:
+        """Snow on the log (log-local painter, pixels): white mounds along the top following
+        its silhouette, a bluish shade along their lower rim, little drips down the front, a few
+        specks on the bark. Fades in / out with ``snow``."""
+        R = self.R
+        painter.save()
+        painter.setOpacity(painter.opacity() * smoothstep(0.0, 1.0, self.snow))
+        ink = QPen(INK, SNOW_INK_W * R, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap,
+                   Qt.PenJoinStyle.RoundJoin)
+        for x0, x1, height, drape, drips in SNOW_PATCHES:
+            path = self._snow_patch(x0, x1, height, drape, drips)
+            # Bluish shade along the lower rim: the whole patch in shade, then the snow white
+            # over it, nudged up a little.
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.setBrush(SNOW_SHADE)
+            painter.drawPath(path)
+            painter.save()
+            painter.setClipPath(path)
+            painter.setBrush(SNOW)
+            painter.drawPath(path.translated(0.0, -0.045 * R))
+            painter.setBrush(QColor(255, 255, 255, 230))       # a soft highlight on the mound
+            mid = 0.5 * (x0 + x1)
+            painter.drawEllipse(QPointF((mid - 0.12 * (x1 - x0)) * R,
+                                        (self._top_edge(mid) - 0.55 * height) * R),
+                                0.2 * (x1 - x0) * R, 0.018 * R)
+            painter.restore()
+            painter.setPen(ink)
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            painter.drawPath(path)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(SNOW)
+        for x, y, size in SNOW_SPECKS:
+            painter.drawEllipse(QPointF(x * R, y * LOG_RADIUS * R), size * R, size * 0.8 * R)
+        painter.restore()
+
+    def _snow_patch(self, x0: float, x1: float, height: float, drape: float,
+                    drips: tuple[tuple[float, float], ...]) -> QPainterPath:
+        """Outline of one snow patch from ``x0`` to ``x1`` (R): a lumpy mound ``height`` above
+        the log's top edge and a wavy lower edge hanging ``drape`` down the front with rounded
+        ``drips``, smoothed through midpoints."""
+        R = self.R
+        steps = 18
+        top: list[QPointF] = []
+        bottom: list[QPointF] = []
+        for i in range(steps + 1):
+            t = i / steps
+            x = lerp(x0, x1, t)
+            edge = self._top_edge(x)
+            dome = math.sin(math.pi * t) ** 0.55
+            lumps = 1.0 + 0.18 * math.sin(t * 11.0 + x0 * 3.0)
+            top.append(QPointF(x * R, (edge - height * dome * lumps) * R))
+            hang = drape * math.sin(math.pi * t) ** 0.35 * (1.0 + 0.12 * math.sin(t * 9.0 + x1))
+            for dx, length in drips:
+                hang += length * math.exp(-((x - dx) / 0.065) ** 2) * dome
+            bottom.append(QPointF(x * R, (edge + hang) * R))
+        pts = top + bottom[::-1]
+        path = QPainterPath()
+        first = QPointF((pts[0].x() + pts[-1].x()) / 2, (pts[0].y() + pts[-1].y()) / 2)
+        path.moveTo(first)
+        for i, p in enumerate(pts):
+            nxt = pts[(i + 1) % len(pts)]
+            path.quadTo(p, QPointF((p.x() + nxt.x()) / 2, (p.y() + nxt.y()) / 2))
+        path.closeSubpath()
+        return path
 
     def _paint_paws(self, painter: QPainter, amount: float,
                     paw_colors: tuple[QColor, QColor]) -> None:

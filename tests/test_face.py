@@ -119,7 +119,8 @@ def test_cool_mood_wears_sunglasses_and_takes_them_off(qapp):
 
 def test_xmas_outfit_puts_the_scarf_on_and_takes_it_off(qapp):
     """The Christmas outfit (round 39) fades a knitted scarf on, lifts the face a little, keeps
-    the mouth above the band and squeezes the body under it; ``normal`` takes it all off."""
+    the mouth above the band and squeezes the body under it, and snows on the log (round 43);
+    ``normal`` takes it all off."""
     from overlay.character import FlameCharacter
     from overlay.outfits import SCARF_FACE_LIFT
 
@@ -130,6 +131,7 @@ def test_xmas_outfit_puts_the_scarf_on_and_takes_it_off(qapp):
     assert ch.outfit == "xmas" and ch.scarf.worn and ch.scarf.amount > 0.99
     assert ch.face.lift >= SCARF_FACE_LIFT - 1e-6
     assert ch.face.floor_y is not None and ch._drive.scarf_pinch > 0.0
+    assert ch.log.snow > 0.99
     ch.play(Mood.CHILL, 1.0)                 # the scarf stays on in every mood
     for _ in range(10):
         ch.update(1 / 30, QPointF(0, 0), None)
@@ -138,7 +140,7 @@ def test_xmas_outfit_puts_the_scarf_on_and_takes_it_off(qapp):
     for _ in range(30):
         ch.update(1 / 30, QPointF(0, 0), None)
     assert not ch.scarf.visible and ch.face.lift == 0.0 and ch.face.floor_y is None
-    assert ch._drive.scarf_pinch == 0.0
+    assert ch._drive.scarf_pinch == 0.0 and ch.log.snow == 0.0
     with pytest.raises(ValueError):
         ch.set_outfit("party")
 
