@@ -50,6 +50,8 @@ only** (git-ignored): never commit them, never copy original film assets.
 - Teardrop flame with one main tip and smaller tongues that **move** (not fixed slots), flickering
   like real fire - unpredictable, never a loop you can see repeat.
 - Keep the soft glow. **No white sticker border** (it would flicker on the changing outline).
+- Face lines are lighter than the body outline (`EYE_INK_W`, `CLOSED_EYE_INK_W`, `MOUTH_INK_W`
+  in `face.py`, round 42) and the mouth outline keeps one on-screen width at any mouth size.
 - The body shape is not fixed: an expression may puff up, go boxy and ragged, flatten or stretch
   to suit the emotion.
 - Priority is beautiful, natural, smooth, lively motion; quality matters more than CPU cost,

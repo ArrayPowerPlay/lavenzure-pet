@@ -556,6 +556,14 @@
 - **Ảnh để duyệt** (git-ignored): `docs/references/_xmas4_scarf_zoom.png` (phóng to, có/không khăn), `_xmas4_scarf_real_size.png` (cỡ thật, nền tối/sáng), `_xmas4_scarf_walk.png` (đi phải / dừng / đi trái), `_xmas4_scarf_moods.png` (các biểu cảm khác, **chưa chỉnh**: `scared` đang bị bóp miệng, sẽ sửa ở bước 3 bằng cách cho thân dài ra).
 - **Chờ user:** duyệt khăn ở `normal` (màu, độ dày, vị trí nút thắt, độ dài/hướng đuôi, độ đung đưa). Sau đó mới làm bước 3 (khăn ở mọi biểu cảm, `scared` dài người, `remind`, `fly`).
 
+### Lượt 42 (2026-11-15) — quàng khăn thì thân dài ra (miệng giữ nguyên cỡ); viền mắt, viền miệng mảnh hơn
+- **User:** khi quàng khăn nên cho thân dài ra để miệng không bị thu nhỏ, nhất là `surprised` và `scared`; viền mắt và viền miệng bớt đậm, vì viền miệng lúc cười / ngạc nhiên thì mảnh mà lúc bình thường lại to.
+- **Đã làm:**
+  1. **Thân tự dài ra theo cỡ miệng** (áp dụng cho **mọi** biểu cảm có miệng to, không chỉ `scared`): mỗi khung mặt đo xem miệng có lấn xuống mép khăn không; nếu lấn, thân lửa cao dần lên (lò xo, ~0,3-0,4 s) tới khi miệng vừa, giữ khe 0,03 R; hết biểu cảm thì thân thu lại. Khăn vẫn ở nguyên chỗ (phần dài thêm nằm phía trên khăn). Biểu cảm miệng nhỏ (`normal`, ngủ) không đổi. Lúc mới mở miệng, miệng có thể nhỏ trong khoảng 0,2 s trước khi thân kịp dài ra. Tối đa cao thêm 0,45 lần (`SCARF_MAX_TALLER`).
+  2. **Viền mặt mảnh hơn** (cả Normal outfit lẫn Xmas): viền mắt 0,07 → 0,056 R, đường mắt nhắm 0,065 → 0,052 R, viền miệng 0,062 → 0,048 R; mặt copy từ ảnh mẫu (fig 1, fig 7) mảnh theo cùng tỉ lệ. **Viền miệng giờ dày như nhau ở mọi cỡ miệng** (trước đây miệng mở to bị thu nhỏ cho vừa mặt nên viền mảnh theo). Đường mí kiểu lông mày của `angry` giữ nguyên.
+- **Ảnh** (git-ignored): `docs/references/_xmas5_before.png` / `_xmas5_after.png` (các biểu cảm, hàng trên Normal, hàng dưới Xmas), `_xmas5_ink_compare.png` (viền cũ / mới, phóng to), `_xmas5_scared_timeline.png` (scared / surprised theo thời gian, thân dài ra rồi thu lại).
+- **Chờ user:** duyệt; vẫn còn chờ duyệt khăn ở lượt 41 trước khi làm tiếp bước 3 (`remind`, khúc gỗ...).
+
 ## Còn bàn
 
 - **Đóng gói v0.1.0** (lượt 34-37): đã code, user thử `rc.1` trên desktop thật (chạy được) và v0.1.0 đã phát hành. Còn: user xem lại giấy phép MIT và chuyện `README.txt` trong zip.
@@ -563,4 +571,4 @@
 - Đo lại 60 phút ở 30 fps + lửa nhẹ (`src/perf_check.py`, cần thoát pet đang chạy).
 - Cách 3 (tạm dừng khi có app toàn màn hình) và cách 5 (lửa 30 khung/giây) — user để lại, chưa làm.
 - Lượt 24: user thử các tính năng mới trên desktop thật và góp ý; T1, T6, P2 vẫn pending; âm thanh và hướng agent để sau.
-- Lượt 39-41: trang phục Giáng sinh = khăn len (bỏ mũ lượt 38), code theo thứ tự ở lượt 39, duyệt từng bước. Lượt 40: khi bay vẫn là khúc gỗ, ở Xmas outfit có thêm đốm tuyết. Lượt 41: đã gỡ mũ + làm khăn ở `normal`, **chờ user duyệt** rồi mới làm bước 3.
+- Lượt 39-41: trang phục Giáng sinh = khăn len (bỏ mũ lượt 38), code theo thứ tự ở lượt 39, duyệt từng bước. Lượt 40: khi bay vẫn là khúc gỗ, ở Xmas outfit có thêm đốm tuyết. Lượt 41: đã gỡ mũ + làm khăn ở `normal`. Lượt 42: quàng khăn thì thân dài ra cho miệng to vừa (mọi biểu cảm), viền mặt mảnh hơn; **chờ user duyệt** rồi mới làm tiếp bước 3.
