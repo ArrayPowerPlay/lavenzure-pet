@@ -171,29 +171,3 @@ def test_scarf_makes_the_body_taller_instead_of_shrinking_a_big_mouth(qapp):
     assert ch.face.taller > 0.1 and ch.face.mouth_overflow < 0.01
     run(45)
     assert ch.face.taller < 0.02
-
-
-def test_xmas_snowfall_melts_on_the_fire_and_stops_with_the_outfit(qapp):
-    """Round 45: the Xmas outfit makes it snow in the pet's window; flakes that reach the fire
-    melt into steam, and taking the outfit off lets the snow die out."""
-    from overlay.character import FlameCharacter
-    from overlay.outfits import HIT_FIRE, HIT_NONE
-
-    ch = FlameCharacter(seed=2, renderer="shader")
-    for _ in range(60):
-        ch.update(1 / 30, QPointF(0, 0), None)
-    assert not ch.snowfall.active               # no snow in the normal outfit
-    ch.set_outfit("xmas")
-    melted = 0
-    for _ in range(300):                        # 10 s
-        ch.update(1 / 30, QPointF(0, 0), None)
-        melted = max(melted, len(ch.snowfall._steam))
-    assert ch.snowfall.flake_count > 10 and melted > 0
-    tip_x, tip_y = ch.flame.tip                 # just inside / far above the flame's top
-    head = ch._to_widget(tip_x, tip_y + 0.3 * ch.R)
-    assert ch._snow_hit(*head) == HIT_FIRE
-    assert ch._snow_hit(head[0], 2.0) == HIT_NONE
-    ch.set_outfit("normal")
-    for _ in range(450):                        # 15 s: the last flakes land or melt
-        ch.update(1 / 30, QPointF(0, 0), None)
-    assert not ch.snowfall.active

@@ -591,6 +591,10 @@
 - **Ảnh** (git-ignored): `docs/references/_xmas8_snowfall.png` (đứng yên / đang đi sang phải / trên khúc gỗ / scared; hàng trên nền tối, giữa nền sáng, dưới cùng là cỡ thật), `_xmas8_snowfall_zoom.png` (phóng to).
 - **Chờ user:** duyệt tuyết rơi; tiếp theo là bước 5 (biểu cảm chúc mừng + câu chúc Giáng sinh).
 
+### Lượt 46 (2026-11-15) — BỎ tuyết rơi; bắt đầu bước 5
+- **User:** tuyết rơi không cần thiết lắm, **bỏ đi**; làm bước 5 (biểu cảm chúc mừng).
+- **Đã làm:** gỡ toàn bộ code tuyết rơi của lượt 45 (`SnowFall`, `FlameRenderer.top_edge`, test) bằng một commit revert. **Tuyết đọng trên khúc gỗ (lượt 43-44) vẫn giữ.** Bước 4 trong thứ tự ở lượt 39 coi như hủy.
+
 ## Còn bàn
 
 - **Đóng gói v0.1.0** (lượt 34-37): đã code, user thử `rc.1` trên desktop thật (chạy được) và v0.1.0 đã phát hành. Còn: user xem lại giấy phép MIT và chuyện `README.txt` trong zip.
@@ -598,4 +602,4 @@
 - Đo lại 60 phút ở 30 fps + lửa nhẹ (`src/perf_check.py`, cần thoát pet đang chạy).
 - Cách 3 (tạm dừng khi có app toàn màn hình) và cách 5 (lửa 30 khung/giây) — user để lại, chưa làm.
 - Lượt 24: user thử các tính năng mới trên desktop thật và góp ý; T1, T6, P2 vẫn pending; âm thanh và hướng agent để sau.
-- Lượt 39-41: trang phục Giáng sinh = khăn len (bỏ mũ lượt 38), code theo thứ tự ở lượt 39, duyệt từng bước. Lượt 40: khi bay vẫn là khúc gỗ, ở Xmas outfit có thêm đốm tuyết. Lượt 41: đã gỡ mũ + làm khăn ở `normal`. Lượt 42: quàng khăn thì thân dài ra cho miệng to vừa (mọi biểu cảm), viền mặt mảnh hơn (user duyệt). Lượt 43: khăn ở mọi biểu cảm xong, khúc gỗ phủ tuyết; lượt 44: tuyết dày hơn (user duyệt). Lượt 45: tuyết rơi quanh pet, chạm lửa tan "xèo"; **chờ user duyệt** rồi làm bước 5 (biểu cảm chúc mừng).
+- Lượt 39-41: trang phục Giáng sinh = khăn len (bỏ mũ lượt 38), code theo thứ tự ở lượt 39, duyệt từng bước. Lượt 40: khi bay vẫn là khúc gỗ, ở Xmas outfit có thêm đốm tuyết. Lượt 41: đã gỡ mũ + làm khăn ở `normal`. Lượt 42: quàng khăn thì thân dài ra cho miệng to vừa (mọi biểu cảm), viền mặt mảnh hơn (user duyệt). Lượt 43: khăn ở mọi biểu cảm xong, khúc gỗ phủ tuyết; lượt 44: tuyết dày hơn (user duyệt). Lượt 45: tuyết rơi quanh pet; lượt 46: user **bỏ tuyết rơi** (đã gỡ code), làm bước 5 (biểu cảm chúc mừng).

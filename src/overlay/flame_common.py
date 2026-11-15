@@ -258,9 +258,7 @@ class FlameRenderer:
 
     Call ``step()`` once per frame, then ``paint()`` with a painter already transformed into body
     coordinates. ``top_points`` (outer outline points high on the flame, body pixels) is used by
-    the character to spawn sparks; ``tip`` is the highest outline point. ``top_edge`` is the
-    whole top silhouette (the highest solid point of sampled columns, sorted by x; renderers
-    that do not fill it leave it empty) - falling snow melts where it meets it.
+    the character to spawn sparks; ``tip`` is the highest outline point.
     """
 
     name = "base"
@@ -270,7 +268,6 @@ class FlameRenderer:
         self.R = R
         self._rng = rng
         self.top_points: list[tuple[float, float]] = []
-        self.top_edge: list[tuple[float, float]] = []
         self.tip: tuple[float, float] = (0.0, -2.6 * R)
 
     def flare(self, strength: float = 1.0) -> None:
@@ -336,7 +333,6 @@ class ImageFlame(FlameRenderer):
             cols = cols[::TOP_POINT_STEP]
         if len(cols) == 0:
             self.top_points = []
-            self.top_edge = []
             return
         rows = solid[:, cols].argmax(axis=0)
         scale = 1.0 / (self.R * self.SUPERSAMPLE)
@@ -346,7 +342,6 @@ class ImageFlame(FlameRenderer):
         self.tip = (float(xs[top]), float(ys[top]))
         high = ys < -(BODY_CY + 0.4) * self.R
         self.top_points = list(zip(xs[high].tolist(), ys[high].tolist(), strict=True))
-        self.top_edge = list(zip(xs.tolist(), ys.tolist(), strict=True))
 
 
 def make_flame_renderer(name: str, R: float, rng: random.Random) -> FlameRenderer:
