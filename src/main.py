@@ -33,7 +33,7 @@ from chat.chat_bubble import ChatBubble
 from monitor.background_monitor import BackgroundMonitor
 from monitor.user_activity import UserActivityWatcher
 from overlay.behavior import GREET_SECONDS, BehaviorController, PetState
-from overlay.character import Mood
+from overlay.character import OUTFITS, Mood
 from overlay.overlay_window import OverlaySprite
 from overlay.speech_bubble import SpeechBubble
 from paths import resource
@@ -117,6 +117,9 @@ class LavenzureApp(QObject):
         saved_fps = int(self.user_settings.get("max_fps"))
         self.sprite.set_max_fps(min(FPS_CHOICES, key=lambda choice: abs(choice - saved_fps)))
         self.sprite.character.set_lite_flame(bool(config.get("performance.lite_flame", True)))
+        # What the pet wears (Settings > Outfit; Xmas = scarf, snowy log, greetings).
+        saved_outfit = str(self.user_settings.get("outfit"))
+        self.sprite.character.set_outfit(saved_outfit if saved_outfit in OUTFITS else "normal")
         self.memory = SessionMemory(
             ttl_seconds=config.get("memory.idle_timeout_minutes", 15) * 60
         )
@@ -204,9 +207,11 @@ class LavenzureApp(QObject):
             self.settings = SettingsWindow(max_fps=self.sprite.max_fps,
                                            language=self.lines.language,
                                            provider=str(self.user_settings.get("provider")),
+                                           outfit=self.sprite.character.outfit,
                                            autostart=startup.is_enabled())
             self.settings.max_fps_changed.connect(self._set_max_fps)
             self.settings.language_changed.connect(self._set_language)
+            self.settings.outfit_changed.connect(self._set_outfit)
             self.settings.provider_changed.connect(self._set_provider)
             self.settings.autostart_toggled.connect(self._set_autostart)
             self.settings.api_keys_changed.connect(reset_agent)
@@ -240,6 +245,13 @@ class LavenzureApp(QObject):
         if self.settings is not None:
             self.settings.set_autostart(startup.is_enabled())
         log.info("Start with Windows: %s", startup.is_enabled())
+
+    def _set_outfit(self, outfit: str) -> None:
+        """Settings: dress the pet (``normal`` / ``xmas``; the scarf fades in or out with a
+        little poof) and remember the choice."""
+        self.sprite.character.set_outfit(outfit)
+        self.user_settings.set("outfit", outfit)
+        log.info("Outfit %s", outfit)
 
     def _set_language(self, language: str) -> None:
         """Settings: switch the pet's language and remember the choice."""

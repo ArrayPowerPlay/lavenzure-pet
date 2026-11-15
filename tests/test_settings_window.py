@@ -60,3 +60,28 @@ def test_window_is_short_and_scrolls(qapp):
     assert window.height() <= 540
     assert scroll.widget().sizeHint().height() > scroll.viewport().height()
     window.close()
+
+
+def test_outfit_buttons_start_on_the_current_outfit_and_report_a_pick(qapp):
+    """Round 47 (H5.6): Settings > Outfit offers Normal / Xmas, starts on the outfit worn and
+    reports a new pick."""
+    window = SettingsWindow(outfit="xmas")
+    assert set(window.outfit_buttons) == {"normal", "xmas"}
+    assert window.outfit_buttons["xmas"].isChecked()
+    picked = []
+    window.outfit_changed.connect(picked.append)
+    window.outfit_buttons["normal"].setChecked(True)
+    assert picked == ["normal"]
+    window.close()
+
+
+def test_outfit_setting_defaults_to_normal_and_is_remembered(tmp_path):
+    """Without a saved choice the pet wears its normal look (``character.outfit``); a pick is
+    saved and read back next time."""
+    from user_settings import UserSettings
+
+    path = tmp_path / "settings.json"
+    settings = UserSettings(path)
+    assert settings.get("outfit") == "normal"
+    settings.set("outfit", "xmas")
+    assert UserSettings(path).get("outfit") == "xmas"

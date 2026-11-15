@@ -14,6 +14,8 @@ Current settings:
   config.yaml).
 - ``provider`` - which AI answers the chat (``gemini`` / ``openai``; default ``llm.provider`` in
   config.yaml). API keys are NOT stored here: see ``api_keys``.
+- ``outfit`` - what the pet wears (``normal`` / ``xmas``; default ``character.outfit`` in
+  config.yaml). Chosen by hand, never switched by the date (round 40).
 """
 from __future__ import annotations
 
@@ -32,6 +34,7 @@ DEFAULTS: dict[str, tuple[str, Any]] = {
     "max_fps": ("character.fps", 30),
     "language": ("language", "en"),
     "provider": ("llm.provider", "gemini"),
+    "outfit": ("character.outfit", "normal"),
 }
 
 

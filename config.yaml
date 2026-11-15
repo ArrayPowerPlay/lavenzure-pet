@@ -16,6 +16,7 @@ character:
   scale: 0.75 # size multiplier of the code-drawn flame character (1.0 = 280x236 px window, 0.75 = 210x177)
   fps: 30 # default frame rate (user chose 30; Settings also offers 60); higher = more CPU
   flame_renderer: shader   # flame body: shader (GPU, chosen) | metaball | baked (pre-simulated clips); falls back to metaball
+  outfit: normal # default outfit: normal | xmas (knitted scarf, snowy log, Christmas greetings); Settings > Outfit
 
 performance:
   # (The frame rate is character.fps; tray -> Settings can change it, and that choice is

@@ -5,6 +5,8 @@ It holds these options; a choice made here is remembered (``user_settings``):
 - **Language** - English / Tiếng Việt: the language of everything the pet says on screen (click
   lines, care lines, facts/jokes, alerts, reminders). Chat replies follow the language the user
   writes in.
+- **Outfit** - Normal / Xmas: what the pet wears. Xmas = a knitted red-and-white scarf, snow on
+  the log it rides and now and then a Christmas greeting. Chosen by hand only (round 40).
 - **Chat AI** - which service answers the chat (Gemini / OpenAI) and the API keys: one box for the
   chosen service plus an optional Tavily box for web search (``ApiKeyPanel``; keys go to the
   Windows Credential Manager, never to the settings file).
@@ -19,9 +21,9 @@ A small live readout shows how many frames per second the pet is really drawing,
 the choice is visible at once. (The lite flame is not a switch here: the user chose it, so it is
 always on - see ``performance.lite_flame`` in config.yaml.)
 
-The window only *reports* changes (``language_changed``, ``max_fps_changed``,
-``provider_changed``, ``api_keys_changed``, ``autostart_toggled``); the app applies them and
-remembers them.
+The window only *reports* changes (``language_changed``, ``outfit_changed``,
+``max_fps_changed``, ``provider_changed``, ``api_keys_changed``, ``autostart_toggled``); the app
+applies them and remembers them.
 """
 from __future__ import annotations
 
@@ -82,21 +84,25 @@ FPS_CHOICES = (30, 60)
 # AI services offered for the chat: setting value -> name shown in the window.
 PROVIDER_CHOICES = {"gemini": "Gemini", "openai": "OpenAI"}
 
+# Outfits offered (round 39: "Normal outfit" / "Xmas outfit"): setting value -> button text.
+OUTFIT_CHOICES = {"normal": "Normal outfit", "xmas": "Xmas outfit"}
+
 
 class SettingsWindow(QWidget):
-    """Small always-on-top window with the language, chat-AI and frame-rate choices and a live
-    frame-rate readout."""
+    """Small always-on-top window with the language, outfit, chat-AI and frame-rate choices
+    and a live frame-rate readout."""
 
     language_changed = Signal(str)
+    outfit_changed = Signal(str)
     max_fps_changed = Signal(int)
     provider_changed = Signal(str)
     api_keys_changed = Signal()
     autostart_toggled = Signal(bool)
 
     def __init__(self, max_fps: int = 30, language: str = "en", provider: str = "gemini",
-                 autostart: bool = False) -> None:
-        """Build the window; the buttons matching the current language, chat AI and frame rate
-        start selected."""
+                 autostart: bool = False, outfit: str = "normal") -> None:
+        """Build the window; the buttons matching the current language, outfit, chat AI and
+        frame rate start selected."""
         super().__init__(None, Qt.WindowType.Window | Qt.WindowType.WindowStaysOnTopHint)
         self.setObjectName("settings")
         self.setWindowTitle("Lavenzure - Settings")
@@ -140,6 +146,23 @@ class SettingsWindow(QWidget):
         language_row.addStretch(1)
         language_note = self._note("What the pet says on screen. Chat replies follow the "
                                    "language you write in.")
+
+        outfit_section = QLabel("Outfit")
+        outfit_section.setObjectName("section")
+        outfit_row = QHBoxLayout()
+        outfit_row.setContentsMargins(0, 0, 0, 0)
+        self.outfit_group = QButtonGroup(self)
+        self.outfit_buttons: dict[str, QRadioButton] = {}
+        for code, name in OUTFIT_CHOICES.items():
+            button = QRadioButton(name)
+            button.setChecked(code == outfit)
+            button.toggled.connect(lambda checked, c=code: self._on_outfit_toggled(c, checked))
+            self.outfit_group.addButton(button)
+            self.outfit_buttons[code] = button
+            outfit_row.addWidget(button)
+        outfit_row.addStretch(1)
+        outfit_note = self._note("Xmas: a knitted scarf, snow on the log and, now and then, a "
+                                 "Christmas greeting.")
 
         ai_section = QLabel("Chat AI")
         ai_section.setObjectName("section")
@@ -214,6 +237,9 @@ class SettingsWindow(QWidget):
         layout.addWidget(language_section)
         layout.addLayout(language_row)
         layout.addWidget(language_note)
+        layout.addWidget(outfit_section)
+        layout.addLayout(outfit_row)
+        layout.addWidget(outfit_note)
         layout.addWidget(ai_section)
         layout.addLayout(ai_row)
         layout.addWidget(ai_note)
@@ -243,6 +269,11 @@ class SettingsWindow(QWidget):
         """A language button was picked: report it (ignore the one switched off)."""
         if checked:
             self.language_changed.emit(code)
+
+    def _on_outfit_toggled(self, code: str, checked: bool) -> None:
+        """An outfit button was picked: report it (ignore the one switched off)."""
+        if checked:
+            self.outfit_changed.emit(code)
 
     def _on_provider_toggled(self, code: str, checked: bool) -> None:
         """A chat-AI button was picked: show its key box and report it (ignore the one switched
