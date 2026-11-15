@@ -45,7 +45,7 @@ Chưa có khóa thì pet vẫn chạy bình thường; chỉ phần chat cần k
 
 ## Hướng dẫn sử dụng
 
-### Bản thân chú pet
+### 1. Bản thân chú pet
 
 | Thao tác | Kết quả |
 |---|---|
@@ -56,7 +56,7 @@ Chưa có khóa thì pet vẫn chạy bình thường; chỉ phần chat cần k
 
 Sau **10 phút** bạn không đụng chuột hay bàn phím, pet sẽ ngủ gật. Thao tác đầu tiên của bạn sẽ đánh thức pet, và pet nói "Welcome back!" kèm thời gian bạn vắng mặt. Từ 20:00 đến 05:00 pet trông dịu hơn và di chuyển chậm hơn (pet không tự đi ngủ chỉ vì đồng hồ).
 
-### Menu của pet (chuột phải vào pet)
+### 2. Menu của pet (chuột phải vào pet)
 
 | Mục | Tác dụng |
 |---|---|
@@ -65,7 +65,7 @@ Sau **10 phút** bạn không đụng chuột hay bàn phím, pet sẽ ngủ g�
 | **Wander** | Đánh thức pet và cho pet đi lại tiếp |
 | **Hide Pet** | Ẩn pet. Chat, nhắc việc và cảnh báo vẫn chạy ngầm |
 
-### Biểu tượng ở khay hệ thống (góc phải dưới thanh taskbar)
+### 3. Biểu tượng ở khay hệ thống (góc phải dưới thanh taskbar)
 
 Pet đặt một biểu tượng nhỏ của mình ở khay hệ thống. Trên Windows 11 biểu tượng có thể nằm sau mũi tên **^**; kéo nó ra ngoài để luôn thấy. Bấm chuột phải vào biểu tượng:
 
@@ -77,7 +77,7 @@ Pet đặt một biểu tượng nhỏ của mình ở khay hệ thống. Trên 
 
 Nếu không thấy pet đâu, nhiều khả năng pet đang bị ẩn: dùng **Show Pet** ở biểu tượng khay.
 
-### Chat
+### 4. Chat
 
 1. Chuột phải vào pet → **Chat**. Một bong bóng thoại mở ra cạnh pet và đi theo pet khi bạn kéo.
 2. Gõ vào ô ở dưới cùng rồi nhấn **Enter**. Câu trả lời hiện dần ra, và pet đổi nét mặt cho hợp với câu trả lời.
@@ -99,7 +99,7 @@ Bạn có thể nhờ pet (AI tự chọn công cụ phù hợp):
 | Tình trạng máy | "Pin / CPU / RAM của mình sao rồi?" | không cần gì |
 | Nhắc việc | "Nhắc mình 11 giờ gọi điện cho mẹ" | không cần gì |
 
-### Nhắc việc
+### 5. Nhắc việc
 
 - Cứ nói trong chat: **"nhắc mình sau 30 phút đứng dậy vận động"** hoặc **"nhắc mình lúc 21:00 nộp báo cáo"**. Giờ đã qua trong hôm nay sẽ được hiểu là ngày mai. Đặt trước được tối đa 7 ngày.
 - Nếu bạn không nói giờ hoặc nói mơ hồ ("tối nay", "lát nữa"), pet sẽ hỏi lại và gợi ý một giờ (sáng 08:00, trưa 12:00, chiều 15:00, tối 20:00, khuya 22:00).
@@ -108,12 +108,12 @@ Bạn có thể nhờ pet (AI tự chọn công cụ phù hợp):
 - Khi đến giờ, pet chạy ra dù đang bị ẩn hay đang ngủ, bật đồng hồ báo thức và nói lời nhắc bằng giọng của mình. Bong bóng nằm đó cho đến khi bạn **click chuột trái vào pet**.
 - Nhắc việc được lưu xuống đĩa nên vẫn còn sau khi tắt app hoặc khởi động lại máy. Nếu giờ nhắc trôi qua lúc app đang tắt, lần mở sau pet sẽ nhắc và báo trễ bao nhiêu phút.
 
-### Cảnh báo và những câu pet tự nói
+### 6. Cảnh báo và những câu pet tự nói
 
 - **Cảnh báo**: cứ 45 giây pet kiểm tra máy một lần. Nếu pin xuống còn 30% hoặc thấp hơn, hay CPU hoặc RAM đạt 90%, pet làm mặt báo động và hiện bong bóng nằm đó cho đến khi bạn click chuột trái vào pet. Sau khi bạn tắt cảnh báo, pet im lặng 10 phút. Các ngưỡng nằm trong [`config.yaml`](./config.yaml).
 - **Tự nói**: khoảng 5 phút một lần pet nói một câu quan tâm (lời chào buổi sáng, nhắc nghỉ ngơi…), một sự thật thú vị hoặc một câu đùa, lần lượt thay nhau. Pet im lặng khi đang bị ẩn, đang ngủ hoặc khi bạn đang chat.
 
-### Settings (biểu tượng khay → Settings)
+### 7. Settings (biểu tượng khay → Settings)
 
 Lựa chọn của bạn được nhớ cho những lần chạy sau.
 
@@ -125,7 +125,7 @@ Lựa chọn của bạn được nhớ cho những lần chạy sau.
 | **Startup** | **Start with Windows**: pet xuất hiện mỗi lần bạn đăng nhập (mặc định tắt) |
 | **Performance** | Tốc độ khung hình **30** hoặc **60 fps**. 30 nhẹ máy hơn; dòng bên dưới cho biết fps thực tế đang vẽ |
 
-### Xử lý sự cố
+### 8. Xử lý sự cố
 
 - **Pet biến mất**: pet đang bị ẩn; biểu tượng khay → **Show Pet**. Nếu không thấy biểu tượng khay, tìm sau mũi tên **^** của taskbar.
 - **Chat báo có lỗi**: kiểm tra khóa trong Settings → Chat AI (**Save** sẽ báo nếu khóa bị từ chối), kết nối mạng và hạn mức API của bạn.

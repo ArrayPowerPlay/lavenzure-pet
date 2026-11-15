@@ -45,7 +45,7 @@ Without a key the pet still runs; only the chat needs one.
 
 ## User guide
 
-### The pet itself
+### 1. The pet itself
 
 | Action | Result |
 |---|---|
@@ -56,7 +56,7 @@ Without a key the pet still runs; only the chat needs one.
 
 After **10 minutes** without touching the mouse or keyboard the pet dozes off. The first thing you do wakes it up and it says "Welcome back!" with how long you were away. From 20:00 to 05:00 it looks calmer and moves slower (it never goes to sleep because of the clock).
 
-### The pet menu (right-click the pet)
+### 2. The pet menu (right-click the pet)
 
 | Item | What it does |
 |---|---|
@@ -65,7 +65,7 @@ After **10 minutes** without touching the mouse or keyboard the pet dozes off. T
 | **Wander** | Wakes the pet up and lets it roam again |
 | **Hide Pet** | Hides the pet. Chat, reminders and alerts keep working in the background |
 
-### The tray icon (system tray, bottom-right of the taskbar)
+### 3. The tray icon (system tray, bottom-right of the taskbar)
 
 The pet puts a small icon of itself in the system tray. On Windows 11 it may sit behind the **^** arrow; drag it out to keep it always visible. Right-click it:
 
@@ -77,7 +77,7 @@ The pet puts a small icon of itself in the system tray. On Windows 11 it may sit
 
 If you cannot find the pet, it is probably hidden: use **Show Pet** from the tray icon.
 
-### Chat
+### 4. Chat
 
 1. Right-click the pet → **Chat**. A speech bubble opens beside the pet and follows it when you drag it.
 2. Type in the box at the bottom and press **Enter**. The reply streams in, and the pet makes a face that matches it.
@@ -99,7 +99,7 @@ What you can ask (the AI decides which tool to use):
 | PC status | "How is my battery / CPU / RAM?" | nothing |
 | A reminder | "Remind me at 11:00 to call mom" | nothing |
 
-### Reminders
+### 5. Reminders
 
 - Just ask in the chat: **"remind me in 30 minutes to stretch"** or **"remind me at 21:00 to submit the report"**. A time that has already passed today means tomorrow. Reminders can be up to 7 days ahead.
 - If you give no time or a vague one ("tonight", "later"), the pet asks and suggests a time (morning 08:00, noon 12:00, afternoon 15:00, evening 20:00, late night 22:00).
@@ -108,12 +108,12 @@ What you can ask (the AI decides which tool to use):
 - When one goes off, the pet comes out even if it was hidden or asleep, shows an alarm clock and says the reminder in its own words. The bubble stays until you **left-click the pet**.
 - Reminders are saved to disk, so they survive closing the app and restarting your PC. If a reminder's time passed while the app was closed, it goes off at the next start and says how many minutes late it is.
 
-### Alerts and little talks
+### 6. Alerts and little talks
 
 - **Alerts**: every 45 seconds the pet checks your PC. If the battery drops to 30% or lower, or CPU or RAM reach 90%, it shows an alert face and a bubble that stays until you left-click it. After you dismiss an alert it stays quiet for 10 minutes. The thresholds are in [`config.yaml`](./config.yaml).
 - **Talks on its own**: about every 5 minutes it says a caring line (a good-morning wish, a reminder to rest…), a fun fact or a joke, taking turns. It stays quiet while it is hidden, asleep, or while you are chatting.
 
-### Settings (tray icon → Settings)
+### 7. Settings (tray icon → Settings)
 
 Your choices are remembered between runs.
 
@@ -125,7 +125,7 @@ Your choices are remembered between runs.
 | **Startup** | **Start with Windows**: the pet appears every time you log in (off by default) |
 | **Performance** | Frame rate **30** or **60 fps**. 30 is lighter on your CPU/GPU; the line under it shows the real fps being drawn |
 
-### Troubleshooting
+### 8. Troubleshooting
 
 - **The pet disappeared**: it is hidden; tray icon → **Show Pet**. If there is no tray icon, check the **^** arrow of the taskbar.
 - **The chat says something went wrong**: check the key in Settings → Chat AI (**Save** tells you if the key is rejected), your internet connection and your API quota.
