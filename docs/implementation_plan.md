@@ -187,7 +187,7 @@ Còn thiếu / cần làm tiếp:
   - [ ] H5.1 Gỡ mũ Noel lượt 38 (`outfits.py` phần mũ, `set_santa_hat`, `HAT_FLAME_DIP`, test, nút preview)
   - [ ] H5.2 Khăn len ở `normal` (mặt nhích lên) → user duyệt
   - [ ] H5.3 Khăn ở mọi biểu cảm: `scared` dài người (miệng giữ nguyên cỡ), `remind` có khăn, `fly` trên khúc gỗ → user duyệt
-  - [ ] H5.3b Vật cưỡi khi bay ở Xmas outfit thay khúc gỗ (chờ user chọn; đề xuất hộp quà), vẫn thấy khăn → user duyệt
+  - [ ] H5.3b Khúc gỗ khi bay ở Xmas outfit có thêm đốm tuyết (vẫn thấy khăn) → user duyệt
   - [ ] H5.4 Tuyết rơi (chỉ khi bật Xmas outfit) → user duyệt
   - [ ] H5.5 Biểu cảm chúc mừng dùng chung (chữ to, đẹp, 🎄; EN/VI), hiện ngẫu nhiên như các biểu cảm khác; câu chúc Giáng sinh
   - [ ] H5.6 Settings > Outfit: Normal / Xmas (chọn tay, không tự đổi theo ngày)

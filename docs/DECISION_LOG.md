@@ -545,6 +545,7 @@
 
 - **Claude đề xuất: hộp quà.** Chỉ thay khi bật Xmas outfit; Normal outfit vẫn là khúc gỗ.
 - **Còn mở (chờ user):** chọn vật nào; nếu hộp quà: màu (xanh lá + ruy băng đỏ như ảnh thử, hay màu khác), nơ đặt ở đâu, biến mất kiểu gì (nổ ra giấy màu / bị lửa bén cháy thành tàn như khúc gỗ / nắp bật ra rồi biến mất).
+- **User chốt:** **vẫn dùng khúc gỗ** khi bay ở Xmas outfit (không dùng hộp quà / kẹo gậy / xe trượt tuyết), nhưng khúc gỗ **có thêm đốm tuyết** (mảng tuyết trắng đọng trên khúc gỗ, chỉ khi bật Xmas outfit; Normal outfit giữ khúc gỗ như cũ). Khăn vẫn phải thấy khi bay.
 
 ## Còn bàn
 
@@ -553,4 +554,4 @@
 - Đo lại 60 phút ở 30 fps + lửa nhẹ (`src/perf_check.py`, cần thoát pet đang chạy).
 - Cách 3 (tạm dừng khi có app toàn màn hình) và cách 5 (lửa 30 khung/giây) — user để lại, chưa làm.
 - Lượt 24: user thử các tính năng mới trên desktop thật và góp ý; T1, T6, P2 vẫn pending; âm thanh và hướng agent để sau.
-- Lượt 39-40: trang phục Giáng sinh = khăn len (bỏ mũ lượt 38); đã chốt, **phiên sau code** theo thứ tự ở lượt 39, duyệt từng bước. Lượt 40: chờ user chọn vật thay khúc gỗ khi bay (Claude đề xuất hộp quà).
+- Lượt 39-40: trang phục Giáng sinh = khăn len (bỏ mũ lượt 38); đã chốt, **phiên sau code** theo thứ tự ở lượt 39, duyệt từng bước. Lượt 40: khi bay vẫn là khúc gỗ, ở Xmas outfit có thêm đốm tuyết.
