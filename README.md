@@ -26,7 +26,7 @@ Lavenzure is a pocket-sized flame spirit that lives on top of your windows. It w
 - **Chat with an AI agent** (Google Gemini or OpenAI, your choice) with tools for **weather**, **web search**, **PC status** (CPU / RAM / battery) and **reminders** ("remind me at 11:00 to…").
 - **Looks after you**: alerts when the battery, CPU or RAM get critical, and every 5 minutes it says a caring line, a fun fact or a joke.
 - **English or Vietnamese** for everything it says (Settings).
-- **Christmas outfit** (Settings → Outfit): a knitted scarf, a snowy log and festive greetings.
+- **Outfits** (Settings → Outfit): pick the costume your pet wears. The current version ships the **Christmas outfit** (a knitted scarf, a snowy log and festive greetings) next to the normal look, and more outfits are planned.
 - **Private**: the chat lives in RAM only, and your API keys are kept in the Windows Credential Manager.
 
 ## Download and run (Windows 10/11)

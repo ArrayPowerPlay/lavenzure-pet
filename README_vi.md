@@ -26,7 +26,7 @@ Lavenzure là một linh hồn lửa nhỏ bằng bàn tay, sống nổi trên m
 - **Chat với AI agent** (Google Gemini hoặc OpenAI, bạn chọn) có sẵn công cụ **thời tiết**, **tìm kiếm web**, **tình trạng máy** (CPU / RAM / pin) và **nhắc việc** ("nhắc tôi lúc 11:00 làm…").
 - **Quan tâm bạn**: cảnh báo khi pin, CPU hoặc RAM ở mức nguy hiểm; cứ 5 phút lại nói một câu quan tâm, một sự thật thú vị hoặc một câu đùa.
 - **Tiếng Anh hoặc tiếng Việt** cho mọi câu nó nói (trong Settings).
-- **Trang phục Giáng sinh** (Settings → Outfit): khăn len, khúc gỗ phủ tuyết và lời chúc mừng.
+- **Nhiều trang phục** (Settings → Outfit): bạn chọn bộ đồ cho pet. Phiên bản hiện tại có **trang phục Giáng sinh** (khăn len, khúc gỗ phủ tuyết và lời chúc mừng) bên cạnh diện mạo thường, và sẽ có thêm các trang phục khác.
 - **Riêng tư**: cuộc trò chuyện chỉ nằm trong RAM, khóa API được cất trong Windows Credential Manager.
 
 ## Tải về và chạy (Windows 10/11)
