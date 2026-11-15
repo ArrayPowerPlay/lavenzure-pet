@@ -282,8 +282,20 @@ class MetaballFlame(FlameRenderer):
                     self.tip = min(pts, key=lambda p: p[1])
                 cut = -(BODY_CY + 0.5) * R
                 self.top_points = [p for p in pts if p[1] < cut]
+                self.top_edge = _top_edge(pts, 0.06 * R)
 
 # ---------------------------------------------------------------------- contour helpers
+
+def _top_edge(pts: list[tuple[float, float]], bin_w: float) -> list[tuple[float, float]]:
+    """Top silhouette of outline points: the highest point in each ``bin_w`` wide column,
+    sorted by x (see ``FlameRenderer.top_edge``)."""
+    best: dict[int, tuple[float, float]] = {}
+    for x, y in pts:
+        k = int(math.floor(x / bin_w))
+        if k not in best or y < best[k][1]:
+            best[k] = (x, y)
+    return [best[k] for k in sorted(best)]
+
 
 def _trace(g: np.ndarray, x0: float, y0: float, h: float) -> list[list[tuple[float, float]]]:
     """Marching squares: closed loops (in units of R) where ``g`` crosses 0.

@@ -39,6 +39,7 @@ internal resolution.
 """
 from __future__ import annotations
 
+import bisect
 import math
 import random
 from dataclasses import dataclass
@@ -63,15 +64,20 @@ from overlay.flame_common import (
     smoothstep,
 )
 from overlay.outfits import (
+    HIT_FIRE,
+    HIT_NONE,
+    HIT_REST,
     SCARF_FACE_LIFT,
     SCARF_MAX_TALLER,
     SCARF_MOUTH_ROOM,
     SCARF_PINCH,
     SCARF_T,
     ScarfProp,
+    SnowFall,
 )
 from overlay.props import (
     LOG_CY,
+    LOG_HALF_LEN,
     LOG_RADIUS,
     AlarmClockProp,
     LogProp,
@@ -217,6 +223,7 @@ class FlameCharacter:
         self.clock = AlarmClockProp(self.R)
         self.snores = Snores(self.R, self._rng)
         self.scarf = ScarfProp(self.R, self._seed)
+        self.snowfall = SnowFall(self.width, self.height, scale, self._seed + 977)
         self._outfit = "normal"
         self._scarf_taller = 0.0   # extra body height that keeps a big mouth above the scarf
         self._drive: FlameDrive | None = None   # last frame's flame inputs (the scarf hugs them)
@@ -319,8 +326,10 @@ class FlameCharacter:
         self._outfit = name
         if name == "xmas":
             self.scarf.show()
+            self.snowfall.show()
         else:
             self.scarf.hide()
+            self.snowfall.hide()
         self._poofs.append(_Poof(self.feet.x(), self.feet.y() + self._hop_y + self._float_y
                                  - 0.5 * self.R, 0.0, 0.35, 1.3 * self.R))
 
@@ -604,6 +613,7 @@ class FlameCharacter:
         self.clock.update(dt)
         self.scarf.update(dt, self._vx / self.R, (self._vy + self._hop_v) / self.R)
         self.log.snow = self.scarf.amount if self.scarf.visible else 0.0   # Xmas: a snowy log
+        self.snowfall.update(dt, self._moved, self._snow_hit)
         if self.log.crumbling:
             self._crumble_debt += dt * 70.0
             n = int(self._crumble_debt)
@@ -624,6 +634,29 @@ class FlameCharacter:
             if poof.age < poof.life:
                 alive.append(poof)
         self._poofs = alive
+
+    def _snow_hit(self, x: float, y: float) -> int:
+        """What a falling snowflake at widget point (``x``, ``y``) touches: the fire (it melts),
+        the log or the ground line (it settles), or nothing."""
+        base_y = self.feet.y() + self._hop_y + self._float_y
+        if self.log.visible and self.log.amount > 0.5:
+            lx = x - (self.feet.x() + self._shake_px * 0.3)
+            top = base_y + (LOG_CY - LOG_RADIUS - 0.1) * self.R
+            if abs(lx) < LOG_HALF_LEN * self.R and top <= y <= top + LOG_RADIUS * self.R:
+                return HIT_REST
+        elif y >= self.feet.y():
+            return HIT_REST
+        # Into body coordinates (inverse of ``_to_widget``), then compare with the fire's top.
+        by = (y - base_y) / self._sy
+        bx = (x - self.feet.x() - self._shake_px) / self._sx + self._lean.value * 0.22 * by
+        edge = self.flame.top_edge
+        if not edge or not edge[0][0] <= bx <= edge[-1][0]:
+            return HIT_NONE
+        i = bisect.bisect_left(edge, (bx, -math.inf))
+        x0, y0 = edge[max(i - 1, 0)]
+        x1, y1 = edge[min(i, len(edge) - 1)]
+        top_y = y0 if x1 == x0 else lerp(y0, y1, (bx - x0) / (x1 - x0))
+        return HIT_FIRE if by >= top_y else HIT_NONE
 
     def _poof_at_log(self) -> None:
         """Puff + spark ring where the log pops into existence."""
@@ -727,6 +760,7 @@ class FlameCharacter:
         if not log_behind:
             self._paint_log(painter, paws=True)
         self._paint_clock(painter)
+        self.snowfall.paint(painter)
         self._paint_poofs(painter)
         self.snores.paint(painter)
 
