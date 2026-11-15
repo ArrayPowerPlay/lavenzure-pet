@@ -617,6 +617,13 @@
 - **Phát hiện thêm (chưa sửa, chờ user):** ở các biểu cảm lửa cao (`cheer`, `scared`, `angry`...), lúc lửa bùng lên đỉnh lửa đôi khi bị **cắt bằng** vì chạm trần vùng vẽ của shader (4,4 R trên chân). Có thể nâng trần vùng vẽ (cửa sổ pet còn chỗ tới ~4,65 R).
 - **Chờ user:** thử trên desktop thật (cần khởi động lại pet), duyệt; trang phục Giáng sinh (H5) coi như xong nếu user ưng.
 
+### Lượt 48 (2026-11-15) — sửa đỉnh lửa bị cắt bằng (ĐÃ CODE)
+- **User:** "ok sửa đi" (lỗi phát hiện ở lượt 47).
+- **Tái hiện:** đo 360 khung hình mỗi biểu cảm: lửa của `surprised`, `angry`, `alert`, `cheer`, `yuck` muốn bùng cao tới ~4,9 R, nhưng shader làm lửa nhỏ dần từ 4,0 R và tắt hẳn ở 4,4 R, nên **30-66% số khung hình** của các biểu cảm này có đỉnh lửa bị ép thành mặt bằng (biểu cảm thường ~3%).
+- **Đã sửa:** trần vùng vẽ lửa của shader 4,4 → **5,2 R** (lửa chỉ nhỏ dần từ 4,8 R: giờ dưới 1,5% khung hình chạm tới, mà chỉ chạm nhẹ); **cửa sổ pet cao thêm** (236 → 260 × scale, ở scale 0.75 là 177 → 195 px; khoảng trên chân 4,65 → 5,17 R) để đỉnh lửa cao hơn vẫn nằm gọn trong cửa sổ (đo: không khung nào chạm mép trên). Mọi thứ đặt theo vị trí chân pet nên di chuyển, icon khay, bong bóng không đổi. Tốn thêm ~0,1 ms mỗi khung hình.
+- **Ảnh** (git-ignored): `docs/references/_xmas11_flame_top.png` (trước / sau, cùng các khung hình).
+- **Chờ user:** thử trên desktop thật cùng lượt 47.
+
 ## Còn bàn
 
 - **Đóng gói v0.1.0** (lượt 34-37): đã code, user thử `rc.1` trên desktop thật (chạy được) và v0.1.0 đã phát hành. Còn: user xem lại giấy phép MIT và chuyện `README.txt` trong zip.
@@ -624,4 +631,4 @@
 - Đo lại 60 phút ở 30 fps + lửa nhẹ (`src/perf_check.py`, cần thoát pet đang chạy).
 - Cách 3 (tạm dừng khi có app toàn màn hình) và cách 5 (lửa 30 khung/giây) — user để lại, chưa làm.
 - Lượt 24: user thử các tính năng mới trên desktop thật và góp ý; T1, T6, P2 vẫn pending; âm thanh và hướng agent để sau.
-- Lượt 39-41: trang phục Giáng sinh = khăn len (bỏ mũ lượt 38), code theo thứ tự ở lượt 39, duyệt từng bước. Lượt 40: khi bay vẫn là khúc gỗ, ở Xmas outfit có thêm đốm tuyết. Lượt 41: đã gỡ mũ + làm khăn ở `normal`. Lượt 42: quàng khăn thì thân dài ra cho miệng to vừa (mọi biểu cảm), viền mặt mảnh hơn (user duyệt). Lượt 43: khăn ở mọi biểu cảm xong, khúc gỗ phủ tuyết; lượt 44: tuyết dày hơn (user duyệt). Lượt 45: tuyết rơi quanh pet; lượt 46: user **bỏ tuyết rơi** (đã gỡ code); đã làm bước 5 (biểu cảm `cheer` + bong bóng chúc 🎄, chỉ khi bật Xmas outfit). Lượt 47: sửa mắt / bong bóng theo góp ý và làm bước 6 (Settings > Outfit); **chờ user thử trên desktop thật**. Còn mở: đỉnh lửa đôi khi bị cắt bằng ở biểu cảm lửa cao.
+- Lượt 39-41: trang phục Giáng sinh = khăn len (bỏ mũ lượt 38), code theo thứ tự ở lượt 39, duyệt từng bước. Lượt 40: khi bay vẫn là khúc gỗ, ở Xmas outfit có thêm đốm tuyết. Lượt 41: đã gỡ mũ + làm khăn ở `normal`. Lượt 42: quàng khăn thì thân dài ra cho miệng to vừa (mọi biểu cảm), viền mặt mảnh hơn (user duyệt). Lượt 43: khăn ở mọi biểu cảm xong, khúc gỗ phủ tuyết; lượt 44: tuyết dày hơn (user duyệt). Lượt 45: tuyết rơi quanh pet; lượt 46: user **bỏ tuyết rơi** (đã gỡ code); đã làm bước 5 (biểu cảm `cheer` + bong bóng chúc 🎄, chỉ khi bật Xmas outfit). Lượt 47: sửa mắt / bong bóng theo góp ý và làm bước 6 (Settings > Outfit); **chờ user thử trên desktop thật**. Lượt 48: đã sửa đỉnh lửa bị cắt bằng ở biểu cảm lửa cao.
