@@ -93,6 +93,7 @@ uniform vec3 uBody;        // body centre height, half-width, half-height (R)
 uniform vec2 uInsets;      // mid / inner band insets on the calm body (R)
 uniform vec4 uShape;       // body width mult, body height mult, boxiness 0..1, raggedness 0..1
 uniform vec4 uPaws;        // on the log: amount 0..1, kneading phase, seat height (R), -
+uniform vec4 uScarf;       // scarf: band centre height (R), half thickness (R), squeeze, -
 
 // ---- 3D gradient noise (hash-based, no textures) ----
 vec3 hash3(vec3 p) {
@@ -177,6 +178,12 @@ void main() {
     // Sitting on the log, the body's weight spreads its lower half a little (fig. 4: a wide
     // bottom resting on the log, not a narrow point).
     bx *= 1.0 + 0.12 * clamp(uPaws.x, 0.0, 1.0) * (1.0 - smoothstep(cy - ry, cy, h));
+    // The Christmas scarf is tied snugly: the soft body is squeezed a little where it sits
+    // (``body_half_width`` in flame_common.py is the CPU copy of this body, keep them in step).
+    if (uScarf.z > 0.0) {
+        float s = (h - uScarf.x) / max(uScarf.y * 1.25, 1e-3);
+        bx *= 1.0 - uScarf.z * exp(-s * s * s * s);
+    }
     vec2 q = vec2(x / bx, (h - cy) / by);
     float pw = 2.0 + 2.6 * boxy;
     vec2 aq = abs(q) + 1e-5;
@@ -533,6 +540,8 @@ class ShaderFlame(ImageFlame):
                                  float(drive.boxy), float(drive.jag))
             prog.setUniformValue("uPaws", float(drive.paws), float(drive.paw_phase),
                                  float(drive.seat), 0.0)
+            prog.setUniformValue("uScarf", float(drive.scarf_h), float(drive.scarf_t),
+                                 float(drive.scarf_pinch), 0.0)
             self._vao.bind()
             gl.glDrawArrays(_GL_TRIANGLE_STRIP, 0, 4)
             self._vao.release()

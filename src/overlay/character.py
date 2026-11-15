@@ -25,6 +25,8 @@ Pieces:
   sitting on it, so the paws and the log never cover the mouth), the frying pan resting on the
   head in the ``chill`` mood, the sunglasses of ``cool``, the alarm clock ringing beside the pet
   while a reminder is due (``set_reminding``), and the "z"s of a sleeping pet.
+- **Outfits** (``overlay.outfits``, ``set_outfit``) - ``xmas`` = a knitted scarf hugging the
+  lower body in every mood (the face moves up a little and the body is squeezed under it).
 - **Sparks** that drift upward in *screen* space, so they trail behind the pet as it moves, plus
   little "poof" rings when a prop appears or vanishes.
 
@@ -60,6 +62,7 @@ from overlay.flame_common import (
     noise1,
     smoothstep,
 )
+from overlay.outfits import SCARF_FACE_LIFT, SCARF_PINCH, SCARF_T, ScarfProp
 from overlay.props import (
     LOG_CY,
     LOG_RADIUS,
@@ -137,6 +140,7 @@ SEAT_SINK = 0.05                   # R: the body's flat bottom sits this far int
 FACE_LIFT_ON_LOG = 0.24            # R: the face moves up while sitting on the log ...
 MOUTH_FLOOR_ON_LOG = -0.56         # ... and the mouth stays above this height (R, feet = 0)
 BREATH_PERIOD = 3.6                # seconds per breath while asleep
+OUTFITS = ("normal", "xmas")       # what ``set_outfit`` accepts (Settings > Outfit)
 
 
 class FlameCharacter:
@@ -205,6 +209,9 @@ class FlameCharacter:
         self.shades = SunglassesProp(self.R)
         self.clock = AlarmClockProp(self.R)
         self.snores = Snores(self.R, self._rng)
+        self.scarf = ScarfProp(self.R, self._seed)
+        self._outfit = "normal"
+        self._drive: FlameDrive | None = None   # last frame's flame inputs (the scarf hugs them)
 
         self._embers: list[_Ember] = []
         self._poofs: list[_Poof] = []
@@ -293,6 +300,26 @@ class FlameCharacter:
     def riding(self) -> bool:
         """True while the pet sits on its flying log."""
         return self._riding
+
+    def set_outfit(self, name: str) -> None:
+        """Wear an outfit: ``normal`` (none) or ``xmas`` (the knitted scarf). It stays on
+        through every mood; changing it fades the scarf in / out with a little poof."""
+        if name not in OUTFITS:
+            raise ValueError(f"unknown outfit {name!r}")
+        if name == self._outfit:
+            return
+        self._outfit = name
+        if name == "xmas":
+            self.scarf.show()
+        else:
+            self.scarf.hide()
+        self._poofs.append(_Poof(self.feet.x(), self.feet.y() + self._hop_y + self._float_y
+                                 - 0.5 * self.R, 0.0, 0.35, 1.3 * self.R))
+
+    @property
+    def outfit(self) -> str:
+        """Name of the outfit being worn (see ``set_outfit``)."""
+        return self._outfit
 
     def set_night(self, amount: float) -> None:
         """Night look (0 = day, 1 = full night): lower, slower, deeper-red fire. Eases over
@@ -425,6 +452,14 @@ class FlameCharacter:
         ride = clamp(self.log.amount, 0.0, 1.0) if self.log.visible else 0.0
         self.face.lift = FACE_LIFT_ON_LOG * ride
         self.face.floor_y = MOUTH_FLOOR_ON_LOG * self.R if ride > 0.05 else None
+        if self.scarf.visible:
+            # The scarf takes the lower body: the face moves up and the mouth stays above it.
+            worn = self.scarf.amount
+            self.face.lift = max(self.face.lift, SCARF_FACE_LIFT * worn)
+            top = self.scarf.band_height(self.face.expr.body_h, ride) + SCARF_T + 0.03
+            floor = -top * worn * self.R
+            self.face.floor_y = floor if self.face.floor_y is None else min(self.face.floor_y,
+                                                                               floor)
         face_cursor = None
         if cursor is not None:
             face_cursor = QPointF(cursor.x() - self.feet.x(),
@@ -515,8 +550,12 @@ class FlameCharacter:
         # Sitting on the log: the shader draws the paws as part of the fire (see ``paint``).
         ride = clamp(self.log.amount, 0.0, 1.2) if self.log.visible else 0.0
         height = ex.flame * w.height * (1.0 - 0.14 * night) * (1.0 + 0.1 * self._breath_wave)
+        scarf_h = scarf_pinch = 0.0
+        if self.scarf.visible:
+            scarf_h = self.scarf.band_height(ex.body_h, clamp(ride, 0.0, 1.0))
+            scarf_pinch = SCARF_PINCH * self.scarf.amount
         # Apparent wind from the pet's own movement (in R per second): the fire trails behind.
-        self.flame.step(FlameDrive(
+        self._drive = drive = FlameDrive(
             dt=dt * speed, clock=c, seed=s, wild=wild, flame=height,
             wind_x=-0.45 * self._vx / self.R, wind_y=-0.3 * self._vy / self.R,
             sway=sway, breath=self._breath_n,
@@ -524,11 +563,13 @@ class FlameCharacter:
             jag=clamp(ex.jag, 0.0, 1.2),
             paws=clamp(ride, 0.0, 1.0) * (1.0 - smoothstep(0.0, 0.3, self.log.crumble)),
             paw_phase=self.log.knead_phase, seat=-(LOG_CY - LOG_RADIUS) - SEAT_SINK,
-        ))
+            scarf_h=scarf_h, scarf_t=SCARF_T, scarf_pinch=scarf_pinch,
+        )
+        self.flame.step(drive)
 
     def _update_props(self, dt: float) -> None:
-        """Log (and its crumbling embers), frying pan, sunglasses, alarm clock, snoring "z"s and
-        poof rings."""
+        """Log (and its crumbling embers), frying pan, sunglasses, alarm clock, scarf, snoring
+        "z"s and poof rings."""
         self.log.update(dt)
         self.pan.update(dt)
         if self.pan.landing_impact():
@@ -537,6 +578,7 @@ class FlameCharacter:
         if self.shades.landing_impact():
             self._squash.velocity -= 0.6      # the sunglasses land on the nose: a small nod
         self.clock.update(dt)
+        self.scarf.update(dt, self._vx / self.R, (self._vy + self._hop_v) / self.R)
         if self.log.crumbling:
             self._crumble_debt += dt * 70.0
             n = int(self._crumble_debt)
@@ -653,6 +695,9 @@ class FlameCharacter:
         # just above the eyes and the flame shows around and behind it.
         self.pan.paint(painter, self.face.eye_top() - 0.07 * self.R)
         self.shades.paint(painter, self.face.eye_boxes(), self.face.expr.tilt)
+        if self._drive is not None:
+            ride = clamp(self.log.amount, 0.0, 1.0) if self.log.visible else 0.0
+            self.scarf.paint(painter, self._drive, ride)
         painter.restore()
 
         if not log_behind:

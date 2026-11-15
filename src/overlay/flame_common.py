@@ -14,7 +14,8 @@ All of them share what lives in this module:
 
 - the body geometry (``BODY_*``), so the face always sits on the same calm yellow area no matter
   which renderer is active;
-- ``FlameDrive`` (per-frame inputs from the character) and ``FlameColors``;
+- ``FlameDrive`` (per-frame inputs from the character), ``FlameColors`` and
+  ``body_half_width`` (the shader body's width at a height, for things that hug the body);
 - ``FireWeather``: slow random "moods" of the fire (calm, gust, crackle, lull) plus a drifting
   lean of the main tip, so the flame never settles into one predictable rhythm;
 - ``FlameRenderer`` (the interface) and ``ImageFlame`` (helper for renderers that produce a
@@ -157,6 +158,31 @@ class FlameDrive:
     paws: float = 0.0
     paw_phase: float = 0.0
     seat: float = 0.0
+    # Knitted scarf of the Christmas outfit (shader only): the band's centre height and half
+    # thickness (R above the feet), and how much the soft body is squeezed there (0 = no scarf).
+    scarf_h: float = 0.0
+    scarf_t: float = 0.1
+    scarf_pinch: float = 0.0
+
+
+def body_half_width(h: float, drive: FlameDrive) -> float:
+    """Half width (R) of the ``shader`` renderer's calm body at height ``h`` (R above the feet).
+
+    A CPU copy of the body superellipse in ``flame_shader._FRAGMENT_SHADER`` (breathing, the
+    spread of the lower half on the log, the scarf squeeze). It ignores the small rim noise and
+    the cone above the body centre, so it is exact enough below the centre, where things that
+    hug the body (the scarf) sit. Keep it in step with the shader.
+    """
+    cy, rx, ry = BODY_CY * drive.body_h, BODY_RX * drive.body_w, BODY_RY * drive.body_h
+    bx = rx * (1.0 + 0.02 * drive.breath)
+    by = ry * (1.0 - 0.02 * drive.breath)
+    bx *= 1.0 + 0.12 * clamp(drive.paws, 0.0, 1.0) * (1.0 - smoothstep(cy - ry, cy, h))
+    if drive.scarf_pinch > 0.0:
+        s = (h - drive.scarf_h) / max(drive.scarf_t * 1.25, 1e-3)
+        bx *= 1.0 - drive.scarf_pinch * math.exp(-s ** 4)
+    pw = 2.0 + 2.6 * drive.boxy
+    qy = min(abs((h - cy) / by), 0.999)
+    return bx * (1.0 - qy ** pw) ** (1.0 / pw)
 
 
 @dataclass

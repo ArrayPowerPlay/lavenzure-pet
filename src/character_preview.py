@@ -171,6 +171,8 @@ def main() -> int:
             ch.set_reminding(True)
 
     button("Remind (clock) / OK", 4, 0, each(toggle_remind))
+    button("Outfit normal / xmas", 4, 1,
+           each(lambda ch: ch.set_outfit("normal" if ch.outfit == "xmas" else "xmas")))
 
     def toggle_bg() -> None:
         """Switch the backdrop between dark and light."""
