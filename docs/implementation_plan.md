@@ -183,12 +183,12 @@ Còn thiếu / cần làm tiếp:
 - [x] **H3. Bật lại nhắc việc** (thay G4): theo phút hoặc giờ, code tự tính giờ, lưu file `reminders.json`, bong bóng giữ tới khi click.
 - [x] **H4. Biểu cảm `cool`:** kính râm rơi xuống + cười nhếch mép; có trong phản ứng click và cảm xúc AI.
 - [x] **H6. Nhắc việc hỏi giờ + huỷ nhắc** (lượt 25): giờ thiếu / mơ hồ → hỏi lại kèm giờ gợi ý; công cụ liệt kê / huỷ / tắt bong bóng nhắc; tab **Chat | Reminders** trong bong bóng chat, gỡ nhắc bằng nút ✕.
-- [ ] **H5. T6 (trang phục ngày lễ)** — Giáng sinh đã chốt ở `DECISION_LOG.md` lượt 39-40; đang code (lượt 41-43: H5.1-H5.3 xong, H5.3b chờ user duyệt) (T1 đã làm ở H8):
+- [ ] **H5. T6 (trang phục ngày lễ)** — Giáng sinh đã chốt ở `DECISION_LOG.md` lượt 39-40; đang code (lượt 41-45: H5.1-H5.3b xong, H5.4 chờ user duyệt) (T1 đã làm ở H8):
   - [x] H5.1 Gỡ mũ Noel lượt 38 (`outfits.py` phần mũ, `set_santa_hat`, `HAT_FLAME_DIP`, test, nút preview)
   - [x] H5.2 Khăn len ở `normal` (mặt nhích lên) → user đã duyệt (lượt 41: `outfits.py` `ScarfProp`, `set_outfit("xmas")`, nút preview)
   - [x] H5.3 Khăn ở mọi biểu cảm: `scared` dài người (miệng giữ nguyên cỡ; lượt 42: thân tự dài ra ở mọi biểu cảm miệng to, viền mặt mảnh hơn), `remind` có khăn, `fly` trên khúc gỗ (lượt 43: kiểm tra cả 18 biểu cảm)
-  - [x] H5.3b Khúc gỗ khi bay ở Xmas outfit có thêm đốm tuyết (vẫn thấy khăn) → **chờ user duyệt** (lượt 43: `LogProp.snow`)
-  - [ ] H5.4 Tuyết rơi (chỉ khi bật Xmas outfit) → user duyệt
+  - [x] H5.3b Khúc gỗ khi bay ở Xmas outfit có thêm đốm tuyết (vẫn thấy khăn) → user đã duyệt (lượt 43-44: `LogProp.snow`)
+  - [x] H5.4 Tuyết rơi (chỉ khi bật Xmas outfit; chỉ trong cửa sổ pet; chạm lửa tan "xèo") → **chờ user duyệt** (lượt 45: `outfits.py` `SnowFall`)
   - [ ] H5.5 Biểu cảm chúc mừng dùng chung (chữ to, đẹp, 🎄; EN/VI), hiện ngẫu nhiên như các biểu cảm khác; câu chúc Giáng sinh
   - [ ] H5.6 Settings > Outfit: Normal / Xmas (chọn tay, không tự đổi theo ngày)
 - [x] **H7. Biểu cảm nhắc lịch** (lượt 32): mood `REMIND` + đồng hồ báo thức ⏰ (`AlarmClockProp`) rung liên tục cạnh pet, pet đứng yên tới khi click; click → đồng hồ rút đi + mood `OK` (mắt "^ ^" cười 1 giây).

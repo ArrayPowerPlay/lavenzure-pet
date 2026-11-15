@@ -7,7 +7,8 @@ across every mood live in `src/overlay/outfits.py`: `ScarfProp` (Christmas, `set
 hugs the lower body with `flame_common.body_half_width` (the shader body's exact width at a
 height) and pre-draws its still parts into cached images; copy it for anything that must fit
 the body of every expression. An outfit can also dress other props: the Xmas outfit sets
-`LogProp.snow` (snow patches on the log, faded with the scarf). Copy the closest
+`LogProp.snow` (snow patches on the log, faded with the scarf) and runs `SnowFall` (widget-space
+flakes that melt on `FlameRenderer.top_edge`, the fire's top silhouette). Copy the closest
 one; `SunglassesProp` is the smallest complete example.
 
 ## Shape of a prop

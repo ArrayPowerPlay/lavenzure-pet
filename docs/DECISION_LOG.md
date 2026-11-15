@@ -577,6 +577,20 @@
 - **Ảnh** (git-ignored): `docs/references/_xmas7_thicker_snow.png`, `_xmas7_thicker_snow_real_size.png`.
 - **Chờ user:** duyệt, rồi làm bước 4 (tuyết rơi).
 
+### Lượt 45 (2026-11-15) — bước 4: tuyết rơi (chỉ khi bật Xmas outfit)
+- **User:** duyệt tuyết dày trên khúc gỗ (lượt 44), bảo làm tiếp bước 4. **Claude hỏi** tuyết rơi ở đâu: **user chọn "chỉ quanh pet"** (trong cửa sổ nhỏ của pet, không làm lớp phủ cả màn hình).
+- **Đã làm:** `src/overlay/outfits.py` `SnowFall`, bật / tắt cùng Xmas outfit.
+  - Khoảng 7 bông tuyết mỗi giây ở cỡ mặc định, rơi chậm, đung đưa nhẹ. 30% là tinh thể sáu cánh, còn lại là chấm tròn; bông to rơi nhanh hơn (trông gần hơn). Tuyết dày dần lên trong 1,5 s sau khi bật outfit.
+  - Tuyết nằm yên theo màn hình (giống tia lửa): pet đi thì đi xuyên qua tuyết. Khi pet đi sang một bên, tuyết được thêm vào từ phía đó để phía trước không bị trống.
+  - **Chạm lửa thì tan "xèo":** một làn hơi nước nhỏ bay lên và một tia lửa vàng tí xíu bật lên rồi tắt. Code so vị trí bông tuyết với đường viền trên của ngọn lửa trong từng khung hình (`FlameRenderer.top_edge`, mới).
+  - Rơi tới khúc gỗ (khi bay) hoặc tới mặt đất dưới chân pet thì nằm lại một chút rồi mờ đi.
+  - Gần mép cửa sổ thì bông tuyết mờ dần, nên không thấy khung cửa sổ.
+  - Bông tuyết trắng có quầng xanh nhạt mềm để vẫn thấy trên nền trắng.
+  - Tắt outfit thì ngừng tuyết mới, tuyết đang rơi rơi nốt.
+  - Tốn thêm khoảng 0,3 ms mỗi khung hình (bông tuyết vẽ sẵn thành ảnh nhỏ). Normal outfit vẽ y như cũ (64 khung hình giống hệt).
+- **Ảnh** (git-ignored): `docs/references/_xmas8_snowfall.png` (đứng yên / đang đi sang phải / trên khúc gỗ / scared; hàng trên nền tối, giữa nền sáng, dưới cùng là cỡ thật), `_xmas8_snowfall_zoom.png` (phóng to).
+- **Chờ user:** duyệt tuyết rơi; tiếp theo là bước 5 (biểu cảm chúc mừng + câu chúc Giáng sinh).
+
 ## Còn bàn
 
 - **Đóng gói v0.1.0** (lượt 34-37): đã code, user thử `rc.1` trên desktop thật (chạy được) và v0.1.0 đã phát hành. Còn: user xem lại giấy phép MIT và chuyện `README.txt` trong zip.
@@ -584,4 +598,4 @@
 - Đo lại 60 phút ở 30 fps + lửa nhẹ (`src/perf_check.py`, cần thoát pet đang chạy).
 - Cách 3 (tạm dừng khi có app toàn màn hình) và cách 5 (lửa 30 khung/giây) — user để lại, chưa làm.
 - Lượt 24: user thử các tính năng mới trên desktop thật và góp ý; T1, T6, P2 vẫn pending; âm thanh và hướng agent để sau.
-- Lượt 39-41: trang phục Giáng sinh = khăn len (bỏ mũ lượt 38), code theo thứ tự ở lượt 39, duyệt từng bước. Lượt 40: khi bay vẫn là khúc gỗ, ở Xmas outfit có thêm đốm tuyết. Lượt 41: đã gỡ mũ + làm khăn ở `normal`. Lượt 42: quàng khăn thì thân dài ra cho miệng to vừa (mọi biểu cảm), viền mặt mảnh hơn (user duyệt). Lượt 43: khăn ở mọi biểu cảm xong, khúc gỗ phủ tuyết; lượt 44: tuyết dày hơn; **chờ user duyệt** rồi mới làm bước 4 (tuyết rơi).
+- Lượt 39-41: trang phục Giáng sinh = khăn len (bỏ mũ lượt 38), code theo thứ tự ở lượt 39, duyệt từng bước. Lượt 40: khi bay vẫn là khúc gỗ, ở Xmas outfit có thêm đốm tuyết. Lượt 41: đã gỡ mũ + làm khăn ở `normal`. Lượt 42: quàng khăn thì thân dài ra cho miệng to vừa (mọi biểu cảm), viền mặt mảnh hơn (user duyệt). Lượt 43: khăn ở mọi biểu cảm xong, khúc gỗ phủ tuyết; lượt 44: tuyết dày hơn (user duyệt). Lượt 45: tuyết rơi quanh pet, chạm lửa tan "xèo"; **chờ user duyệt** rồi làm bước 5 (biểu cảm chúc mừng).
