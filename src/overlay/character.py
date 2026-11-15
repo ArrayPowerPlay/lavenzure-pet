@@ -62,7 +62,14 @@ from overlay.flame_common import (
     noise1,
     smoothstep,
 )
-from overlay.outfits import SCARF_FACE_LIFT, SCARF_PINCH, SCARF_T, ScarfProp
+from overlay.outfits import (
+    SCARF_FACE_LIFT,
+    SCARF_MAX_TALLER,
+    SCARF_MOUTH_ROOM,
+    SCARF_PINCH,
+    SCARF_T,
+    ScarfProp,
+)
 from overlay.props import (
     LOG_CY,
     LOG_RADIUS,
@@ -211,6 +218,7 @@ class FlameCharacter:
         self.snores = Snores(self.R, self._rng)
         self.scarf = ScarfProp(self.R, self._seed)
         self._outfit = "normal"
+        self._scarf_taller = 0.0   # extra body height that keeps a big mouth above the scarf
         self._drive: FlameDrive | None = None   # last frame's flame inputs (the scarf hugs them)
 
         self._embers: list[_Ember] = []
@@ -454,12 +462,22 @@ class FlameCharacter:
         self.face.floor_y = MOUTH_FLOOR_ON_LOG * self.R if ride > 0.05 else None
         if self.scarf.visible:
             # The scarf takes the lower body: the face moves up and the mouth stays above it.
+            # A mouth too big for the room left is never shrunk for long: the body grows taller
+            # until it fits (round 42: surprised / scared keep their full-size mouths).
             worn = self.scarf.amount
             self.face.lift = max(self.face.lift, SCARF_FACE_LIFT * worn)
-            top = self.scarf.band_height(self.face.expr.body_h, ride) + SCARF_T + 0.03
+            top = self._scarf_height(ride) + SCARF_T + 0.03
             floor = -top * worn * self.R
             self.face.floor_y = floor if self.face.floor_y is None else min(self.face.floor_y,
                                                                                floor)
+            short = self.face.mouth_overflow + SCARF_MOUTH_ROOM
+            rate = 16.0 if short > 0.0 else 2.5      # grow quickly, settle back gently
+            self._scarf_taller = clamp(self._scarf_taller + short * rate * dt, 0.0,
+                                       SCARF_MAX_TALLER)
+            self.face.taller = self._scarf_taller * worn
+        else:
+            self._scarf_taller = 0.0
+            self.face.taller = 0.0
         face_cursor = None
         if cursor is not None:
             face_cursor = QPointF(cursor.x() - self.feet.x(),
@@ -552,7 +570,7 @@ class FlameCharacter:
         height = ex.flame * w.height * (1.0 - 0.14 * night) * (1.0 + 0.1 * self._breath_wave)
         scarf_h = scarf_pinch = 0.0
         if self.scarf.visible:
-            scarf_h = self.scarf.band_height(ex.body_h, clamp(ride, 0.0, 1.0))
+            scarf_h = self._scarf_height(clamp(ride, 0.0, 1.0))
             scarf_pinch = SCARF_PINCH * self.scarf.amount
         # Apparent wind from the pet's own movement (in R per second): the fire trails behind.
         self._drive = drive = FlameDrive(
@@ -566,6 +584,12 @@ class FlameCharacter:
             scarf_h=scarf_h, scarf_t=SCARF_T, scarf_pinch=scarf_pinch,
         )
         self.flame.step(drive)
+
+    def _scarf_height(self, ride: float) -> float:
+        """Height of the scarf band's centre (R above the feet): it follows the mood's body
+        height but not the extra height grown for a big mouth (that stretches the body *above*
+        the scarf)."""
+        return self.scarf.band_height(self.face.expr.body_h - self.face.taller, ride)
 
     def _update_props(self, dt: float) -> None:
         """Log (and its crumbling embers), frying pan, sunglasses, alarm clock, scarf, snoring
@@ -696,8 +720,7 @@ class FlameCharacter:
         self.pan.paint(painter, self.face.eye_top() - 0.07 * self.R)
         self.shades.paint(painter, self.face.eye_boxes(), self.face.expr.tilt)
         if self._drive is not None:
-            ride = clamp(self.log.amount, 0.0, 1.0) if self.log.visible else 0.0
-            self.scarf.paint(painter, self._drive, ride)
+            self.scarf.paint(painter, self._drive, self._drive.scarf_h)
         painter.restore()
 
         if not log_behind:

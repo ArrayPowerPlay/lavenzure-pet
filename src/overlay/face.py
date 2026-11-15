@@ -306,6 +306,14 @@ EYE_RY = 0.225
 MOUTH_Y = 0.27          # mouth centre relative to the face centre (R)
 MOUTH_W = 0.26          # half-width of the neutral mouth (R)
 SPHERE_R = 0.95         # radius of the imaginary head sphere used for the turn effect (R)
+# Ink line widths on screen (R). Lightened in round 42 (were 0.07 / 0.065 / 0.062); the mouth
+# keeps the same width whatever its size (an open mouth scaled down to fit used to get a
+# thinner outline than the closed line). Copied faces scale their traced widths the same way.
+EYE_INK_W = 0.056       # open eye outline
+CLOSED_EYE_INK_W = 0.052   # a closed eye's single line ("- -", "^ ^")
+MOUTH_INK_W = 0.048     # mouth outline / closed mouth line
+REF_EYE_INK = EYE_INK_W / 0.07
+REF_MOUTH_INK = MOUTH_INK_W / 0.062
 
 
 class Face:
@@ -360,6 +368,12 @@ class Face:
         # reach (body pixels, ``None`` = no limit).
         self.lift = 0.0
         self.floor_y: float | None = None
+        # Also set by the character: extra body height (added to the mood's ``body_h`` goal, so
+        # it springs in like any body change; the scarf uses it to keep big mouths full size).
+        self.taller = 0.0
+        # Written by ``paint``: how far the mouth wanted to go below ``floor_y`` (R; negative =
+        # room left; 0 without a floor).
+        self.mouth_overflow = 0.0
 
         # Caches (pure speed-ups, see the module doc): the merged mood + mouth goal, and the
         # last eye geometry of each side together with the inputs it was computed from.
@@ -484,6 +498,8 @@ class Face:
                                                        for name in MOUTH_FIELDS})
             self._merged_from = (self._goal, mouth_goal)
         goal = self._merged_goal                 # shared: only read, never changed in place
+        if self.taller > 0.0:
+            goal = replace(goal, body_h=goal.body_h + self.taller)
         if self._micro is not None:
             goal = replace(goal)
             _, _, values = MICRO_EXPRESSIONS[self._micro]
@@ -825,7 +841,8 @@ class Face:
             end_y = lerp(0.0, ry * 0.3, arc)
             line = QPainterPath(QPointF(-rx, end_y))
             line.quadTo(QPointF(0.0, lerp(ry * 0.4, -ry * 0.85, arc)), QPointF(rx, end_y))
-            painter.setPen(QPen(INK, 0.065 * R, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap,
+            painter.setPen(QPen(INK, CLOSED_EYE_INK_W * R, Qt.PenStyle.SolidLine,
+                                Qt.PenCapStyle.RoundCap,
                                 Qt.PenJoinStyle.RoundJoin))
             painter.setBrush(Qt.BrushStyle.NoBrush)
             painter.drawPath(line)
@@ -936,9 +953,9 @@ class Face:
             cheek.closeSubpath()
             eye = eye.subtracted(cheek)
 
-        pen_w = 0.07 * R
+        pen_w = EYE_INK_W * R
         for ref, w in refs:
-            pen_w = lerp(pen_w, ref.eye_ink * ref.scale * R, w)
+            pen_w = lerp(pen_w, ref.eye_ink * REF_EYE_INK * ref.scale * R, w)
         pen = QPen(INK, pen_w, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap,
                    Qt.PenJoinStyle.RoundJoin)
         painter.setPen(pen)
@@ -1100,18 +1117,22 @@ class Face:
                                       EYE_Y + ex.eye_y + (m.centre[1] - ref.origin[1]) * ref.scale)
             rk = self._fit(rcx, rcy, pts)
             cx, cy, k = lerp(cx, rcx, weight), lerp(cy, rcy, weight), lerp(k, rk, weight)
+        self.mouth_overflow = 0.0
         if self.floor_y is not None:
             # Never below the floor (sitting on the log: the paws and the log stay clear): shrink
-            # it about its upper edge.
+            # it about its upper edge. How far it reached past the floor (or how much room was
+            # left, negative) is kept for the character, which can make the body taller instead.
             depth = max(y for _, y in pts) - highest
             top_abs = cy + highest * k
+            self.mouth_overflow = (top_abs + depth * k - self.floor_y) / R
             if depth > 0.0 and top_abs + depth * k > self.floor_y:
                 k2 = clamp((self.floor_y - top_abs) / depth, 0.35, k)
                 cy, k = top_abs - highest * k2, k2
 
-        pen_w = 0.062 * R
+        pen_w = MOUTH_INK_W * R
         for ref, weight in refs:
-            pen_w = lerp(pen_w, ref.mouth_ink * ref.scale * R, weight)
+            pen_w = lerp(pen_w, ref.mouth_ink * REF_MOUTH_INK * ref.scale * R, weight)
+        pen_w /= max(k, 0.05)        # drawn inside ``scale(k)``: same width on screen at any k
         ink_pen = QPen(INK, pen_w, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap,
                        Qt.PenJoinStyle.RoundJoin)
         painter.save()

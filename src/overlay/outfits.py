@@ -35,6 +35,8 @@ SCARF_T = 0.14         # half thickness of the band (R)
 SCARF_RIDE_RAISE = 0.14   # on the log the body's bottom is cut flat: the scarf sits higher (R)
 SCARF_PINCH = 0.06     # how much the soft body is squeezed under the scarf (fraction of width)
 SCARF_FACE_LIFT = 0.2  # the face moves up this much while the scarf is worn (R)
+SCARF_MOUTH_ROOM = 0.03   # gap kept between a big mouth and the scarf's top edge (R)
+SCARF_MAX_TALLER = 0.45   # most the body may grow taller to make room for the mouth (body_h)
 BAND_MARGIN = 0.05     # the band stands this far out of the body outline (knitted thickness, R)
 BAND_SAG = 0.06        # the front of the wrap curves down below its ends (R)
 BAND_CAP = 0.1         # how far the rounded ends bulge past the body's sides (R)
@@ -171,8 +173,9 @@ class ScarfProp:
 
     # ------------------------------------------------------------------ painting
 
-    def paint(self, painter: QPainter, drive: FlameDrive, ride: float) -> None:
-        """Draw the scarf on the body described by ``drive`` (``ride`` = 0..1 on the log).
+    def paint(self, painter: QPainter, drive: FlameDrive, band_h: float) -> None:
+        """Draw the scarf on the body described by ``drive``, its band centred ``band_h`` R
+        above the feet (see ``band_height``).
 
         The band and the knot only change with the body's size, so they are pre-drawn into
         small cached images (sizes rounded to 1/100 R, far below a pixel); only the swinging
@@ -180,7 +183,7 @@ class ScarfProp:
         if not self.visible:
             return
         R = self.R
-        hs = round(self.band_height(drive.body_h, ride), 2)
+        hs = round(band_h, 2)
         wt = round(body_half_width(hs + SCARF_T - 0.03, drive) + BAND_MARGIN, 2)
         wb = round(body_half_width(hs - SCARF_T + 0.03, drive) + BAND_MARGIN, 2)
         kx, ky = SIDE * KNOT_AT * 0.5 * (wt + wb), hs - 0.02

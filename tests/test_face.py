@@ -141,3 +141,31 @@ def test_xmas_outfit_puts_the_scarf_on_and_takes_it_off(qapp):
     assert ch._drive.scarf_pinch == 0.0
     with pytest.raises(ValueError):
         ch.set_outfit("party")
+
+
+def test_scarf_makes_the_body_taller_instead_of_shrinking_a_big_mouth(qapp):
+    """Round 42: with the scarf on, a big mouth (scared) is not squeezed above the band for
+    long - the body grows taller until it fits, and settles back when the mood ends."""
+    from PySide6.QtGui import QImage, QPainter
+
+    from overlay.character import FlameCharacter
+
+    ch = FlameCharacter(seed=2, renderer="shader")
+    ch.set_outfit("xmas")
+    img = QImage(ch.width, ch.height, QImage.Format.Format_ARGB32_Premultiplied)
+
+    def run(frames: int) -> None:
+        """Update and paint (the mouth's room is measured while painting)."""
+        for _ in range(frames):
+            ch.update(1 / 30, QPointF(0, 0), None)
+            painter = QPainter(img)
+            ch.paint(painter)
+            painter.end()
+
+    run(30)
+    assert ch.face.taller == 0.0             # the calm face fits as it is
+    ch.play(Mood.SCARED, 1.5)
+    run(30)
+    assert ch.face.taller > 0.1 and ch.face.mouth_overflow < 0.01
+    run(45)
+    assert ch.face.taller < 0.02
