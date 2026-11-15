@@ -13,7 +13,7 @@ memory:
   idle_timeout_minutes: 15 # wipe the chat (screen + memory) after this many minutes without chatting
 
 character:
-  scale: 0.75 # size multiplier of the code-drawn flame character (1.0 = 280x236 px window, 0.75 = 210x177)
+  scale: 0.75 # size multiplier of the code-drawn flame character (1.0 = 280x260 px window, 0.75 = 210x195)
   fps: 30 # default frame rate (user chose 30; Settings also offers 60); higher = more CPU
   flame_renderer: shader   # flame body: shader (GPU, chosen) | metaball | baked (pre-simulated clips); falls back to metaball
   outfit: normal # default outfit: normal | xmas (knitted scarf, snowy log, Christmas greetings); Settings > Outfit

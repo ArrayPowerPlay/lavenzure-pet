@@ -169,9 +169,10 @@ class FlameCharacter:
         """``scale`` = size multiplier; ``renderer`` = flame body renderer name (see module doc)."""
         self.scale = scale
         self.R = self.BASE_RADIUS * scale
-        # Wide canvas: room for a puffed-up body, the frying pan's handle and the log.
+        # Wide canvas: room for a puffed-up body, the frying pan's handle and the log; tall
+        # enough (5.17 R above the feet, round 47) for the highest flare-ups of the shader flame.
         self.width = int(round(280 * scale))
-        self.height = int(round(236 * scale))
+        self.height = int(round(260 * scale))
         self.feet = QPointF(self.width / 2, self.height - 22 * scale)
 
         self._rng = random.Random(seed)

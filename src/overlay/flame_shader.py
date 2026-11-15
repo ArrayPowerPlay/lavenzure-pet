@@ -398,7 +398,10 @@ class ShaderFlame(ImageFlame):
 
     name = "shader"
     X_RANGE = (-3.0, 3.0)   # wide enough for puffed-up, wind-blown bodies
-    Y_RANGE = (-4.4, 0.25)
+    # Round 47: the ceiling was 4.4 R; tall moods (surprised, angry, alert, cheer) flare up to
+    # ~4.9 R, so for a third to two thirds of their frames the tip ran into the taper below the
+    # ceiling and looked cut flat. At 5.2 R the taper (4.8-5.15 R) is above almost every tip.
+    Y_RANGE = (-5.2, 0.25)
     # "Lite flame" mode: pixels per screen pixel instead of ``SUPERSAMPLE`` (2.0). 1.5 has ~56 %
     # of the pixels, so the shader and the read-back do about half the work; the bitmap is
     # still larger than the flame on screen, the edges only get a little softer.
