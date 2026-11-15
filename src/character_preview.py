@@ -173,6 +173,7 @@ def main() -> int:
     button("Remind (clock) / OK", 4, 0, each(toggle_remind))
     button("Outfit normal / xmas", 4, 1,
            each(lambda ch: ch.set_outfit("normal" if ch.outfit == "xmas" else "xmas")))
+    button("Cheer (greeting)", 4, 2, each(lambda ch: ch.play(Mood.CHEER, 3.0)))
 
     def toggle_bg() -> None:
         """Switch the backdrop between dark and light."""

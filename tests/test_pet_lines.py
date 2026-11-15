@@ -125,3 +125,17 @@ def test_welcome_back_mentions_the_time(lines, language):
     """The greeting is filled in with the time away."""
     lines.set_language(language)
     assert away_text(language, 1500) in lines.welcome_back(1500)
+
+
+@pytest.mark.parametrize("language", list(LANGUAGES))
+def test_xmas_greeting_in_every_language_without_repeats(lines, language):
+    """Round 46: the Christmas greeting exists in both languages (🎄, a title and a line), and
+    every wording comes up once before any repeats."""
+    lines.set_language(language)
+    seen = [lines.greeting("xmas") for _ in range(6)]
+    assert all(emoji == "🎄" and title and line for emoji, title, line in seen)
+    assert len(set(seen)) == 6
+    following = lines.greeting("xmas")
+    assert following != seen[-1]
+    with pytest.raises(KeyError):
+        lines.greeting("halloween")

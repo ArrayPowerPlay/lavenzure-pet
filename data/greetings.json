@@ -1,0 +1,22 @@
+{
+  "_comment": "Festive greetings (round 46): per occasion, an emoji framing the big title, and per language a list of {title, line}. An occasion's greeting is only said while its outfit is worn (xmas = Xmas outfit), as a random click reaction or instead of an ambient line now and then.",
+  "xmas": {
+    "emoji": "🎄",
+    "en": [
+      {"title": "Merry Christmas!", "line": "Wishing you a warm and cozy holiday by the fire ✨"},
+      {"title": "Merry Christmas!", "line": "May your days be merry, bright and toasty warm!"},
+      {"title": "Merry Christmas!", "line": "Thank you for keeping me company this year :3"},
+      {"title": "Happy Holidays!", "line": "Hot cocoa, soft lights and good company. Enjoy!"},
+      {"title": "Merry Christmas!", "line": "I hope Santa brings you everything on your list 🎁"},
+      {"title": "Season's Greetings!", "line": "Sending you the warmest hug a little flame can give!"}
+    ],
+    "vi": [
+      {"title": "Giáng sinh vui vẻ!", "line": "Chúc bạn một mùa lễ thật ấm áp bên ánh lửa ✨"},
+      {"title": "Merry Christmas!", "line": "Chúc bạn những ngày lễ vui tươi, rực rỡ và ấm áp!"},
+      {"title": "Giáng sinh an lành!", "line": "Cảm ơn bạn đã ở bên mình suốt năm nay :3"},
+      {"title": "Giáng sinh vui vẻ!", "line": "Ca cao nóng, đèn lấp lánh và người thương bên cạnh nha!"},
+      {"title": "Merry Christmas!", "line": "Mong ông già Noel mang đến cho bạn mọi món quà bạn ước 🎁"},
+      {"title": "Giáng sinh an lành!", "line": "Gửi bạn cái ôm ấm nhất mà một ngọn lửa nhỏ có thể trao!"}
+    ]
+  }
+}

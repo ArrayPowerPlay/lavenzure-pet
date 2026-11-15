@@ -20,6 +20,9 @@ Two pools per language live in ``data/`` (decisions of rounds 20-22):
 - ``welcome_back(seconds)`` - the greeting when the user comes back after the pet dozed off
   (task T1), e.g. "Welcome back! You were away for 25 minutes." or, past an hour, "... for
   over 1 hour." (one of a few wordings).
+- ``greeting(occasion)`` - a festive greeting for an occasion (round 46; ``data/greetings.json``,
+  only ``xmas`` so far): the occasion's emoji, a big title ("Merry Christmas!") and a warm
+  line, drawn like a deck so each wording comes up once before any repeats.
 
 Chat replies are not covered here: the AI answers in whatever language the user writes in.
 """
@@ -139,7 +142,8 @@ class PetLines:
 
     def __init__(self, data_dir: Path, language: str = DEFAULT_LANGUAGE,
                  rng: random.Random | None = None) -> None:
-        """Load ``care_lines.json`` and ``facts_jokes.json`` from ``data_dir``."""
+        """Load ``care_lines.json``, ``facts_jokes.json`` and ``greetings.json`` from
+        ``data_dir``."""
         self._rng = rng or random.Random()
         care = json.loads((data_dir / "care_lines.json").read_text(encoding="utf-8"))
         facts = json.loads((data_dir / "facts_jokes.json").read_text(encoding="utf-8"))
@@ -148,6 +152,9 @@ class PetLines:
             code: {CARE: list(care[code]), FACTS: [{"text": t} for t in facts[code]]}
             for code in LANGUAGES
         }
+        # greetings[occasion] = {"emoji": ..., "en": [{"title", "line"}, ...], "vi": [...]}
+        raw = json.loads((data_dir / "greetings.json").read_text(encoding="utf-8"))
+        self._greetings: dict[str, dict] = {k: v for k, v in raw.items() if not k.startswith("_")}
         self._decks: dict[tuple[str, str], list[int]] = {}
         self._last_index: dict[tuple[str, str], int] = {}
         self._next_kind = CARE
@@ -171,6 +178,24 @@ class PetLines:
         """The "welcome back" greeting for a user who was away ``seconds`` (random wording)."""
         templates = WELCOME_BACK.get(self.language, WELCOME_BACK[DEFAULT_LANGUAGE])
         return self._rng.choice(templates).format(away=away_text(self.language, seconds))
+
+    def greeting(self, occasion: str) -> tuple[str, str, str]:
+        """A festive greeting for ``occasion`` (e.g. ``"xmas"``) in the current language, as
+        (emoji, title, line). Wordings come up like a shuffled deck: each once before any
+        repeats, never the same one twice in a row. Raises ``KeyError`` for an unknown
+        occasion."""
+        data = self._greetings[occasion]
+        entries = data.get(self.language) or data[DEFAULT_LANGUAGE]
+        key = (self.language, "greet:" + occasion)
+        deck = self._decks.setdefault(key, [])
+        if not deck:
+            deck[:] = list(range(len(entries)))
+            self._rng.shuffle(deck)
+            if len(deck) > 1 and deck[0] == self._last_index.get(key):
+                deck.append(deck.pop(0))
+        index = deck.pop(0)
+        self._last_index[key] = index
+        return data["emoji"], entries[index]["title"], entries[index]["line"]
 
     def pool(self, kind: str) -> list[dict]:
         """All entries of one pool (``CARE`` or ``FACTS``) in the current language."""

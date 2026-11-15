@@ -140,14 +140,17 @@ _FLARE_RATE = 0.4                  # spontaneous flare-ups per second at wild = 
 EMBER_RATES = {Mood.ALERT: 8.0, Mood.HAPPY: 7.0, Mood.SURPRISED: 5.0, Mood.THINKING: 1.2,
                Mood.SCARED: 11.0, Mood.ANGRY: 10.0, Mood.CHILL: 1.5, Mood.SLEEP: 0.5,
                Mood.YAWN: 1.0, Mood.TAKEOFF: 9.0, Mood.FLY: 3.0, Mood.WAKE: 4.0,
-               Mood.YUCK: 4.0, Mood.COOL: 1.5, Mood.REMIND: 3.0, Mood.OK: 4.0}
+               Mood.YUCK: 4.0, Mood.COOL: 1.5, Mood.REMIND: 3.0, Mood.OK: 4.0,
+               Mood.CHEER: 9.0}
 MAX_FRAME_DT = 0.1                 # a longer gap (a hitch) is treated as this long
 MAX_STEP_DT = 1 / 30               # longer frames are simulated in steps of at most this
 SEAT_SINK = 0.05                   # R: the body's flat bottom sits this far into the log
 FACE_LIFT_ON_LOG = 0.24            # R: the face moves up while sitting on the log ...
 MOUTH_FLOOR_ON_LOG = -0.56         # ... and the mouth stays above this height (R, feet = 0)
 BREATH_PERIOD = 3.6                # seconds per breath while asleep
-OUTFITS = ("normal", "xmas")       # what ``set_outfit`` accepts (Settings > Outfit)
+OUTFITS = ("normal", "xmas")
+# Outfit -> the occasion it celebrates (the greeting the pet may say); none for ``normal``.
+OCCASION_OF_OUTFIT = {"xmas": "xmas"}       # what ``set_outfit`` accepts (Settings > Outfit)
 
 
 class FlameCharacter:
@@ -329,6 +332,12 @@ class FlameCharacter:
         """Name of the outfit being worn (see ``set_outfit``)."""
         return self._outfit
 
+    @property
+    def occasion(self) -> str | None:
+        """The occasion the current outfit celebrates (``"xmas"``), or ``None``: only then
+        may the pet say that occasion's greeting (round 46)."""
+        return OCCASION_OF_OUTFIT.get(self._outfit)
+
     def set_night(self, amount: float) -> None:
         """Night look (0 = day, 1 = full night): lower, slower, deeper-red fire. Eases over
         several seconds, so switching at 20:00 is a gentle dusk rather than a jump."""
@@ -368,6 +377,9 @@ class FlameCharacter:
             self.pan.show()
         elif mood == Mood.COOL:
             self.shades.show()
+        elif mood == Mood.CHEER:
+            self.bounce(0.6)               # a happy hop with a shower of sparks
+            self.burst(18)
 
     def talk(self, seconds: float) -> None:
         """Move the mouth like speaking for ``seconds`` without changing the expression."""

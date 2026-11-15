@@ -132,3 +132,17 @@ def test_alert_face_wins_over_a_reminder(pet):
     assert pet.character.clock.ringing
     pet.clear_alert()
     assert pet.state == PetState.REMIND
+
+
+def test_greeting_only_with_an_occasion_outfit(pet):
+    """Round 46: the festive greeting is a click reaction only while an occasion's outfit is
+    worn (Xmas); it asks main for the words and shows the cheer face."""
+    names = {pet.play_random_reaction() for _ in range(80)}
+    assert "greet" not in names
+    pet.character.set_outfit("xmas")
+    seen = []
+    pet.greet_requested.connect(lambda: seen.append(True))
+    names = {pet.play_random_reaction() for _ in range(80)}
+    assert "greet" in names and seen
+    pet.play_reaction("greet")
+    assert pet.character.mood == Mood.CHEER

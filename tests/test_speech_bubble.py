@@ -43,3 +43,18 @@ def test_one_word_is_a_small_bubble(qapp):
     bubble.show_text("Hi!", 4000)
     assert bubble.width() < big[0] and bubble.height() < big[1]
     bubble.hide()
+
+
+def test_greeting_is_a_bigger_self_hiding_bubble(qapp):
+    """Round 46: the festive greeting gets the big decorated look, fits its text (not the
+    markup) and hides by itself (it is not sticky)."""
+    bubble = make_bubble(qapp)
+    bubble.show_text(SHORT, 4000)
+    plain = (bubble.width(), bubble.height())
+    bubble.show_greeting("🎄", "Merry Christmas!", "Wishing you a warm and cozy holiday!", 5000)
+    assert bubble.isVisible() and not bubble.is_sticky()
+    assert bubble.height() > plain[1] and bubble.width() <= 290
+    assert "Merry Christmas!" in bubble.text()
+    bubble.show_text(SHORT, 4000)                  # back to a plain line: plain size again
+    assert (bubble.width(), bubble.height()) == plain
+    bubble.hide()

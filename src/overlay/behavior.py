@@ -46,6 +46,7 @@ TAKEOFF_DELAY_MS = 480        # the log appears and the pet gets excited before 
 NIGHT_SPEED = 0.7             # movement speed multiplier at night
 NIGHT_IDLE = 1.5              # idle pauses get this much longer at night
 OK_SECONDS = 1.0              # the smiling "okay!" blink after a reminder is acknowledged
+GREET_SECONDS = 3.0           # the festive greeting face (the bubble stays longer)
 
 # name -> unbound method returning the reaction length in seconds (None = it ends by itself).
 REACTIONS: dict[str, Callable[[BehaviorController], float | None]] = {}
@@ -87,6 +88,7 @@ class BehaviorController(QObject):
     """Owns the current PetState and the window-movement animation currently playing."""
 
     speak_requested = Signal()   # the "say a random line" reaction was picked
+    greet_requested = Signal()   # the festive greeting reaction was picked (main shows the text)
 
     def __init__(self, sprite: OverlaySprite) -> None:
         """Attach to ``sprite``, create the state timers and start the random idle loop."""
@@ -244,6 +246,8 @@ class BehaviorController(QObject):
         skip = {self._last_reaction}
         if self.character.riding:
             skip.add("chill")              # the pan does not go with sitting on the log
+        if self.character.occasion is None:
+            skip.add("greet")              # greetings only with an occasion's outfit on
         names = [n for n in REACTIONS if n not in skip] or list(REACTIONS)
         name = random.choice(names)
         self._last_reaction = name
@@ -310,6 +314,14 @@ class BehaviorController(QObject):
         self.speak_requested.emit()
         self.character.play(Mood.TALKING, 2.0)
         return 2.6
+
+    @reaction("greet")
+    def _react_greet(self) -> float:
+        """Festive greeting (only while an occasion's outfit is worn, e.g. "Merry Christmas!"
+        with the Xmas outfit): a happy hop with "^ ^" eyes and a big smile while the big
+        greeting bubble shows (main picks the words)."""
+        self.greet_requested.emit()
+        return self._play(Mood.CHEER, GREET_SECONDS)
 
     @reaction("fly")
     def _react_fly(self) -> None:

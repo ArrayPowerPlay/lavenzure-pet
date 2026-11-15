@@ -82,6 +82,7 @@ class Mood(Enum):
     COOL = auto()        # sunglasses (a prop drawn over the eyes) and a one-sided smirk
     REMIND = auto()      # a reminder is due: wide eyes at the user, an "oh, hey!" smile (+ clock)
     OK = auto()          # reminder acknowledged: a smiling "^ ^" blink, "okay!"
+    CHEER = auto()       # festive greeting ("Merry Christmas!"): "^ ^" eyes, a big open smile
 
 
 @dataclass
@@ -229,6 +230,13 @@ MOOD_TARGETS: dict[Mood, tuple[Expression, ...]] = {
     Mood.OK: (Expression(happy_eyes=1.0, lower_lid=0.4, smile=0.95, mouth_width=1.15,
                          mouth_curl=0.3, tilt=0.06, flame=1.0, flicker=1.15, wild=1.1,
                          body_w=1.04, body_h=0.98),),
+    # "cheer" (round 46, designed freely): the festive greeting shared by every occasion (the
+    # bubble carries the words: "Merry Christmas!" now, birthday / New Year later). Eyes closed
+    # into happy "^ ^" arcs, a wide open "D" smile, head tipped, the fire tall and lively.
+    Mood.CHEER: (Expression(happy_eyes=1.0, lower_lid=0.4, mouth_open=1.0, smile=0.6,
+                            mouth_width=1.7, mouth_top=0.2, mouth_bottom=1.0, mouth_dip=0.25,
+                            tilt=0.07, flame=1.12, flicker=1.45, wild=1.4, body_w=1.04,
+                            body_h=1.06),),
 }
 
 # Small expressions the idle face drifts through: name -> (weight, (min, max) seconds, values).
@@ -455,6 +463,9 @@ class Face:
         elif mood == Mood.OK:
             vel["body_h"] -= 1.0         # a little nod
             vel["lower_lid"] += 2.0
+        elif mood == Mood.CHEER:
+            vel["body_h"] -= 1.0         # gathers itself, then springs up tall
+            vel["body_w"] += 0.8
 
     def update(self, dt: float, cursor: QPointF | None, body_vy: float) -> None:
         """Advance ``dt`` seconds. ``cursor`` is the mouse relative to the face centre (pixels,

@@ -2,12 +2,18 @@
 
 The bubble is its own top-level window. While visible it re-centres itself over the pet's head on
 every frame, so it travels along when the pet walks, floats, jumps or is dragged.
+
+Festive greetings (round 46) use the same window with a bigger, decorated look
+(``show_greeting``): the occasion's emoji on both sides of a large bold title, a smaller warm
+line under it, centred, in a cream card with a red border.
 """
 from __future__ import annotations
 
 from collections.abc import Callable
+from html import escape
 
 from PySide6.QtCore import QPoint, Qt, QTimer
+from PySide6.QtGui import QTextDocument
 from PySide6.QtWidgets import QLabel
 
 FOLLOW_INTERVAL_MS = 16  # ~60 fps, same rate as the pet
@@ -19,6 +25,11 @@ NORMAL_STYLE = ("background-color: rgba(255,250,230,235); border: 1px solid #d08
 STICKY_STYLE = ("background-color: rgba(255,250,230,242); border: 2px solid #d08a2e; "
                 "border-radius: 10px; padding: 10px 14px; color: #3a2410; font-size: 15px;")
 NORMAL_MAX_W, STICKY_MAX_W = 240, 320
+GREETING_STYLE = ("background-color: rgba(255,251,240,246); border: 3px solid #c8202f; "
+                  "border-radius: 14px; padding: 10px 16px;")
+GREETING_MAX_W = 290     # the warm line wraps into a compact card; the title never wraps
+GREETING_TITLE = "font-size: 22px; font-weight: 700; color: #c8202f; white-space: nowrap;"
+GREETING_LINE = "font-size: 14px; color: #2e6b3a;"
 _NO_LIMIT = 16_777_215   # Qt's QWIDGETSIZE_MAX: "no size limit"
 
 
@@ -60,6 +71,8 @@ class SpeechBubble(QLabel):
         """
         sticky = auto_hide_ms is None
         self.setStyleSheet(STICKY_STYLE if sticky else NORMAL_STYLE)
+        self.setTextFormat(Qt.TextFormat.PlainText)
+        self.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         self.setText(text)
         if sticky:
             self._fit(STICKY_MAX_W, 2 * (14 + 2))
@@ -72,6 +85,37 @@ class SpeechBubble(QLabel):
         self._auto_hide_timer.stop()
         if auto_hide_ms is not None:
             self._auto_hide_timer.start(auto_hide_ms)
+
+    def show_greeting(self, emoji: str, title: str, line: str, auto_hide_ms: int = 7000) -> None:
+        """Show a festive greeting: ``emoji`` on both sides of a big bold ``title`` with a
+        smaller ``line`` under it (see the module doc). It hides by itself."""
+        self.setStyleSheet(GREETING_STYLE)
+        self.setTextFormat(Qt.TextFormat.RichText)
+        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.setText(f'<div align="center" style="{GREETING_TITLE}">{emoji} {escape(title)} '
+                     f'{emoji}</div><div align="center" style="{GREETING_LINE}">'
+                     f'{escape(line)}</div>')
+        self._fit_rich(GREETING_MAX_W, 2 * (16 + 3))
+        self._follow()
+        self.show()
+        self.raise_()
+        self._follow_timer.start()
+        self._auto_hide_timer.start(auto_hide_ms)
+
+    def _fit_rich(self, max_width: int, frame_w: int) -> None:
+        """Like ``_fit`` for rich text: measure the laid-out text (not its markup) and size the
+        bubble to it, wrapping only past ``max_width``."""
+        self.ensurePolished()
+        self.setMinimumSize(0, 0)
+        self.setMaximumSize(_NO_LIMIT, _NO_LIMIT)
+        doc = QTextDocument()
+        doc.setDefaultFont(self.font())
+        doc.setDocumentMargin(0)
+        doc.setHtml(self.text())
+        doc.setTextWidth(max_width - frame_w)
+        width = min(max_width, int(doc.idealWidth()) + frame_w + 4)
+        self.setFixedWidth(width)
+        self.setFixedHeight(self.heightForWidth(width))
 
     def _fit(self, max_width: int, frame_w: int) -> None:
         """Size the bubble to its text: one line as wide as the text needs, wrapping only past

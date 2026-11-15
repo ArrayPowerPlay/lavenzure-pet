@@ -13,6 +13,7 @@ import os
 os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
 
 import logging
+import random
 import sys
 from datetime import datetime
 
@@ -31,7 +32,7 @@ from autostart import startup
 from chat.chat_bubble import ChatBubble
 from monitor.background_monitor import BackgroundMonitor
 from monitor.user_activity import UserActivityWatcher
-from overlay.behavior import BehaviorController, PetState
+from overlay.behavior import GREET_SECONDS, BehaviorController, PetState
 from overlay.character import Mood
 from overlay.overlay_window import OverlaySprite
 from overlay.speech_bubble import SpeechBubble
@@ -53,6 +54,7 @@ EMOTION_MOODS = {"happy": Mood.HAPPY, "scared": Mood.SCARED, "angry": Mood.ANGRY
                  "yuck": Mood.YUCK, "cool": Mood.COOL}
 EMOTION_SECONDS = 5.0
 WELCOME_DELAY_MS = 1000   # greet after the wake-up stretch (``Mood.WAKE``, 0.9 s) has played
+GREETING_EXTRA_MS = 1500  # the festive greeting bubble stays this much longer than a plain line
 
 
 def reading_ms(text: str) -> int:
@@ -154,6 +156,7 @@ class LavenzureApp(QObject):
         self.pet_menu.rest_requested.connect(self._set_resting)
         self.pet_menu.hide_requested.connect(self._hide_pet)
         self.behavior.speak_requested.connect(self._say_random_line)
+        self.behavior.greet_requested.connect(self._say_greeting)
         self.chat.message_sent.connect(self._on_chat_message)
         self.chat.closed.connect(lambda: self.behavior.set_chatting(False))
 
@@ -315,6 +318,18 @@ class LavenzureApp(QObject):
             self._say(text, auto_hide_ms=reading_ms(text))
             self.monitor.notify_activity()
 
+    def _say_greeting(self) -> None:
+        """Show the festive greeting of the occasion the pet is dressed for (Xmas outfit ->
+        "Merry Christmas!") in the big greeting bubble; nothing without an occasion or while a
+        sticky bubble (alert, reminder) is up."""
+        occasion = self.sprite.character.occasion
+        if occasion is None or self.bubble.is_sticky():
+            return
+        emoji, title, line = self.lines.greeting(occasion)
+        self.bubble.show_greeting(emoji, title, line,
+                                  auto_hide_ms=reading_ms(title + line) + GREETING_EXTRA_MS)
+        self.monitor.notify_activity()
+
     def _show_pet_menu(self) -> None:
         """Right-click on the pet: the small Chat / Idle (Wander) / Hide Pet menu at the cursor."""
         self.monitor.notify_activity()
@@ -327,10 +342,17 @@ class LavenzureApp(QObject):
         self._show_sticky()
 
     def _on_ambient_due(self) -> None:
-        """Time for a line of its own (care line and fact/joke take turns). Skipped while the pet
-        is hidden or asleep, the chat is open, or a sticky bubble (alert, reminder) is up."""
+        """Time for a line of its own (care line and fact/joke take turns; with an occasion's
+        outfit on, sometimes the festive greeting instead). Skipped while the pet is hidden or
+        asleep, the chat is open, or a sticky bubble (alert, reminder) is up."""
         if (not self.sprite.isVisible() or self.behavior.sleeping or self.chat.isVisible()
                 or self.bubble.is_sticky()):
+            return
+        character = self.sprite.character
+        if (character.occasion is not None
+                and random.random() < float(config.get("ambient.greeting_share", 0.3))):
+            character.play(Mood.CHEER, GREET_SECONDS)   # now and then the festive greeting
+            self._say_greeting()
             return
         text = self.lines.next_ambient(datetime.now())
         self.sprite.character.play(Mood.HAPPY, 1.6)
