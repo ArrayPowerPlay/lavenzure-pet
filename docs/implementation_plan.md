@@ -183,7 +183,13 @@ Còn thiếu / cần làm tiếp:
 - [x] **H3. Bật lại nhắc việc** (thay G4): theo phút hoặc giờ, code tự tính giờ, lưu file `reminders.json`, bong bóng giữ tới khi click.
 - [x] **H4. Biểu cảm `cool`:** kính râm rơi xuống + cười nhếch mép; có trong phản ứng click và cảm xúc AI.
 - [x] **H6. Nhắc việc hỏi giờ + huỷ nhắc** (lượt 25): giờ thiếu / mơ hồ → hỏi lại kèm giờ gợi ý; công cụ liệt kê / huỷ / tắt bong bóng nhắc; tab **Chat | Reminders** trong bong bóng chat, gỡ nhắc bằng nút ✕.
-- [ ] **H5. T6 (trang phục ngày lễ)** — pending, chờ user chốt. (T1 đã làm ở H8.)
+- [ ] **H5. T6 (trang phục ngày lễ)** — Giáng sinh đã chốt ở `DECISION_LOG.md` lượt 39, chưa code (T1 đã làm ở H8):
+  - [ ] H5.1 Gỡ mũ Noel lượt 38 (`outfits.py` phần mũ, `set_santa_hat`, `HAT_FLAME_DIP`, test, nút preview)
+  - [ ] H5.2 Khăn len ở `normal` (mặt nhích lên) → user duyệt
+  - [ ] H5.3 Khăn ở mọi biểu cảm: `scared` dài người (miệng giữ nguyên cỡ), `remind` có khăn, `fly` trên khúc gỗ → user duyệt
+  - [ ] H5.4 Tuyết rơi → user duyệt
+  - [ ] H5.5 Biểu cảm chúc mừng dùng chung (chữ to, đẹp, 🎄; EN/VI), câu chúc Giáng sinh
+  - [ ] H5.6 Settings > Outfit: Normal / Xmas
 - [x] **H7. Biểu cảm nhắc lịch** (lượt 32): mood `REMIND` + đồng hồ báo thức ⏰ (`AlarmClockProp`) rung liên tục cạnh pet, pet đứng yên tới khi click; click → đồng hồ rút đi + mood `OK` (mắt "^ ^" cười 1 giây).
 - [x] **H8. T1 — chào khi quay lại máy** (lượt 32): sau khi pet ngủ gật vì vắng ≥ 10 phút, user quay lại → "Welcome back! You were away for 25 minutes." / "... for over 1 hour." (EN/VI, `UserActivityWatcher.user_returned`, `PetLines.welcome_back`).
 

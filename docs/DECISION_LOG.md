@@ -515,6 +515,20 @@
 - **Chi phí:** vẽ mũ ~0,5-0,8 ms/khung (mặt ~1 ms), cả khung ~3,5 ms ở scale 0.75, trong ngân sách. Phần đứng yên (thân mũ, vành, quả bông) vẽ sẵn thành ảnh một lần; chỉ phần chóp mũ vẽ lại mỗi khung.
 - **Chờ user:** duyệt mũ ở biểu cảm `normal`. Sau đó mới chỉnh các biểu cảm khác (`sleep`, `remind`, `scared`...), tuyết, kiểm tra ngày + công tắc, rồi câu chúc.
 
+### Lượt 39 (2026-11-15) — đổi sang KHĂN LEN, bỏ mũ; tuyết rơi; biểu cảm chúc mừng; Settings chọn trang phục (CHỈ CHỐT, CHƯA CODE)
+- **User góp ý mũ lượt 38:** "trông cũng ok nhưng không tự nhiên, không giống đội mũ"; hỏi khăn len có khả thi hơn không. **Claude (qua một agent phụ) nghiên cứu và làm bản thử** (không sửa code app): mũ che mất lưỡi lửa (phần làm nên ngọn lửa) nên nhìn như dán lên; mũ cải tiến (vành cong, đội lệch, lửa liếm quanh mũ qua shader) khá hơn nhưng vẫn che lửa. **Khăn len khả thi hơn và tự nhiên hơn:** phần dưới thân lửa ổn định, code tính được chính xác bề ngang thân ở mọi khung hình (hàm `body_half_width()` trong bản thử), nên khăn ôm khít ở mọi biểu cảm; lửa giữ nguyên. Ảnh: `docs/references/_xmas2_real_size.png`, `_xmas2_zoom.png`, `_xmas2_scarf.png`. Bản thử: `.scratch/xmas2/scarf2.py` (khăn), `proto.py` (`body_half_width`, shader thử), `final.py` (vẽ ảnh so sánh). Lời khuyên của Claude ở lượt 23 ("khăn quàng khó vì thân lửa đổi hình") là **sai** với vị trí đặt khăn.
+- **User chốt:**
+  1. **Làm khăn len**, **xóa mũ Noel** (gỡ hẳn `SantaHatProp` / `src/overlay/outfits.py` phần mũ, `set_santa_hat`, `HAT_FLAME_DIP`, test mũ, nút "Santa hat on / off" trong preview).
+  2. **Màu khăn như bản reference trong docs** = khăn đỏ sọc trắng ở `docs/references/_xmas2_scarf.png` (bản thử `.scratch/xmas2/scarf2.py`: `RED (212,34,48)`, `RED_D (160,20,38)`, sọc `(255,246,232)`).
+  3. **Mặt nhích lên một chút khi quàng khăn** (như lúc ngồi trên khúc gỗ; bản thử nhích 0,2 R).
+  4. **Riêng `scared`:** khi quàng khăn thì **thân pet dài ra (cao hơn) một chút** để cái miệng to vẫn vừa người — **không được thu nhỏ miệng** (thu nhỏ là mất biểu cảm chuẩn).
+  5. **Biểu cảm nhắc nhở (`remind`, đồng hồ báo thức) cũng phải có khăn** — cần thiết kế cho khớp (đồng hồ, khăn, mặt không chạm nhau).
+  6. **Tuyết rơi**: làm sau khi khăn được duyệt (đề xuất cũ: hạt tuyết chạm lửa thì tan "xèo").
+  7. **Câu chúc Giáng sinh là một biểu cảm riêng** (biểu cảm "chúc mừng" dùng chung: sau này chúc sinh nhật, chúc Tết chỉ đổi dòng chữ). Dòng chữ chúc **to hơn** bong bóng thường, **format đẹp hơn**, có **emoji cây thông Noel 🎄**. Chữ có EN và VI theo Settings > Language.
+  8. **Settings có mục trang phục:** `Normal outfit` / `Xmas outfit`.
+- **Thứ tự code và duyệt (user yêu cầu duyệt từng bước):** (1) gỡ mũ; (2) khăn ở `normal` → **user duyệt**; (3) khăn ở các biểu cảm còn lại, gồm `scared` dài người và `remind` → **user duyệt**; (4) tuyết rơi → **user duyệt**; (5) biểu cảm chúc mừng + câu chúc Giáng sinh; (6) mục Outfit trong Settings.
+- **Còn mở (hỏi user khi tới bước đó):** khăn cần chỉnh nút thắt (bản thử còn giống cái hộp) và đuôi khăn đung đưa mạnh hơn khi đi; đuôi khăn phải ngắn, chĩa sang bên (dài quá trông như chân). Tuyết chỉ có khi bật Xmas outfit hay riêng một công tắc? Câu chúc hiện khi nào (khi bật app trong ngày lễ, khi click, mỗi ngày một lần...)? Outfit có tự bật theo ngày (vd. tháng 12) hay chỉ chọn tay trong Settings? Kiểm tra trên nền sáng.
+
 ## Còn bàn
 
 - **Đóng gói v0.1.0** (lượt 34-37): đã code, user thử `rc.1` trên desktop thật (chạy được) và v0.1.0 đã phát hành. Còn: user xem lại giấy phép MIT và chuyện `README.txt` trong zip.
@@ -522,4 +536,4 @@
 - Đo lại 60 phút ở 30 fps + lửa nhẹ (`src/perf_check.py`, cần thoát pet đang chạy).
 - Cách 3 (tạm dừng khi có app toàn màn hình) và cách 5 (lửa 30 khung/giây) — user để lại, chưa làm.
 - Lượt 24: user thử các tính năng mới trên desktop thật và góp ý; T1, T6, P2 vẫn pending; âm thanh và hướng agent để sau.
-- Lượt 38: mũ Noel ở biểu cảm `normal` chờ user duyệt.
+- Lượt 39: trang phục Giáng sinh = khăn len (bỏ mũ lượt 38); đã chốt, **phiên sau code** theo thứ tự ở lượt 39, duyệt từng bước.

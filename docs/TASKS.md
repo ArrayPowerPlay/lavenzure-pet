@@ -34,7 +34,7 @@ Khi một mục được chốt: ghi quyết định vào `DECISION_LOG.md`, chu
 
 ### P4. T6 — trang phục ngày lễ
 - **Ý tưởng:** Tết, Giáng sinh, Halloween, sinh nhật user → pet đeo đồ + câu chúc riêng. Ước lượng công sức ở `DECISION_LOG.md` lượt 23 (đợt đầu đề xuất: mũ tiệc, mũ Noel, bao lì xì).
-- **Giáng sinh (lượt 38, 2026-11-15):** chốt mũ Noel kiểu (a) (mũ to che đỉnh, lửa liếm hai bên), gắn theo mắt, cách mắt một chút; `chill` cất mũ; câu chúc để sau. **Đã code mũ, đang chờ user duyệt ở biểu cảm `normal`** (`src/overlay/outfits.py`, nút "Santa hat on / off" trong `character_preview.py`). Còn lại: chỉnh các biểu cảm khác (`sleep`: chữ z chạm quả bông, `remind`: đồng hồ chạm quả bông, `scared`: mũ to theo thân), tuyết rơi tan "xèo", kiểm tra ngày + công tắc Settings, câu chúc EN/VI.
+- **Giáng sinh (lượt 39, 2026-11-15) — ĐÃ CHỐT, PHIÊN SAU CODE:** **khăn len** đỏ sọc trắng (như `docs/references/_xmas2_scarf.png`), **xóa mũ Noel** của lượt 38; mặt nhích lên một chút khi quàng khăn; `scared` thì thân dài ra để miệng to vẫn vừa (không thu nhỏ miệng); `remind` cũng có khăn; sau đó **tuyết rơi**; **biểu cảm chúc mừng** riêng (dùng lại cho sinh nhật / Tết, chỉ đổi chữ; chữ to, đẹp, có 🎄); **Settings > Outfit: Normal / Xmas**. Thứ tự + điểm duyệt + câu hỏi còn mở: `DECISION_LOG.md` lượt 39. Bản thử: `.scratch/xmas2/`.
 
 ### P6. Đóng gói và phát hành v0.1.0 (Windows)
 - **Trạng thái:** đã chốt hướng ở lượt 34 và **đã code F1-F7 ở lượt 35** (2026-11-15; thêm cả OpenAI làm nhà cung cấp chat thứ hai). Còn: thử bản đóng gói trên desktop thật, tag `v0.1.0-rc.1` → `v0.1.0`, chuyển repo sang public.
